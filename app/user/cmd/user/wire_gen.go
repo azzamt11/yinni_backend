@@ -7,16 +7,15 @@
 package main
 
 import (
+	"yinni_backend/app/user/internal/biz"
+	"yinni_backend/app/user/internal/conf"
+	"yinni_backend/app/user/internal/data"
+	"yinni_backend/app/user/internal/server"
+	"yinni_backend/app/user/internal/service"
+
 	"github.com/go-kratos/kratos/v2"
 	"github.com/go-kratos/kratos/v2/log"
-	"kratos_go_microservices_template/app/user/internal/biz"
-	"kratos_go_microservices_template/app/user/internal/conf"
-	"kratos_go_microservices_template/app/user/internal/data"
-	"kratos_go_microservices_template/app/user/internal/server"
-	"kratos_go_microservices_template/app/user/internal/service"
-)
 
-import (
 	_ "go.uber.org/automaxprocs"
 )
 

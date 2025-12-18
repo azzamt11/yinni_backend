@@ -3,7 +3,7 @@ package data
 import (
 	"context"
 
-	"kratos_go_microservices_template/app/user/internal/biz"
+	"yinni_backend/app/user/internal/biz"
 
 	"github.com/go-kratos/kratos/v2/log"
 )

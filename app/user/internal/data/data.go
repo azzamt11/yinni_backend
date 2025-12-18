@@ -1,7 +1,7 @@
 package data
 
 import (
-	"kratos_go_microservices_template/app/user/internal/conf"
+	"yinni_backend/app/user/internal/conf"
 
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/google/wire"

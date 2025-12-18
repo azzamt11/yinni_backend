@@ -4,7 +4,7 @@ import (
 	"flag"
 	"os"
 
-	"kratos_go_microservices_template/internal/conf"
+	"yinni_backend/internal/conf"
 
 	"github.com/go-kratos/kratos/v2"
 	"github.com/go-kratos/kratos/v2/config"
