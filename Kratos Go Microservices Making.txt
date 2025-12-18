@@ -566,6 +566,10 @@ http:
     addr: 127.0.0.1:8000
     timeout: 1s
 ```
+--and make sure the database is:
+```
+source: root:root@tcp(mysql:3306)/kratos_db?parseTime=True&loc=Local
+```
 
 
 #Step 16: Test
