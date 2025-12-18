@@ -4,8 +4,8 @@ package ent
 
 import (
 	"context"
-	"kratos_go_microservices_template/ent/predicate"
-	"kratos_go_microservices_template/ent/user"
+	"yinni_backend/ent/predicate"
+	"yinni_backend/ent/user"
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"

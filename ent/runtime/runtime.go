@@ -2,7 +2,7 @@
 
 package runtime
 
-// The schema-stitching logic is generated in kratos_go_microservices_template/ent/runtime.go
+// The schema-stitching logic is generated in yinni_backend/ent/runtime.go
 
 const (
 	Version = "v0.14.5"                                         // Version of ent codegen.

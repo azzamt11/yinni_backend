@@ -4,7 +4,7 @@ package ent
 
 import (
 	"fmt"
-	"kratos_go_microservices_template/ent/user"
+	"yinni_backend/ent/user"
 	"strings"
 
 	"entgo.io/ent"

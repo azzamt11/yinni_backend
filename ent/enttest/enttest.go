@@ -5,11 +5,11 @@ package enttest
 import (
 	"context"
 
-	"kratos_go_microservices_template/ent"
+	"yinni_backend/ent"
 	// required by schema hooks.
-	_ "kratos_go_microservices_template/ent/runtime"
+	_ "yinni_backend/ent/runtime"
 
-	"kratos_go_microservices_template/ent/migrate"
+	"yinni_backend/ent/migrate"
 
 	"entgo.io/ent/dialect/sql/schema"
 )

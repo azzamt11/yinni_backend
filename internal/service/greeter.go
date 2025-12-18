@@ -3,8 +3,8 @@ package service
 import (
 	"context"
 
-	v1 "kratos_go_microservices_template/api/helloworld/v1"
-	"kratos_go_microservices_template/internal/biz"
+	v1 "yinni_backend/api/helloworld/v1"
+	"yinni_backend/internal/biz"
 )
 
 // GreeterService is a greeter service.

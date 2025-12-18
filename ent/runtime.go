@@ -3,8 +3,8 @@
 package ent
 
 import (
-	"kratos_go_microservices_template/ent/schema"
-	"kratos_go_microservices_template/ent/user"
+	"yinni_backend/ent/schema"
+	"yinni_backend/ent/user"
 )
 
 // The init function reads all schema descriptors with runtime code

@@ -6,7 +6,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"kratos_go_microservices_template/ent/user"
+	"yinni_backend/ent/user"
 	"reflect"
 	"sync"
 

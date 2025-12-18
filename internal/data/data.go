@@ -2,8 +2,8 @@ package data
 
 import (
 	"context"
-	"kratos_go_microservices_template/ent" // Import your generated ent code
-	"kratos_go_microservices_template/internal/conf"
+	"yinni_backend/ent" // Import your generated ent code
+	"yinni_backend/internal/conf"
 
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/google/wire"

@@ -5,8 +5,8 @@ package ent
 import (
 	"context"
 	"fmt"
-	"kratos_go_microservices_template/ent/predicate"
-	"kratos_go_microservices_template/ent/user"
+	"yinni_backend/ent/predicate"
+	"yinni_backend/ent/user"
 	"math"
 
 	"entgo.io/ent"

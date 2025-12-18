@@ -3,7 +3,7 @@ package service
 import (
 	"context"
 
-	pb "kratos_go_microservices_template/api/user/v1"
+	pb "yinni_backend/api/user/v1"
 )
 
 type UserService struct {

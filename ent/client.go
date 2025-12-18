@@ -9,9 +9,9 @@ import (
 	"log"
 	"reflect"
 
-	"kratos_go_microservices_template/ent/migrate"
+	"yinni_backend/ent/migrate"
 
-	"kratos_go_microservices_template/ent/user"
+	"yinni_backend/ent/user"
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect"

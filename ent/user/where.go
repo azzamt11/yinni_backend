@@ -3,7 +3,7 @@
 package user
 
 import (
-	"kratos_go_microservices_template/ent/predicate"
+	"yinni_backend/ent/predicate"
 
 	"entgo.io/ent/dialect/sql"
 )
