@@ -8,7 +8,7 @@ server:
 data:
   database:
     driver: mysql
-    source: root:root@tcp(mysql:3306)/kratos_db?parseTime=True&loc=Local
+    source: root:root@tcp(mysql:3306)/yinni_db?parseTime=True&loc=Local
   redis:
     addr: 127.0.0.1:6379
     read_timeout: 0.2s

@@ -35,7 +35,7 @@ services:
     image: mysql:8.0
     environment:
       MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: kratos_db
+      MYSQL_DATABASE: yinni_db
     ports:
       - "3306:3306"
     healthcheck:
@@ -50,7 +50,7 @@ services:
 #     restart: always
 #     environment:
 #       MYSQL_ROOT_PASSWORD: root
-#       MYSQL_DATABASE: kratos_db
+#       MYSQL_DATABASE: yinni_db
 #     ports:
 #       - "3306:3306"
 #     healthcheck:
@@ -72,4 +72,4 @@ services:
 #       mysql:
 #         condition: service_healthy
 #     environment:
-#       - DB_SOURCE=root:root@tcp(mysql:3306)/kratos_db?parseTime=True
+#       - DB_SOURCE=root:root@tcp(mysql:3306)/yinni_db?parseTime=True

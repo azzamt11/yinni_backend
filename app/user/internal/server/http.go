@@ -1,9 +1,9 @@
 package server
 
 import (
-	v1 "kratos_go_microservices_template/api/user/v1"
-	"kratos_go_microservices_template/app/user/internal/conf"
-	"kratos_go_microservices_template/app/user/internal/service"
+	v1 "yinni_backend/api/user/v1"
+	"yinni_backend/app/user/internal/conf"
+	"yinni_backend/app/user/internal/service"
 
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/go-kratos/kratos/v2/middleware/recovery"
