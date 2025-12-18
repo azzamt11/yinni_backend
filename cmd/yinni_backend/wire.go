@@ -6,11 +6,11 @@
 package main
 
 import (
-	"kratos_go_microservices_template/internal/biz"
-	"kratos_go_microservices_template/internal/conf"
-	"kratos_go_microservices_template/internal/data"
-	"kratos_go_microservices_template/internal/server"
-	"kratos_go_microservices_template/internal/service"
+	"yinni_backend/internal/biz"
+	"yinni_backend/internal/conf"
+	"yinni_backend/internal/data"
+	"yinni_backend/internal/server"
+	"yinni_backend/internal/service"
 
 	"github.com/go-kratos/kratos/v2"
 	"github.com/go-kratos/kratos/v2/log"

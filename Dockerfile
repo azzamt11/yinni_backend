@@ -5,7 +5,7 @@ WORKDIR /src
 
 RUN go install github.com/google/wire/cmd/wire@latest
 
-RUN GOPROXY=https://goproxy.cn go build -o /src/bin/server ./cmd/kratos_go_microservices_template/main.go
+RUN GOPROXY=https://goproxy.cn go build -o /src/bin/server ./cmd/yinni_backend/main.go
 
 FROM debian:stable-slim
 

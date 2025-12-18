@@ -62,7 +62,7 @@ services:
 #     build:
 #       context: .
 #       dockerfile: Dockerfile
-#     command: ["./kratos_go_microservices_template", "-conf", "/data/conf"] 
+#     command: ["./yinni_backend", "-conf", "/data/conf"] 
 #     ports:
 #       - "8000:8000"
 #       - "9000:9000"

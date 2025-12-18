@@ -3,11 +3,11 @@ Kratos Go Microservices Making:
 
 
 #Step 1: Making a main app directory
-kratos new kratos_go_microservices_template
+kratos new yinni_backend
 
 
 #Step 2: Go to dir and open Code
-cd kratos_go_microservices_template
+cd yinni_backend
 code .
 
 
@@ -221,8 +221,8 @@ package data
 
 import (
     "context"
-    "kratos_go_microservices_template/ent" // Import your generated ent code
-    "kratos_go_microservices_template/internal/conf"
+    "yinni_backend/ent" // Import your generated ent code
+    "yinni_backend/internal/conf"
 
     "github.com/go-kratos/kratos/v2/log"
     "github.com/google/wire"
@@ -289,7 +289,7 @@ package api.user.v1;
 
 import "google/api/annotations.proto";
 
-option go_package = "kratos_go_microservices_template/api/user/v1;v1";
+option go_package = "yinni_backend/api/user/v1;v1";
 option java_multiple_files = true;
 option java_package = "api.user.v1";
 
@@ -478,7 +478,7 @@ Error response from daemon: failed to create task for container: failed to creat
 ```
 --Add this line to run the correct binary name between build and ports docker-compose.yml
 ```
-    command: ["./kratos_go_microservices_template", "-conf", "/data/conf"] 
+    command: ["./yinni_backend", "-conf", "/data/conf"] 
 ```
 --Change this line in the Dockerfile:
 ```
@@ -486,7 +486,7 @@ RUN GOPROXY=https://goproxy.cn make build
 ```
 --To this (bypass Makefile to ensure the name is 'server'):
 ```
-RUN GOPROXY=https://goproxy.cn go build -o /src/bin/server ./cmd/kratos_go_microservices_template/main.go
+RUN GOPROXY=https://goproxy.cn go build -o /src/bin/server ./cmd/yinni_backend/main.go
 ```
 
 

@@ -1,4 +1,4 @@
-module kratos_go_microservices_template
+module yinni_backend
 
 go 1.25.0
 
