@@ -560,15 +560,23 @@ COPY --from=builder /src/bin/server /app/server
 ```
 CMD ["./server", "-conf", "/data/conf"]
 ```
---and make sure the http server in the config is:
+--user/Config:
 ```
-http:
-    addr: 127.0.0.1:8000
+server:
+  http:
+    addr: 0.0.0.0:8000
     timeout: 1s
-```
---and make sure the database is:
-```
-source: root:root@tcp(mysql:3306)/kratos_db?parseTime=True&loc=Local
+  grpc:
+    addr: 0.0.0.0:9000
+    timeout: 1s
+data:
+  database:
+    driver: mysql
+    source: root:root@tcp(mysql:3306)/test?parseTime=True&loc=Local
+  redis:
+    addr: 127.0.0.1:6379
+    read_timeout: 0.2s
+    write_timeout: 0.2s
 ```
 
 
@@ -593,4 +601,21 @@ curl -X PUT http://localhost:8000/user/1 -H "Content-Type: application/json" -d 
 ```
 curl -X DELETE http://localhost:8000/user/1
 ```
+
+
+Step 17: Building biz (Business Logic)
+kratos proto server api/user/v1/user.proto -t app/user/internal/service
+--Go precisely in this order:
+--1. Modify app/user/internal/biz/user.go (previously greeter.go)
+--2. Modify app/user/internal/biz/biz.go
+--3. Modify app/user/internal/data/user.go (previously greeter.go)
+--4. Modify app/user/internal/data/data.go
+--5. Modify app/user/internal/service/user.go: Add a usecase in the constructor, along with the corresponding import:
+```
+pb *biz.UserUsecase
+```
+--6. Modify app/user/internal/server/http.go (change import first)
+--7. Modify app/user/internal/server/grpc.go (change import first)
+--8. Modify app/user/internal/service/service.go
+go generate ./...
 
