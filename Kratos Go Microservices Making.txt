@@ -837,4 +837,21 @@ http.Filter(corsHandler.Handler),
 ```
 --after the http.middleware
 
+#Step 25: Error Fixing
+--Make sure that the service/user.go constructor is like this
+```
+type UserService struct {
+	pb.UnimplementedUserServer
+
+	uc *biz.UserUsecase
+}
+```
+--And all the corresponding is match, including one in the constructor argument
+```
+func NewUserService(uc *biz.UserUsecase) *UserService {
+	return &UserService{uc: uc}
+}
+```
+go generate ./...
+
 

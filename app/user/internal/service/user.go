@@ -10,15 +10,15 @@ import (
 type UserService struct {
 	pb.UnimplementedUserServer
 
-	pb *biz.UserUsecase
+	uc *biz.UserUsecase
 }
 
-func NewUserService(pb *biz.UserUsecase) *UserService {
-	return &UserService{}
+func NewUserService(uc *biz.UserUsecase) *UserService {
+	return &UserService{uc: uc}
 }
 
 func (s *UserService) CreateUser(ctx context.Context, req *pb.CreateUserRequest) (*pb.CreateUserReply, error) {
-	user, err := s.pb.CreateUser(ctx, &biz.User{
+	user, err := s.uc.CreateUser(ctx, &biz.User{
 		Name:  req.Name,
 		Email: req.Email,
 		Age:   int(req.Age),
@@ -32,7 +32,7 @@ func (s *UserService) CreateUser(ctx context.Context, req *pb.CreateUserRequest)
 }
 
 func (s *UserService) UpdateUser(ctx context.Context, req *pb.UpdateUserRequest) (*pb.UpdateUserReply, error) {
-	user, err := s.pb.UpdateUser(ctx, &biz.User{
+	user, err := s.uc.UpdateUser(ctx, &biz.User{
 		Name:  req.Name,
 		Email: req.Email,
 		Age:   int(req.Age),
@@ -46,7 +46,7 @@ func (s *UserService) UpdateUser(ctx context.Context, req *pb.UpdateUserRequest)
 }
 
 func (s *UserService) DeleteUser(ctx context.Context, req *pb.DeleteUserRequest) (*pb.DeleteUserReply, error) {
-	user, err := s.pb.DeleteUser(ctx, req.Id)
+	user, err := s.uc.DeleteUser(ctx, req.Id)
 
 	if err != nil {
 		return nil, err
@@ -56,7 +56,7 @@ func (s *UserService) DeleteUser(ctx context.Context, req *pb.DeleteUserRequest)
 }
 
 func (s *UserService) GetUser(ctx context.Context, req *pb.GetUserRequest) (*pb.GetUserReply, error) {
-	user, err := s.pb.GetUser(ctx, req.Id)
+	user, err := s.uc.GetUser(ctx, req.Id)
 
 	if err != nil {
 		return nil, err
@@ -66,7 +66,7 @@ func (s *UserService) GetUser(ctx context.Context, req *pb.GetUserRequest) (*pb.
 }
 
 func (s *UserService) ListUser(ctx context.Context, req *pb.ListUserRequest) (*pb.ListUserReply, error) {
-	users, err := s.pb.ListAllUser(ctx)
+	users, err := s.uc.ListAllUser(ctx)
 
 	if err != nil {
 		return nil, err
