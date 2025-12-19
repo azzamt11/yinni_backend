@@ -6,9 +6,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"sync"
 	"yinni_backend/ent/predicate"
 	"yinni_backend/ent/user"
-	"sync"
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"

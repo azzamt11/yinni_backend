@@ -4,8 +4,8 @@ package ent
 
 import (
 	"fmt"
-	"yinni_backend/ent/user"
 	"strings"
+	"yinni_backend/ent/user"
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"

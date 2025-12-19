@@ -5,9 +5,9 @@ package ent
 import (
 	"context"
 	"fmt"
+	"math"
 	"yinni_backend/ent/predicate"
 	"yinni_backend/ent/user"
-	"math"
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"

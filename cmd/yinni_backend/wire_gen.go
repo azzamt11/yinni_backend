@@ -7,15 +7,16 @@
 package main
 
 import (
+	"github.com/go-kratos/kratos/v2"
+	"github.com/go-kratos/kratos/v2/log"
 	"yinni_backend/internal/biz"
 	"yinni_backend/internal/conf"
 	"yinni_backend/internal/data"
 	"yinni_backend/internal/server"
 	"yinni_backend/internal/service"
+)
 
-	"github.com/go-kratos/kratos/v2"
-	"github.com/go-kratos/kratos/v2/log"
-
+import (
 	_ "go.uber.org/automaxprocs"
 )
 

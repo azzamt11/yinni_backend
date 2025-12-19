@@ -603,7 +603,7 @@ curl -X DELETE http://localhost:8000/user/1
 ```
 
 
-Step 17: Building biz (Business Logic)
+#Step 17: Building biz (Business Logic)
 kratos proto server api/user/v1/user.proto -t app/user/internal/service
 --Go precisely in this order:
 --1. Modify app/user/internal/biz/user.go (previously greeter.go)
@@ -618,4 +618,197 @@ pb *biz.UserUsecase
 --7. Modify app/user/internal/server/grpc.go (change import first)
 --8. Modify app/user/internal/service/service.go
 go generate ./...
+
+
+#Step 18: Refining The Logic (biz/user.go)
+--Make sure that the User model struct in biz/user.go match to the proto
+```
+type User struct {
+	ID        int64
+	Name      string
+	Age       int  <== This follows from the definition we have made in the ent
+	Email     string
+	CreatedAt time.Time
+	UpdatedAt time.Time
+}
+```
+--Adding the logger:
+```
+type UserUsecase struct {
+	repo UserRepo
+	log  *log.Helper  <=== This log is from the "github.com/go-kratos/kratos/v2/log"
+}
+
+// NewUserUsecase new a User usecase.
+func NewUserUsecase(repo UserRepo, logger log.Logger) *UserUsecase {
+	return &UserUsecase{repo: repo, log: log.NewHelper(logger)}  <== Pass here
+}
+```
+--Make sure that the functions is correspond to the constructor:
+```
+func (uc *UserUsecase) CreateUser(ctx context.Context, u *User) (*User, error) {
+	log.Infof("CreateUser: %v", u.Email)
+	return uc.repo.Create(ctx, u)
+}
+
+func (uc *UserUsecase) UpdateUser(ctx context.Context, u *User) (*User, error) {
+	log.Infof("UpdateUser: %v", u.Email)
+	return uc.repo.Update(ctx, u)
+}
+
+func (uc *UserUsecase) DeleteUser(ctx context.Context, id int64) (*User, error) {
+	log.Infof("DeleteUser: %v", id)
+	return uc.repo.Delete(ctx, id)
+}
+
+func (uc *UserUsecase) GetUser(ctx context.Context, id int64) (*User, error) {
+	log.Infof("GetUser: %v", id)
+	return uc.repo.GetUser(ctx, id)
+}
+
+func (uc *UserUsecase) ListAllUser(ctx context.Context) ([]*User, error) {
+	log.Infof("ListAllUser: %v")
+	return uc.repo.ListAllUser(ctx)
+}
+```
+
+
+#Step 19: Defining the database fetching (data/data.go)
+--Add the logic of fetching data via ent in the NewData
+```
+log := log.NewHelper(logger)
+
+client, err := ent.Open(
+  "mysql",
+  c.Database.Source,
+)
+
+if err != nil {
+  return nil, nil, err
+}
+
+if err := client.Schema.Create(context.Background()); err != nil {
+  return nil, nil, err
+}
+```
+--And make sure that we have already register the ent in the constructor:
+```
+ent *ent.Client
+```
+go generate ./...
+
+
+#Step 20: Business Logic Concept
+┌─────────────┐
+│  transport  │  ← HTTP / gRPC / MQ
+└─────────────┘
+        ↓
+┌─────────────┐
+│   service   │  ← DTO mapping, validation
+└─────────────┘
+        ↓
+┌─────────────┐
+│     biz     │  ← 💡 BUSINESS MEANING
+└─────────────┘
+        ↓
+┌─────────────┐
+│     data    │  ← DB / cache / external API
+└─────────────┘
+
+
+#Step 21: Building repo functions by ent implementation at data/user.go (biz --> DB --> biz)
+--Create:
+```
+func (r *userRepo) Create(ctx context.Context, g *biz.User) (*biz.User, error) {
+	row, err := r.data.ent.User.
+		Create().
+		SetName(g.Name).
+		SetAge(g.Age).
+		SetEmail(g.Email).
+		Save(ctx)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &biz.User{
+		ID:    int64(row.ID),
+		Name:  row.Name,
+		Age:   row.Age,
+		Email: row.Email,
+	}, nil
+}
+```
+--Update:
+```
+func (r *userRepo) Update(ctx context.Context, g *biz.User) (*biz.User, error) {
+	row, err := r.data.ent.User.
+		UpdateOneID(int(g.ID)).
+		SetName(g.Name).
+		SetAge(g.Age).
+		SetEmail(g.Email).
+		Save(ctx)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &biz.User{
+		ID:    int64(row.ID),
+		Name:  row.Name,
+		Age:   row.Age,
+		Email: row.Email,
+	}, nil
+}
+```
+--GetUser:
+```
+func (r *userRepo) GetUser(ctx context.Context, id int64) (*biz.User, error) {
+	row, err := r.data.ent.User.Get(ctx, int(id))
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &biz.User{
+		ID:    int64(row.ID),
+		Name:  row.Name,
+		Age:   row.Age,
+		Email: row.Email,
+	}, nil
+}
+```
+--Delete:
+```
+func (r *userRepo) Delete(ctx context.Context, id int64) (*biz.User, error) {
+	err := r.data.ent.User.DeleteOneID(int(id)).Exec(ctx)
+	return nil, err
+}
+```
+--GetList:
+```
+func (r *userRepo) ListAllUser(ctx context.Context) ([]*biz.User, error) {
+	rows, err := r.data.ent.User.Query().All(ctx)
+
+	if err != nil {
+		return nil, err
+	}
+
+	rv := make([]*biz.User, 0, len(rows))
+	for _, row := range rows {
+		rv = append(rv, &biz.User{
+			ID:    int64(row.ID),
+			Name:  row.Name,
+			Age:   row.Age,
+			Email: row.Email,
+		})
+	}
+	return rv, nil
+}
+```
+--Simply just do query --> err catching --> bizUser parsing
+
+
+#Step 22: Building service functions at service/user.go (req --> biz --> rep)
+--All you do is just simple. Pass the req.User to repo.function and then pass the result from the repo to the reply.
 
