@@ -562,8 +562,8 @@ const file_api_user_v1_user_proto_rawDesc = "" +
 	"/user/{id}\x12U\n" +
 	"\aGetUser\x12\x1b.api.user.v1.GetUserRequest\x1a\x19.api.user.v1.GetUserReply\"\x12\x82\xd3\xe4\x93\x02\f\x12\n" +
 	"/user/{id}\x12S\n" +
-	"\bListUser\x12\x1c.api.user.v1.ListUserRequest\x1a\x1a.api.user.v1.ListUserReply\"\r\x82\xd3\xe4\x93\x02\a\x12\x05/userB@\n" +
-	"\vapi.user.v1P\x01Z/yinni_backend/api/user/v1;v1b\x06proto3"
+	"\bListUser\x12\x1c.api.user.v1.ListUserRequest\x1a\x1a.api.user.v1.ListUserReply\"\r\x82\xd3\xe4\x93\x02\a\x12\x05/userB-\n" +
+	"\vapi.user.v1P\x01Z\x1cyinni_backend/api/user/v1;v1b\x06proto3"
 
 var (
 	file_api_user_v1_user_proto_rawDescOnce sync.Once

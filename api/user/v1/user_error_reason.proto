@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+package user.v1;
+
+option go_package = "yinni_backend/api/user/v1;v1";
+option java_multiple_files = true;
+option java_package = "User.v1";
+option objc_class_prefix = "APIUserV1";
+
+enum ErrorReason {
+  USER_UNSPECIFIED = 0;
+  USER_NOT_FOUND = 1;
+}

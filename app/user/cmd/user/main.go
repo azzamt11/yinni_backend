@@ -14,6 +14,7 @@ import (
 	"github.com/go-kratos/kratos/v2/transport/grpc"
 	"github.com/go-kratos/kratos/v2/transport/http"
 
+	_ "github.com/go-sql-driver/mysql"
 	_ "go.uber.org/automaxprocs"
 )
 

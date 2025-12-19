@@ -812,3 +812,29 @@ func (r *userRepo) ListAllUser(ctx context.Context) ([]*biz.User, error) {
 #Step 22: Building service functions at service/user.go (req --> biz --> rep)
 --All you do is just simple. Pass the req.User to repo.function and then pass the result from the repo to the reply.
 
+
+#Step 23: Dont forget the \api\user\v1\user_error_reason.proto.
+
+#Step 24: Error:
+docker logs yinni_backend-user-service-1
+--If you find error, you might want to add this line _ "github.com/go-sql-driver/mysql" on the app/user/cmd/user/main.go.
+--or replace test?parseTime=True&loc=Local in config by yinni_db?parseTime=true&charset=utf8mb4&loc=Local
+
+#Step 24: CORS
+--On CORS error while testing, add the import "github.com/rs/cors" on the internal/server/http.go
+--And add this line before the var.opts:
+```
+corsHandler := cors.New(cors.Options{
+		AllowedOrigins:   []string{"*"},
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedHeaders:   []string{"*"},
+		AllowCredentials: true,
+	})
+```
+--and this:
+```
+http.Filter(corsHandler.Handler),
+```
+--after the http.middleware
+
+
