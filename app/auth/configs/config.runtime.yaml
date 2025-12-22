@@ -1,0 +1,16 @@
+server:
+  http:
+    addr: 0.0.0.0:8000
+    timeout: 1s
+  grpc:
+    addr: 0.0.0.0:9000
+    timeout: 1s
+
+auth:
+  jwt_secret: super-secret-key
+  jwt_expire: 3600
+
+data:
+  database:
+    driver: mysql
+    source: root:root@tcp(mysql:3306)/yinni_db?parseTime=true&charset=utf8mb4&loc=Local

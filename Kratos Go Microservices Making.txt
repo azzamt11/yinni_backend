@@ -856,10 +856,27 @@ go generate ./...
 
 
 #Step 26: Building Auth
---Add this to the .env:
+--This is the correct .env:
 ```
-JWT_SECRET=super-secret-key
+# ---- Auth ----
+AUTH_HTTP_PORT=??
+AUTH_GRPC_PORT=??
+
+# ---- User ----
+USER_HTTP_PORT=??
+USER_GRPC_PORT=??
+
+# ---- JWT ----
+JWT_SECRET=??
 JWT_EXPIRE=3600
+
+# ---- Database ----
+MYSQL_ROOT_PASSWORD=??
+MYSQL_DATABASE=??
+MYSQL_PORT=3306
+
+DB_SOURCE=root:root@tcp(mysql:3306)/yinni_db?parseTime=true&charset=utf8mb4&loc=Local
+
 ```
 --Add this bootstraping to the conf.proto:
 ```
@@ -1020,4 +1037,153 @@ message SignInReply {
 --Delete conf in each services //---IMPORTANT!--//
 --Make sure you have proper arguments: add bc.Auth to main.go, and *conf.Auth in wire.go in every services
 --Get rid of every unused provider in the wire.
+--Make sure the Dockerfile correct on this line:
+```
+RUN GOPROXY=https://goproxy.cn go build -o /src/bin/server ./app/user/cmd/user/
+```
 go generate ./...
+
+
+#Step 27: The Principle of environtment
+--.env  ──(Docker)──▶ environment variables
+--environment variables ──(you)──▶ config.yaml
+--config.yaml ──(Kratos config)──▶ conf.pb.go
+--auth/config.yaml:
+```
+server:
+  http:
+    addr: 0.0.0.0:${AUTH_HTTP_PORT}
+    timeout: 1s
+  grpc:
+    addr: 0.0.0.0:${AUTH_GRPC_PORT}
+    timeout: 1s
+
+auth:
+  jwt_secret: ${JWT_SECRET}
+  jwt_expire: ${JWT_EXPIRE}
+
+data:
+  database:
+    driver: mysql
+    source: ${DB_SOURCE}
+```
+--Do correspondingly for user and root service. IMPORTANT: DO IT CAREFULLY, YOU MIGHT MISTAKENLY TYPO ON THE VARIABLE NAME
+--Update .env:
+```
+JWT_SECRET=???
+JWT_EXPIRE=3600
+
+AUTH_HTTP_PORT=8000
+AUTH_GRPC_PORT=9000
+USER_HTTP_PORT=8001
+USER_GRPC_PORT=9001
+
+DB_SOURCE=root:root@tcp(mysql:3306)/yinni_db?parseTime=true&loc=Local
+```
+--Modify dockerfile to inject the variables from environtment: //--IMPORTANT!--//
+```
+CMD ["sh", "-c", "envsubst < /data/conf/config.yaml > /data/conf/config.runtime.yaml && ./server -conf /data/conf"]
+```
+--The correct Dockerfile:
+--Auth:
+```
+# ---------- Build stage ----------
+FROM golang:1.24 AS builder
+
+WORKDIR /src
+COPY . .
+
+RUN GOPROXY=https://goproxy.cn make build
+
+# ---------- Runtime stage ----------
+FROM debian:stable-slim
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates \
+    netbase \
+    gettext-base \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# 👇 COPY THE CORRECT OUTPUT
+COPY --from=builder /src/bin/auth /app/server
+
+RUN chmod +x /app/server
+
+EXPOSE 8000
+EXPOSE 9000
+VOLUME /data/conf
+
+CMD ["sh", "-c", "envsubst < /data/conf/config.yaml > /data/conf/config.runtime.yaml && ./server -conf /data/conf"]
+
+```
+--Do accrodingly for User.
+--Corrected docker-compose.yml:
+```
+version: "3.9"
+
+services:
+  # --- Auth Microservice ---
+  auth-service:
+    build:
+      context: .
+      dockerfile: app/auth/Dockerfile
+    ports:
+      - "${AUTH_HTTP_PORT}:8000"
+      - "${AUTH_GRPC_PORT}:9000"
+    volumes:
+      - ./app/auth/configs:/data/conf
+    environment:
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRE: ${JWT_EXPIRE}
+      AUTH_HTTP_PORT: ${AUTH_HTTP_PORT}
+      AUTH_GRPC_PORT: ${AUTH_GRPC_PORT}
+      DB_SOURCE: ${DB_SOURCE}
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  # --- User Microservice ---
+  user-service:
+    build:
+      context: .
+      dockerfile: app/user/Dockerfile
+    ports:
+      - "${USER_HTTP_PORT}:8000"
+      - "${USER_GRPC_PORT}:9000"
+    volumes:
+      - ./app/user/configs:/data/conf
+    environment:
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRE: ${JWT_EXPIRE}
+      USER_HTTP_PORT: ${USER_HTTP_PORT}
+      USER_GRPC_PORT: ${USER_GRPC_PORT}
+      DB_SOURCE: ${DB_SOURCE}
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  # --- MySQL Database ---
+  mysql:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+    ports:
+      - "${MYSQL_PORT}:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 10s
+      retries: 5
+```
+
+
+#Step 28: Error Fixing on Cache on Docker
+--Exactly run this: //--IMPORTANT!--//
+docker compose down -v
+docker compose build --no-cache
+docker compose up -d
+--If the error persists. Go to hardcoded it.
+
+

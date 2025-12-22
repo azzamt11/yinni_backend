@@ -6,16 +6,17 @@ services:
     build:
       context: .
       dockerfile: app/auth/Dockerfile
-    command: ["./server", "-conf", "/data/conf"]
     ports:
-      - "${AUTH_HTTP_PORT}:8000"   # HTTP
-      - "${AUTH_GRPC_PORT}:9000"   # gRPC
+      - "${AUTH_HTTP_PORT}:8000"
+      - "${AUTH_GRPC_PORT}:9000"
     volumes:
       - ./app/auth/configs:/data/conf
     environment:
-      - JWT_SECRET=${JWT_SECRET}
-      - PORT_HTTP=${AUTH_HTTP_PORT}
-      - PORT_GRPC=${AUTH_GRPC_PORT}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRE: ${JWT_EXPIRE}
+      AUTH_HTTP_PORT: ${AUTH_HTTP_PORT}
+      AUTH_GRPC_PORT: ${AUTH_GRPC_PORT}
+      DB_SOURCE: ${DB_SOURCE}
     depends_on:
       mysql:
         condition: service_healthy
@@ -25,16 +26,17 @@ services:
     build:
       context: .
       dockerfile: app/user/Dockerfile
-    command: ["./server", "-conf", "/data/conf"]
     ports:
-      - "${USER_HTTP_PORT}:8000"   # HTTP
-      - "${USER_GRPC_PORT}:9000"   # gRPC
+      - "${USER_HTTP_PORT}:8000"
+      - "${USER_GRPC_PORT}:9000"
     volumes:
       - ./app/user/configs:/data/conf
     environment:
-      - JWT_SECRET=${JWT_SECRET}
-      - PORT_HTTP=${USER_HTTP_PORT}
-      - PORT_GRPC=${USER_GRPC_PORT}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRE: ${JWT_EXPIRE}
+      USER_HTTP_PORT: ${USER_HTTP_PORT}
+      USER_GRPC_PORT: ${USER_GRPC_PORT}
+      DB_SOURCE: ${DB_SOURCE}
     depends_on:
       mysql:
         condition: service_healthy
@@ -51,6 +53,7 @@ services:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
       timeout: 10s
       retries: 5
+
 
 
 # services:

@@ -1,15 +1,16 @@
 server:
   http:
-    addr: 0.0.0.0:8000
+    addr: 0.0.0.0:${USER_HTTP_PORT}
     timeout: 1s
   grpc:
-    addr: 0.0.0.0:9000
+    addr: 0.0.0.0:${USER_GRPC_PORT}
     timeout: 1s
+
+auth:
+  jwt_secret: ${JWT_SECRET}
+  jwt_expire: ${JWT_EXPIRE}
+
 data:
   database:
     driver: mysql
-    source: root:root@tcp(mysql:3306)/yinni_db?parseTime=True&loc=Local
-  redis:
-    addr: 127.0.0.1:6379
-    read_timeout: 0.2s
-    write_timeout: 0.2s
+    source: ${DB_SOURCE}
