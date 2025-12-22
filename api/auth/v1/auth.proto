@@ -1,0 +1,46 @@
+syntax = "proto3";
+
+package api.auth.v1;
+
+option go_package = "api/auth/v1;v1";
+
+import "google/api/annotations.proto";
+
+service Auth {
+  // Register new user
+  rpc SignUp (SignUpRequest) returns (SignUpReply) {
+    option (google.api.http) = {
+      post: "/v1/auth/sign-up"
+      body: "*"
+    };
+  }
+
+  // Login existing user
+  rpc SignIn (SignInRequest) returns (SignInReply) {
+    option (google.api.http) = {
+      post: "/v1/auth/sign-in"
+      body: "*"
+    };
+  }
+}
+
+message SignUpRequest {
+  string email = 1;
+  string password = 2;
+  string name = 3;
+}
+
+message SignUpReply {
+  int64  user_id = 1;
+}
+
+message SignInRequest {
+  string email = 1;
+  string password = 2;
+}
+
+message SignInReply {
+  string access_token = 1;
+  string token_type = 2; // "Bearer"
+  int64  expires_in = 3; // seconds
+}

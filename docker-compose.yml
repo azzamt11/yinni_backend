@@ -1,45 +1,54 @@
+version: "3.9"
+
 services:
+  # --- Auth Microservice ---
+  auth-service:
+    build:
+      context: .
+      dockerfile: app/auth/Dockerfile
+    command: ["./server", "-conf", "/data/conf"]
+    ports:
+      - "${AUTH_HTTP_PORT}:8000"   # HTTP
+      - "${AUTH_GRPC_PORT}:9000"   # gRPC
+    volumes:
+      - ./app/auth/configs:/data/conf
+    environment:
+      - JWT_SECRET=${JWT_SECRET}
+      - PORT_HTTP=${AUTH_HTTP_PORT}
+      - PORT_GRPC=${AUTH_GRPC_PORT}
+    depends_on:
+      mysql:
+        condition: service_healthy
+
   # --- User Microservice ---
   user-service:
     build:
       context: .
       dockerfile: app/user/Dockerfile
-    # Override: Run the 'user' binary specifically
     command: ["./server", "-conf", "/data/conf"]
     ports:
-      - "8000:8000" # HTTP
-      - "9000:9000" # gRPC
+      - "${USER_HTTP_PORT}:8000"   # HTTP
+      - "${USER_GRPC_PORT}:9000"   # gRPC
     volumes:
       - ./app/user/configs:/data/conf
+    environment:
+      - JWT_SECRET=${JWT_SECRET}
+      - PORT_HTTP=${USER_HTTP_PORT}
+      - PORT_GRPC=${USER_GRPC_PORT}
     depends_on:
       mysql:
         condition: service_healthy
 
-  # --- Order Microservice ---
-  # order-service:
-  #   build:
-  #     context: .
-  #     dockerfile: Dockerfile
-  #   # Override: Run the 'order' binary specifically
-  #   command: ["./order", "-conf", "/data/conf"]
-  #   ports:
-  #     - "8001:8000" # Maps Host 8001 to Order's HTTP 8000
-  #     - "9001:9000" # Maps Host 9001 to Order's gRPC 9000
-  #   volumes:
-  #     - ./app/order/configs:/data/conf
-  #   depends_on:
-  #     mysql:
-  #       condition: service_healthy
-
+  # --- MySQL Database ---
   mysql:
     image: mysql:8.0
     environment:
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: yinni_db
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
     ports:
-      - "3306:3306"
+      - "${MYSQL_PORT}:3306"
     healthcheck:
-      test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
       timeout: 10s
       retries: 5
 

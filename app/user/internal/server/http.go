@@ -2,8 +2,9 @@ package server
 
 import (
 	v1 "yinni_backend/api/user/v1"
-	"yinni_backend/app/user/internal/conf"
 	"yinni_backend/app/user/internal/service"
+	"yinni_backend/internal/conf"
+	"yinni_backend/pkg/middleware"
 
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/go-kratos/kratos/v2/middleware/logging"
@@ -13,7 +14,7 @@ import (
 )
 
 // NewHTTPServer new an HTTP server.
-func NewHTTPServer(c *conf.Server, user *service.UserService, logger log.Logger) *http.Server {
+func NewHTTPServer(c *conf.Server, authConf *conf.Auth, user *service.UserService, logger log.Logger) *http.Server {
 	corsHandler := cors.New(cors.Options{
 		AllowedOrigins:   []string{"*"},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
@@ -25,6 +26,7 @@ func NewHTTPServer(c *conf.Server, user *service.UserService, logger log.Logger)
 		http.Middleware(
 			recovery.Recovery(),
 			logging.Server(logger),
+			middleware.JWT(authConf.JwtSecret),
 		),
 		http.Filter(corsHandler.Handler),
 	}

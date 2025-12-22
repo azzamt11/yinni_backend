@@ -855,3 +855,169 @@ func NewUserService(uc *biz.UserUsecase) *UserService {
 go generate ./...
 
 
+#Step 26: Building Auth
+--Add this to the .env:
+```
+JWT_SECRET=super-secret-key
+JWT_EXPIRE=3600
+```
+--Add this bootstraping to the conf.proto:
+```
+message Auth {
+  string jwt_secret = 1;
+  int64 jwt_expire = 2;
+}
+
+message Bootstrap {
+  Server server = 1;
+  Data data = 2;
+  Auth auth = 3;
+}
+```
+--Add the generic middleware:
+```
+package middleware
+
+import (
+	"context"
+	"errors"
+	"strings"
+
+	"github.com/go-kratos/kratos/v2/middleware"
+	"github.com/go-kratos/kratos/v2/transport"
+	"github.com/golang-jwt/jwt/v5"
+)
+
+type Claims struct {
+	UserID int64 `json:"user_id"`
+	jwt.RegisteredClaims
+}
+
+func JWT(secret string) middleware.Middleware {
+	return func(handler middleware.Handler) middleware.Handler {
+		return func(ctx context.Context, req interface{}) (interface{}, error) {
+			tr, ok := transport.FromServerContext(ctx)
+			if !ok {
+				return nil, errors.New("missing transport context")
+			}
+
+			auth := tr.RequestHeader().Get("Authorization")
+			if auth == "" {
+				return nil, errors.New("missing authorization header")
+			}
+
+			tokenStr := strings.TrimPrefix(auth, "Bearer ")
+
+			token, err := jwt.ParseWithClaims(
+				tokenStr,
+				&Claims{},
+				func(token *jwt.Token) (interface{}, error) {
+					return []byte(secret), nil
+				},
+			)
+			if err != nil || !token.Valid {
+				return nil, errors.New("invalid token")
+			}
+
+			claims := token.Claims.(*Claims)
+			ctx = context.WithValue(ctx, "user_id", claims.UserID)
+
+			return handler(ctx, req)
+		}
+	}
+}
+
+```
+--Add this to app/auth/internal/service/auth.go:
+```
+type AuthService struct {
+	conf *conf.Auth
+}
+
+func NewAuthService(conf *conf.Auth) *AuthService {
+	return &AuthService{conf: conf}
+}
+```
+--along with token generation:
+```
+func (s *AuthService) Login(ctx context.Context, req *v1.LoginRequest) (*v1.LoginReply, error) {
+	claims := middleware.Claims{
+		UserID: 1, // from DB
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(
+				time.Duration(s.conf.JwtExpire) * time.Second,
+			)),
+		},
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	tokenStr, _ := token.SignedString([]byte(s.conf.JwtSecret))
+
+	return &v1.LoginReply{
+		AccessToken: tokenStr,
+	}, nil
+}
+```
+--Regenerate the conf.proto:
+protoc --proto_path=. --proto_path=./third_party --go_out=paths=source_relative:. internal/conf/conf.proto
+--Create auth service:
+kratos new app/auth
+--And modify accordingly
+--Add this line inside grpc.Middleware and http.Middleware in app/user/service/:
+```
+middleware.JWT(authConf.JwtSecret),
+```
+--Make the proto for the app/auth service:
+```
+syntax = "proto3";
+
+package api.auth.v1;
+
+option go_package = "api/auth/v1;v1";
+
+import "google/api/annotations.proto";
+
+service Auth {
+  // Register new user
+  rpc SignUp (SignUpRequest) returns (SignUpReply) {
+    option (google.api.http) = {
+      post: "/v1/auth/sign-up"
+      body: "*"
+    };
+  }
+
+  // Login existing user
+  rpc SignIn (SignInRequest) returns (SignInReply) {
+    option (google.api.http) = {
+      post: "/v1/auth/sign-in"
+      body: "*"
+    };
+  }
+}
+
+message SignUpRequest {
+  string email = 1;
+  string password = 2;
+  string name = 3;
+}
+
+message SignUpReply {
+  int64  user_id = 1;
+}
+
+message SignInRequest {
+  string email = 1;
+  string password = 2;
+}
+
+message SignInReply {
+  string access_token = 1;
+  string token_type = 2; // "Bearer"
+  int64  expires_in = 3; // seconds
+}
+```
+--Add *conf.Auth to wire (dependency injection)
+--Delete conf in each services //---IMPORTANT!--//
+--Make sure you have proper arguments: add bc.Auth to main.go, and *conf.Auth in wire.go in every services
+--Get rid of every unused provider in the wire.
+go generate ./...

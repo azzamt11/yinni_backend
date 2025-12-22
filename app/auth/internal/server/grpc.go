@@ -1,10 +1,9 @@
 package server
 
 import (
-	v1 "yinni_backend/api/user/v1"
-	"yinni_backend/app/user/internal/service"
+	v1 "yinni_backend/api/auth/v1"
+	"yinni_backend/app/auth/internal/service"
 	"yinni_backend/internal/conf"
-	"yinni_backend/pkg/middleware"
 
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/go-kratos/kratos/v2/middleware/recovery"
@@ -12,11 +11,10 @@ import (
 )
 
 // NewGRPCServer new a gRPC server.
-func NewGRPCServer(c *conf.Server, authConf *conf.Auth, user *service.UserService, logger log.Logger) *grpc.Server {
+func NewGRPCServer(c *conf.Server, auth *service.AuthService, logger log.Logger) *grpc.Server {
 	var opts = []grpc.ServerOption{
 		grpc.Middleware(
 			recovery.Recovery(),
-			middleware.JWT(authConf.JwtSecret),
 		),
 	}
 	if c.Grpc.Network != "" {
@@ -29,6 +27,6 @@ func NewGRPCServer(c *conf.Server, authConf *conf.Auth, user *service.UserServic
 		opts = append(opts, grpc.Timeout(c.Grpc.Timeout.AsDuration()))
 	}
 	srv := grpc.NewServer(opts...)
-	v1.RegisterUserServer(srv, user)
+	v1.RegisterAuthServer(srv, auth)
 	return srv
 }

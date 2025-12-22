@@ -5,9 +5,15 @@ option go_package = "yinni_backend/internal/conf;conf";
 
 import "google/protobuf/duration.proto";
 
+message Auth {
+  string jwt_secret = 1;
+  int64 jwt_expire = 2;
+}
+
 message Bootstrap {
   Server server = 1;
   Data data = 2;
+  Auth auth = 3;
 }
 
 message Server {
