@@ -21,9 +21,12 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	Product_GetProduct_FullMethodName     = "/api.product.v1.Product/GetProduct"
-	Product_ListProducts_FullMethodName   = "/api.product.v1.Product/ListProducts"
-	Product_SearchProducts_FullMethodName = "/api.product.v1.Product/SearchProducts"
+	Product_GetProduct_FullMethodName          = "/api.product.v1.Product/GetProduct"
+	Product_GetProductByPID_FullMethodName     = "/api.product.v1.Product/GetProductByPID"
+	Product_ListProducts_FullMethodName        = "/api.product.v1.Product/ListProducts"
+	Product_SearchProducts_FullMethodName      = "/api.product.v1.Product/SearchProducts"
+	Product_GetFeaturedProducts_FullMethodName = "/api.product.v1.Product/GetFeaturedProducts"
+	Product_GetSimilarProducts_FullMethodName  = "/api.product.v1.Product/GetSimilarProducts"
 )
 
 // ProductClient is the client API for Product service.
@@ -32,10 +35,16 @@ const (
 type ProductClient interface {
 	// Get product by ID
 	GetProduct(ctx context.Context, in *GetProductRequest, opts ...grpc.CallOption) (*ProductInfo, error)
+	// Get product by Flipkart PID
+	GetProductByPID(ctx context.Context, in *GetProductByPIDRequest, opts ...grpc.CallOption) (*ProductInfo, error)
 	// List products
 	ListProducts(ctx context.Context, in *ListProductsRequest, opts ...grpc.CallOption) (*ListProductsReply, error)
 	// Search products
 	SearchProducts(ctx context.Context, in *SearchProductsRequest, opts ...grpc.CallOption) (*ListProductsReply, error)
+	// Get featured products
+	GetFeaturedProducts(ctx context.Context, in *GetFeaturedProductsRequest, opts ...grpc.CallOption) (*ListProductsReply, error)
+	// Get similar products
+	GetSimilarProducts(ctx context.Context, in *GetSimilarProductsRequest, opts ...grpc.CallOption) (*ListProductsReply, error)
 }
 
 type productClient struct {
@@ -50,6 +59,16 @@ func (c *productClient) GetProduct(ctx context.Context, in *GetProductRequest, o
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(ProductInfo)
 	err := c.cc.Invoke(ctx, Product_GetProduct_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *productClient) GetProductByPID(ctx context.Context, in *GetProductByPIDRequest, opts ...grpc.CallOption) (*ProductInfo, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ProductInfo)
+	err := c.cc.Invoke(ctx, Product_GetProductByPID_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -76,16 +95,42 @@ func (c *productClient) SearchProducts(ctx context.Context, in *SearchProductsRe
 	return out, nil
 }
 
+func (c *productClient) GetFeaturedProducts(ctx context.Context, in *GetFeaturedProductsRequest, opts ...grpc.CallOption) (*ListProductsReply, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ListProductsReply)
+	err := c.cc.Invoke(ctx, Product_GetFeaturedProducts_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *productClient) GetSimilarProducts(ctx context.Context, in *GetSimilarProductsRequest, opts ...grpc.CallOption) (*ListProductsReply, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ListProductsReply)
+	err := c.cc.Invoke(ctx, Product_GetSimilarProducts_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ProductServer is the server API for Product service.
 // All implementations must embed UnimplementedProductServer
 // for forward compatibility.
 type ProductServer interface {
 	// Get product by ID
 	GetProduct(context.Context, *GetProductRequest) (*ProductInfo, error)
+	// Get product by Flipkart PID
+	GetProductByPID(context.Context, *GetProductByPIDRequest) (*ProductInfo, error)
 	// List products
 	ListProducts(context.Context, *ListProductsRequest) (*ListProductsReply, error)
 	// Search products
 	SearchProducts(context.Context, *SearchProductsRequest) (*ListProductsReply, error)
+	// Get featured products
+	GetFeaturedProducts(context.Context, *GetFeaturedProductsRequest) (*ListProductsReply, error)
+	// Get similar products
+	GetSimilarProducts(context.Context, *GetSimilarProductsRequest) (*ListProductsReply, error)
 	mustEmbedUnimplementedProductServer()
 }
 
@@ -99,11 +144,20 @@ type UnimplementedProductServer struct{}
 func (UnimplementedProductServer) GetProduct(context.Context, *GetProductRequest) (*ProductInfo, error) {
 	return nil, status.Error(codes.Unimplemented, "method GetProduct not implemented")
 }
+func (UnimplementedProductServer) GetProductByPID(context.Context, *GetProductByPIDRequest) (*ProductInfo, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetProductByPID not implemented")
+}
 func (UnimplementedProductServer) ListProducts(context.Context, *ListProductsRequest) (*ListProductsReply, error) {
 	return nil, status.Error(codes.Unimplemented, "method ListProducts not implemented")
 }
 func (UnimplementedProductServer) SearchProducts(context.Context, *SearchProductsRequest) (*ListProductsReply, error) {
 	return nil, status.Error(codes.Unimplemented, "method SearchProducts not implemented")
+}
+func (UnimplementedProductServer) GetFeaturedProducts(context.Context, *GetFeaturedProductsRequest) (*ListProductsReply, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetFeaturedProducts not implemented")
+}
+func (UnimplementedProductServer) GetSimilarProducts(context.Context, *GetSimilarProductsRequest) (*ListProductsReply, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetSimilarProducts not implemented")
 }
 func (UnimplementedProductServer) mustEmbedUnimplementedProductServer() {}
 func (UnimplementedProductServer) testEmbeddedByValue()                 {}
@@ -144,6 +198,24 @@ func _Product_GetProduct_Handler(srv interface{}, ctx context.Context, dec func(
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Product_GetProductByPID_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetProductByPIDRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ProductServer).GetProductByPID(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Product_GetProductByPID_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ProductServer).GetProductByPID(ctx, req.(*GetProductByPIDRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Product_ListProducts_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ListProductsRequest)
 	if err := dec(in); err != nil {
@@ -180,6 +252,42 @@ func _Product_SearchProducts_Handler(srv interface{}, ctx context.Context, dec f
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Product_GetFeaturedProducts_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetFeaturedProductsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ProductServer).GetFeaturedProducts(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Product_GetFeaturedProducts_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ProductServer).GetFeaturedProducts(ctx, req.(*GetFeaturedProductsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Product_GetSimilarProducts_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetSimilarProductsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ProductServer).GetSimilarProducts(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Product_GetSimilarProducts_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ProductServer).GetSimilarProducts(ctx, req.(*GetSimilarProductsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Product_ServiceDesc is the grpc.ServiceDesc for Product service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -192,12 +300,24 @@ var Product_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Product_GetProduct_Handler,
 		},
 		{
+			MethodName: "GetProductByPID",
+			Handler:    _Product_GetProductByPID_Handler,
+		},
+		{
 			MethodName: "ListProducts",
 			Handler:    _Product_ListProducts_Handler,
 		},
 		{
 			MethodName: "SearchProducts",
 			Handler:    _Product_SearchProducts_Handler,
+		},
+		{
+			MethodName: "GetFeaturedProducts",
+			Handler:    _Product_GetFeaturedProducts_Handler,
+		},
+		{
+			MethodName: "GetSimilarProducts",
+			Handler:    _Product_GetSimilarProducts_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

@@ -1,13 +1,18 @@
+// api/product/v1/product_error_reason.proto
 syntax = "proto3";
 
-package product.v1;
+package api.product.v1;
 
 option go_package = "yinni_backend/api/product/v1;v1";
 option java_multiple_files = true;
-option java_package = "product.v1";
-option objc_class_prefix = "APIProductV1";
+option java_package = "api.product.v1";
 
 enum ErrorReason {
-  USER_UNSPECIFIED = 0;
-  USER_NOT_FOUND = 1;
+  PRODUCT_UNSPECIFIED = 0;
+  PRODUCT_NOT_FOUND = 1;
+  INVALID_PRODUCT_ID = 2;
+  INVALID_PRICE_RANGE = 3;
+  INVALID_PARAMETERS = 4;
+  DATABASE_ERROR = 5;
+  SEARCH_FAILED = 6;
 }

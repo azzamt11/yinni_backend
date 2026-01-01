@@ -19,13 +19,22 @@ var _ = binding.EncodeURL
 
 const _ = http.SupportPackageIsVersion1
 
+const OperationProductGetFeaturedProducts = "/api.product.v1.Product/GetFeaturedProducts"
 const OperationProductGetProduct = "/api.product.v1.Product/GetProduct"
+const OperationProductGetProductByPID = "/api.product.v1.Product/GetProductByPID"
+const OperationProductGetSimilarProducts = "/api.product.v1.Product/GetSimilarProducts"
 const OperationProductListProducts = "/api.product.v1.Product/ListProducts"
 const OperationProductSearchProducts = "/api.product.v1.Product/SearchProducts"
 
 type ProductHTTPServer interface {
+	// GetFeaturedProducts Get featured products
+	GetFeaturedProducts(context.Context, *GetFeaturedProductsRequest) (*ListProductsReply, error)
 	// GetProduct Get product by ID
 	GetProduct(context.Context, *GetProductRequest) (*ProductInfo, error)
+	// GetProductByPID Get product by Flipkart PID
+	GetProductByPID(context.Context, *GetProductByPIDRequest) (*ProductInfo, error)
+	// GetSimilarProducts Get similar products
+	GetSimilarProducts(context.Context, *GetSimilarProductsRequest) (*ListProductsReply, error)
 	// ListProducts List products
 	ListProducts(context.Context, *ListProductsRequest) (*ListProductsReply, error)
 	// SearchProducts Search products
@@ -35,8 +44,11 @@ type ProductHTTPServer interface {
 func RegisterProductHTTPServer(s *http.Server, srv ProductHTTPServer) {
 	r := s.Route("/")
 	r.GET("/v1/products/{id}", _Product_GetProduct0_HTTP_Handler(srv))
+	r.GET("/v1/products/pid/{pid}", _Product_GetProductByPID0_HTTP_Handler(srv))
 	r.GET("/v1/products", _Product_ListProducts0_HTTP_Handler(srv))
 	r.GET("/v1/products/search", _Product_SearchProducts0_HTTP_Handler(srv))
+	r.GET("/v1/products/featured", _Product_GetFeaturedProducts0_HTTP_Handler(srv))
+	r.GET("/v1/products/{id}/similar", _Product_GetSimilarProducts0_HTTP_Handler(srv))
 }
 
 func _Product_GetProduct0_HTTP_Handler(srv ProductHTTPServer) func(ctx http.Context) error {
@@ -51,6 +63,28 @@ func _Product_GetProduct0_HTTP_Handler(srv ProductHTTPServer) func(ctx http.Cont
 		http.SetOperation(ctx, OperationProductGetProduct)
 		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
 			return srv.GetProduct(ctx, req.(*GetProductRequest))
+		})
+		out, err := h(ctx, &in)
+		if err != nil {
+			return err
+		}
+		reply := out.(*ProductInfo)
+		return ctx.Result(200, reply)
+	}
+}
+
+func _Product_GetProductByPID0_HTTP_Handler(srv ProductHTTPServer) func(ctx http.Context) error {
+	return func(ctx http.Context) error {
+		var in GetProductByPIDRequest
+		if err := ctx.BindQuery(&in); err != nil {
+			return err
+		}
+		if err := ctx.BindVars(&in); err != nil {
+			return err
+		}
+		http.SetOperation(ctx, OperationProductGetProductByPID)
+		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
+			return srv.GetProductByPID(ctx, req.(*GetProductByPIDRequest))
 		})
 		out, err := h(ctx, &in)
 		if err != nil {
@@ -99,9 +133,56 @@ func _Product_SearchProducts0_HTTP_Handler(srv ProductHTTPServer) func(ctx http.
 	}
 }
 
+func _Product_GetFeaturedProducts0_HTTP_Handler(srv ProductHTTPServer) func(ctx http.Context) error {
+	return func(ctx http.Context) error {
+		var in GetFeaturedProductsRequest
+		if err := ctx.BindQuery(&in); err != nil {
+			return err
+		}
+		http.SetOperation(ctx, OperationProductGetFeaturedProducts)
+		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
+			return srv.GetFeaturedProducts(ctx, req.(*GetFeaturedProductsRequest))
+		})
+		out, err := h(ctx, &in)
+		if err != nil {
+			return err
+		}
+		reply := out.(*ListProductsReply)
+		return ctx.Result(200, reply)
+	}
+}
+
+func _Product_GetSimilarProducts0_HTTP_Handler(srv ProductHTTPServer) func(ctx http.Context) error {
+	return func(ctx http.Context) error {
+		var in GetSimilarProductsRequest
+		if err := ctx.BindQuery(&in); err != nil {
+			return err
+		}
+		if err := ctx.BindVars(&in); err != nil {
+			return err
+		}
+		http.SetOperation(ctx, OperationProductGetSimilarProducts)
+		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
+			return srv.GetSimilarProducts(ctx, req.(*GetSimilarProductsRequest))
+		})
+		out, err := h(ctx, &in)
+		if err != nil {
+			return err
+		}
+		reply := out.(*ListProductsReply)
+		return ctx.Result(200, reply)
+	}
+}
+
 type ProductHTTPClient interface {
+	// GetFeaturedProducts Get featured products
+	GetFeaturedProducts(ctx context.Context, req *GetFeaturedProductsRequest, opts ...http.CallOption) (rsp *ListProductsReply, err error)
 	// GetProduct Get product by ID
 	GetProduct(ctx context.Context, req *GetProductRequest, opts ...http.CallOption) (rsp *ProductInfo, err error)
+	// GetProductByPID Get product by Flipkart PID
+	GetProductByPID(ctx context.Context, req *GetProductByPIDRequest, opts ...http.CallOption) (rsp *ProductInfo, err error)
+	// GetSimilarProducts Get similar products
+	GetSimilarProducts(ctx context.Context, req *GetSimilarProductsRequest, opts ...http.CallOption) (rsp *ListProductsReply, err error)
 	// ListProducts List products
 	ListProducts(ctx context.Context, req *ListProductsRequest, opts ...http.CallOption) (rsp *ListProductsReply, err error)
 	// SearchProducts Search products
@@ -116,12 +197,54 @@ func NewProductHTTPClient(client *http.Client) ProductHTTPClient {
 	return &ProductHTTPClientImpl{client}
 }
 
+// GetFeaturedProducts Get featured products
+func (c *ProductHTTPClientImpl) GetFeaturedProducts(ctx context.Context, in *GetFeaturedProductsRequest, opts ...http.CallOption) (*ListProductsReply, error) {
+	var out ListProductsReply
+	pattern := "/v1/products/featured"
+	path := binding.EncodeURL(pattern, in, true)
+	opts = append(opts, http.Operation(OperationProductGetFeaturedProducts))
+	opts = append(opts, http.PathTemplate(pattern))
+	err := c.cc.Invoke(ctx, "GET", path, nil, &out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
 // GetProduct Get product by ID
 func (c *ProductHTTPClientImpl) GetProduct(ctx context.Context, in *GetProductRequest, opts ...http.CallOption) (*ProductInfo, error) {
 	var out ProductInfo
 	pattern := "/v1/products/{id}"
 	path := binding.EncodeURL(pattern, in, true)
 	opts = append(opts, http.Operation(OperationProductGetProduct))
+	opts = append(opts, http.PathTemplate(pattern))
+	err := c.cc.Invoke(ctx, "GET", path, nil, &out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+// GetProductByPID Get product by Flipkart PID
+func (c *ProductHTTPClientImpl) GetProductByPID(ctx context.Context, in *GetProductByPIDRequest, opts ...http.CallOption) (*ProductInfo, error) {
+	var out ProductInfo
+	pattern := "/v1/products/pid/{pid}"
+	path := binding.EncodeURL(pattern, in, true)
+	opts = append(opts, http.Operation(OperationProductGetProductByPID))
+	opts = append(opts, http.PathTemplate(pattern))
+	err := c.cc.Invoke(ctx, "GET", path, nil, &out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+// GetSimilarProducts Get similar products
+func (c *ProductHTTPClientImpl) GetSimilarProducts(ctx context.Context, in *GetSimilarProductsRequest, opts ...http.CallOption) (*ListProductsReply, error) {
+	var out ListProductsReply
+	pattern := "/v1/products/{id}/similar"
+	path := binding.EncodeURL(pattern, in, true)
+	opts = append(opts, http.Operation(OperationProductGetSimilarProducts))
 	opts = append(opts, http.PathTemplate(pattern))
 	err := c.cc.Invoke(ctx, "GET", path, nil, &out, opts...)
 	if err != nil {

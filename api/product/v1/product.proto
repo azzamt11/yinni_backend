@@ -4,8 +4,8 @@ syntax = "proto3";
 package api.product.v1;
 
 import "google/api/annotations.proto";
-import "google/protobuf/empty.proto";
 import "google/protobuf/timestamp.proto";
+import "api/product/v1/product_error_reason.proto";
 
 option go_package = "yinni_backend/api/product/v1;v1";
 option java_multiple_files = true;
@@ -16,6 +16,13 @@ service Product {
   rpc GetProduct(GetProductRequest) returns (ProductInfo) {
     option (google.api.http) = {
       get: "/v1/products/{id}"
+    };
+  }
+
+  // Get product by Flipkart PID
+  rpc GetProductByPID(GetProductByPIDRequest) returns (ProductInfo) {
+    option (google.api.http) = {
+      get: "/v1/products/pid/{pid}"
     };
   }
 
@@ -32,10 +39,30 @@ service Product {
       get: "/v1/products/search"
     };
   }
+
+  // Get featured products
+  rpc GetFeaturedProducts(GetFeaturedProductsRequest) returns (ListProductsReply) {
+    option (google.api.http) = {
+      get: "/v1/products/featured"
+    };
+  }
+
+  // Get similar products
+  rpc GetSimilarProducts(GetSimilarProductsRequest) returns (ListProductsReply) {
+    option (google.api.http) = {
+      get: "/v1/products/{id}/similar"
+    };
+  }
 }
+
+// ========== REQUEST MESSAGES ==========
 
 message GetProductRequest {
   int64 id = 1;
+}
+
+message GetProductByPIDRequest {
+  string pid = 1;
 }
 
 message ListProductsRequest {
@@ -43,18 +70,36 @@ message ListProductsRequest {
   int32 page_size = 2;
   string category = 3;
   string brand = 4;
-  int32 min_price = 5;
-  int32 max_price = 6;
-  bool in_stock = 7;
-  string sort_by = 8;  // "price", "rating", "newest"
-  string sort_order = 9; // "asc", "desc"
+  string sub_category = 5;
+  int32 min_price = 6;
+  int32 max_price = 7;
+  float min_rating = 8;
+  bool in_stock = 9;
+  bool featured_only = 10;
+  string seller = 11;
+  string sort_by = 12;  // "price", "rating", "newest", "popular"
+  string sort_order = 13; // "asc", "desc"
+  string search_query = 14;
 }
 
 message SearchProductsRequest {
   string query = 1;
   int32 limit = 2;
   string category = 3;
+  PriceRange price_range = 4;
 }
+
+message GetFeaturedProductsRequest {
+  int32 limit = 1;
+  string category = 2;
+}
+
+message GetSimilarProductsRequest {
+  int64 id = 1;
+  int32 limit = 2;
+}
+
+// ========== RESPONSE MESSAGES ==========
 
 message ListProductsReply {
   repeated ProductInfo products = 1;
@@ -63,47 +108,61 @@ message ListProductsReply {
   int32 page_size = 4;
 }
 
+// ========== DATA MESSAGES ==========
+
 message ProductInfo {
   // Basic info
   int64 id = 1;
-  string title = 2;
-  string brand = 3;
-  string description = 4;
+  string original_id = 2;
+  string title = 3;
+  string brand = 4;
+  string description = 5;
   
   // Pricing
-  string actual_price = 5;
-  string selling_price = 6;
-  string discount = 7;
-  int32 price_numeric = 8;
+  string actual_price = 6;
+  string selling_price = 7;
+  string discount = 8;
+  int32 price_numeric = 9;
+  float discount_percentage = 10;
   
   // Categorization
-  string category = 9;
-  string sub_category = 10;
+  string category = 11;
+  string sub_category = 12;
   
   // Stock & Seller
-  bool out_of_stock = 11;
-  string seller = 12;
+  bool out_of_stock = 13;
+  string seller = 14;
   
   // Ratings
-  string average_rating = 13;
-  float rating_numeric = 14;
+  string average_rating = 15;
+  float rating_numeric = 16;
   
   // Media
-  repeated string images = 15;
-  string primary_image = 16;
+  repeated string images = 17;
+  string primary_image = 18;
   
   // Product details
-  map<string, string> product_details = 17;
+  map<string, string> product_details = 19;
   
-  // URLs
-  string url = 18;
-  string pid = 19;
+  // URLs and identifiers
+  string url = 20;
+  string pid = 21;
+  string style_code = 22;
   
-  // Metadata
-  google.protobuf.Timestamp created_at = 20;
-  google.protobuf.Timestamp updated_at = 21;
+  // Timestamps
+  google.protobuf.Timestamp crawled_at = 23;
+  google.protobuf.Timestamp created_at = 24;
+  google.protobuf.Timestamp updated_at = 25;
   
-  // Engagement
-  int32 view_count = 22;
-  int32 click_count = 23;
+  // Engagement metrics
+  int32 view_count = 26;
+  int32 click_count = 27;
+  bool featured = 28;
+}
+
+// ========== COMMON STRUCTURES ==========
+
+message PriceRange {
+  int32 min = 1;
+  int32 max = 2;
 }
