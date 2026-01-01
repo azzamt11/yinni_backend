@@ -2,39 +2,4 @@
 
 package ent
 
-import (
-	"yinni_backend/ent/schema"
-	"yinni_backend/ent/user"
-)
-
-// The init function reads all schema descriptors with runtime code
-// (default values, validators, hooks and policies) and stitches it
-// to their package variables.
-func init() {
-	userFields := schema.User{}.Fields()
-	_ = userFields
-	// userDescAge is the schema descriptor for age field.
-	userDescAge := userFields[0].Descriptor()
-	// user.AgeValidator is a validator for the "age" field. It is called by the builders before save.
-	user.AgeValidator = userDescAge.Validators[0].(func(int) error)
-	// userDescName is the schema descriptor for name field.
-	userDescName := userFields[1].Descriptor()
-	// user.DefaultName holds the default value on creation for the name field.
-	user.DefaultName = userDescName.Default.(string)
-	// userDescEmail is the schema descriptor for email field.
-	userDescEmail := userFields[2].Descriptor()
-	// user.DefaultEmail holds the default value on creation for the email field.
-	user.DefaultEmail = userDescEmail.Default.(string)
-	// userDescPhone is the schema descriptor for phone field.
-	userDescPhone := userFields[3].Descriptor()
-	// user.DefaultPhone holds the default value on creation for the phone field.
-	user.DefaultPhone = userDescPhone.Default.(string)
-	// userDescUsername is the schema descriptor for username field.
-	userDescUsername := userFields[4].Descriptor()
-	// user.DefaultUsername holds the default value on creation for the username field.
-	user.DefaultUsername = userDescUsername.Default.(string)
-	// userDescPassword is the schema descriptor for password field.
-	userDescPassword := userFields[5].Descriptor()
-	// user.DefaultPassword holds the default value on creation for the password field.
-	user.DefaultPassword = userDescPassword.Default.(string)
-}
+// The schema-stitching logic is generated in yinni_backend/ent/runtime/runtime.go

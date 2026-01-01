@@ -1,32 +1,21 @@
 package server
 
 import (
-	v1 "yinni_backend/api/auth/v1"
-	"yinni_backend/app/auth/internal/service"
-	"yinni_backend/internal/conf"
+	v1 "yinni_backend/api/helloworld/v1"
+	"yinni_backend/app/product/internal/conf"
+	"yinni_backend/app/product/internal/service"
 
 	"github.com/go-kratos/kratos/v2/log"
-	"github.com/go-kratos/kratos/v2/middleware/logging"
 	"github.com/go-kratos/kratos/v2/middleware/recovery"
 	"github.com/go-kratos/kratos/v2/transport/http"
-	"github.com/rs/cors"
 )
 
 // NewHTTPServer new an HTTP server.
-func NewHTTPServer(c *conf.Server, auth *service.AuthService, logger log.Logger) *http.Server {
-	corsHandler := cors.New(cors.Options{
-		AllowedOrigins:   []string{"*"},
-		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
-		AllowedHeaders:   []string{"*"},
-		AllowCredentials: true,
-	})
-
+func NewHTTPServer(c *conf.Server, greeter *service.GreeterService, logger log.Logger) *http.Server {
 	var opts = []http.ServerOption{
 		http.Middleware(
 			recovery.Recovery(),
-			logging.Server(logger),
 		),
-		http.Filter(corsHandler.Handler),
 	}
 	if c.Http.Network != "" {
 		opts = append(opts, http.Network(c.Http.Network))
@@ -38,6 +27,6 @@ func NewHTTPServer(c *conf.Server, auth *service.AuthService, logger log.Logger)
 		opts = append(opts, http.Timeout(c.Http.Timeout.AsDuration()))
 	}
 	srv := http.NewServer(opts...)
-	v1.RegisterAuthHTTPServer(srv, auth)
+	v1.RegisterGreeterHTTPServer(srv, greeter)
 	return srv
 }

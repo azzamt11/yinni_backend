@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"reflect"
 	"sync"
+	"yinni_backend/ent/product"
 	"yinni_backend/ent/user"
 
 	"entgo.io/ent"
@@ -73,7 +74,8 @@ var (
 func checkColumn(t, c string) error {
 	initCheck.Do(func() {
 		columnCheck = sql.NewColumnCheck(map[string]func(string) bool{
-			user.Table: user.ValidColumn,
+			product.Table: product.ValidColumn,
+			user.Table:    user.ValidColumn,
 		})
 	})
 	return columnCheck(t, c)

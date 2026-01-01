@@ -1,0 +1,109 @@
+// api/product/v1/product.proto
+syntax = "proto3";
+
+package api.product.v1;
+
+import "google/api/annotations.proto";
+import "google/protobuf/empty.proto";
+import "google/protobuf/timestamp.proto";
+
+option go_package = "yinni_backend/api/product/v1;v1";
+option java_multiple_files = true;
+option java_package = "api.product.v1";
+
+service Product {
+  // Get product by ID
+  rpc GetProduct(GetProductRequest) returns (ProductInfo) {
+    option (google.api.http) = {
+      get: "/v1/products/{id}"
+    };
+  }
+
+  // List products
+  rpc ListProducts(ListProductsRequest) returns (ListProductsReply) {
+    option (google.api.http) = {
+      get: "/v1/products"
+    };
+  }
+
+  // Search products
+  rpc SearchProducts(SearchProductsRequest) returns (ListProductsReply) {
+    option (google.api.http) = {
+      get: "/v1/products/search"
+    };
+  }
+}
+
+message GetProductRequest {
+  int64 id = 1;
+}
+
+message ListProductsRequest {
+  int32 page = 1;
+  int32 page_size = 2;
+  string category = 3;
+  string brand = 4;
+  int32 min_price = 5;
+  int32 max_price = 6;
+  bool in_stock = 7;
+  string sort_by = 8;  // "price", "rating", "newest"
+  string sort_order = 9; // "asc", "desc"
+}
+
+message SearchProductsRequest {
+  string query = 1;
+  int32 limit = 2;
+  string category = 3;
+}
+
+message ListProductsReply {
+  repeated ProductInfo products = 1;
+  int32 total = 2;
+  int32 page = 3;
+  int32 page_size = 4;
+}
+
+message ProductInfo {
+  // Basic info
+  int64 id = 1;
+  string title = 2;
+  string brand = 3;
+  string description = 4;
+  
+  // Pricing
+  string actual_price = 5;
+  string selling_price = 6;
+  string discount = 7;
+  int32 price_numeric = 8;
+  
+  // Categorization
+  string category = 9;
+  string sub_category = 10;
+  
+  // Stock & Seller
+  bool out_of_stock = 11;
+  string seller = 12;
+  
+  // Ratings
+  string average_rating = 13;
+  float rating_numeric = 14;
+  
+  // Media
+  repeated string images = 15;
+  string primary_image = 16;
+  
+  // Product details
+  map<string, string> product_details = 17;
+  
+  // URLs
+  string url = 18;
+  string pid = 19;
+  
+  // Metadata
+  google.protobuf.Timestamp created_at = 20;
+  google.protobuf.Timestamp updated_at = 21;
+  
+  // Engagement
+  int32 view_count = 22;
+  int32 click_count = 23;
+}

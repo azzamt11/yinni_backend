@@ -21,6 +21,26 @@ services:
       mysql:
         condition: service_healthy
 
+  # --- Product Microservice ---
+  product-service:
+    build:
+      context: .
+      dockerfile: app/product/Dockerfile
+    ports:
+      - "${PRODUCT_HTTP_PORT}:8000"
+      - "${PRODUCT_GRPC_PORT}:9000"
+    volumes:
+      - ./app/product/configs:/data/conf
+    environment:
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRE: ${JWT_EXPIRE}
+      PRODUCT_HTTP_PORT: ${PRODUCT_HTTP_PORT}
+      PRODUCT_GRPC_PORT: ${PRODUCT_GRPC_PORT}
+      DB_SOURCE: ${DB_SOURCE}
+    depends_on:
+      mysql:
+        condition: service_healthy
+
   # --- User Microservice ---
   user-service:
     build:

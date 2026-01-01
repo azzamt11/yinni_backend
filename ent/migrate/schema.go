@@ -8,6 +8,110 @@ import (
 )
 
 var (
+	// ProductsColumns holds the columns for the "products" table.
+	ProductsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "create_time", Type: field.TypeTime},
+		{Name: "update_time", Type: field.TypeTime},
+		{Name: "original_id", Type: field.TypeString, Unique: true},
+		{Name: "title", Type: field.TypeString},
+		{Name: "brand", Type: field.TypeString},
+		{Name: "description", Type: field.TypeString, Nullable: true, Size: 2147483647},
+		{Name: "actual_price", Type: field.TypeString, Nullable: true},
+		{Name: "selling_price", Type: field.TypeString, Nullable: true},
+		{Name: "discount", Type: field.TypeString, Nullable: true},
+		{Name: "category", Type: field.TypeString},
+		{Name: "sub_category", Type: field.TypeString},
+		{Name: "out_of_stock", Type: field.TypeBool, Default: false},
+		{Name: "seller", Type: field.TypeString, Nullable: true},
+		{Name: "average_rating", Type: field.TypeString, Nullable: true},
+		{Name: "images", Type: field.TypeJSON, Nullable: true},
+		{Name: "product_details", Type: field.TypeJSON, Nullable: true},
+		{Name: "url", Type: field.TypeString, Nullable: true},
+		{Name: "pid", Type: field.TypeString, Unique: true},
+		{Name: "style_code", Type: field.TypeString, Nullable: true},
+		{Name: "crawled_at", Type: field.TypeTime, Nullable: true},
+		{Name: "embedding", Type: field.TypeJSON, Nullable: true},
+		{Name: "search_keywords", Type: field.TypeJSON, Nullable: true},
+		{Name: "featured", Type: field.TypeBool, Default: false},
+		{Name: "view_count", Type: field.TypeInt, Default: 0},
+		{Name: "click_count", Type: field.TypeInt, Default: 0},
+		{Name: "price_numeric", Type: field.TypeInt, Nullable: true},
+		{Name: "rating_numeric", Type: field.TypeFloat64, Nullable: true},
+	}
+	// ProductsTable holds the schema information for the "products" table.
+	ProductsTable = &schema.Table{
+		Name:       "products",
+		Columns:    ProductsColumns,
+		PrimaryKey: []*schema.Column{ProductsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "product_pid",
+				Unique:  true,
+				Columns: []*schema.Column{ProductsColumns[18]},
+			},
+			{
+				Name:    "product_original_id",
+				Unique:  true,
+				Columns: []*schema.Column{ProductsColumns[3]},
+			},
+			{
+				Name:    "product_brand",
+				Unique:  false,
+				Columns: []*schema.Column{ProductsColumns[5]},
+			},
+			{
+				Name:    "product_category",
+				Unique:  false,
+				Columns: []*schema.Column{ProductsColumns[10]},
+			},
+			{
+				Name:    "product_sub_category",
+				Unique:  false,
+				Columns: []*schema.Column{ProductsColumns[11]},
+			},
+			{
+				Name:    "product_price_numeric",
+				Unique:  false,
+				Columns: []*schema.Column{ProductsColumns[26]},
+			},
+			{
+				Name:    "product_rating_numeric",
+				Unique:  false,
+				Columns: []*schema.Column{ProductsColumns[27]},
+			},
+			{
+				Name:    "product_out_of_stock",
+				Unique:  false,
+				Columns: []*schema.Column{ProductsColumns[12]},
+			},
+			{
+				Name:    "product_featured",
+				Unique:  false,
+				Columns: []*schema.Column{ProductsColumns[23]},
+			},
+			{
+				Name:    "product_category_sub_category",
+				Unique:  false,
+				Columns: []*schema.Column{ProductsColumns[10], ProductsColumns[11]},
+			},
+			{
+				Name:    "product_brand_category",
+				Unique:  false,
+				Columns: []*schema.Column{ProductsColumns[5], ProductsColumns[10]},
+			},
+			{
+				Name:    "product_category_price_numeric",
+				Unique:  false,
+				Columns: []*schema.Column{ProductsColumns[10], ProductsColumns[26]},
+			},
+			{
+				Name:    "product_category_rating_numeric",
+				Unique:  false,
+				Columns: []*schema.Column{ProductsColumns[10], ProductsColumns[27]},
+			},
+		},
+	}
 	// UsersColumns holds the columns for the "users" table.
 	UsersColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
@@ -26,6 +130,7 @@ var (
 	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
+		ProductsTable,
 		UsersTable,
 	}
 )

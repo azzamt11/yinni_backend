@@ -2,7 +2,116 @@
 
 package runtime
 
-// The schema-stitching logic is generated in yinni_backend/ent/runtime.go
+import (
+	"time"
+	"yinni_backend/ent/product"
+	"yinni_backend/ent/schema"
+	"yinni_backend/ent/user"
+)
+
+// The init function reads all schema descriptors with runtime code
+// (default values, validators, hooks and policies) and stitches it
+// to their package variables.
+func init() {
+	productMixin := schema.Product{}.Mixin()
+	productHooks := schema.Product{}.Hooks()
+	product.Hooks[0] = productHooks[0]
+	product.Hooks[1] = productHooks[1]
+	productMixinFields0 := productMixin[0].Fields()
+	_ = productMixinFields0
+	productFields := schema.Product{}.Fields()
+	_ = productFields
+	// productDescCreateTime is the schema descriptor for create_time field.
+	productDescCreateTime := productMixinFields0[0].Descriptor()
+	// product.DefaultCreateTime holds the default value on creation for the create_time field.
+	product.DefaultCreateTime = productDescCreateTime.Default.(func() time.Time)
+	// productDescUpdateTime is the schema descriptor for update_time field.
+	productDescUpdateTime := productMixinFields0[1].Descriptor()
+	// product.DefaultUpdateTime holds the default value on creation for the update_time field.
+	product.DefaultUpdateTime = productDescUpdateTime.Default.(func() time.Time)
+	// product.UpdateDefaultUpdateTime holds the default value on update for the update_time field.
+	product.UpdateDefaultUpdateTime = productDescUpdateTime.UpdateDefault.(func() time.Time)
+	// productDescTitle is the schema descriptor for title field.
+	productDescTitle := productFields[1].Descriptor()
+	// product.TitleValidator is a validator for the "title" field. It is called by the builders before save.
+	product.TitleValidator = productDescTitle.Validators[0].(func(string) error)
+	// productDescBrand is the schema descriptor for brand field.
+	productDescBrand := productFields[2].Descriptor()
+	// product.BrandValidator is a validator for the "brand" field. It is called by the builders before save.
+	product.BrandValidator = productDescBrand.Validators[0].(func(string) error)
+	// productDescCategory is the schema descriptor for category field.
+	productDescCategory := productFields[7].Descriptor()
+	// product.CategoryValidator is a validator for the "category" field. It is called by the builders before save.
+	product.CategoryValidator = productDescCategory.Validators[0].(func(string) error)
+	// productDescSubCategory is the schema descriptor for sub_category field.
+	productDescSubCategory := productFields[8].Descriptor()
+	// product.SubCategoryValidator is a validator for the "sub_category" field. It is called by the builders before save.
+	product.SubCategoryValidator = productDescSubCategory.Validators[0].(func(string) error)
+	// productDescOutOfStock is the schema descriptor for out_of_stock field.
+	productDescOutOfStock := productFields[9].Descriptor()
+	// product.DefaultOutOfStock holds the default value on creation for the out_of_stock field.
+	product.DefaultOutOfStock = productDescOutOfStock.Default.(bool)
+	// productDescFeatured is the schema descriptor for featured field.
+	productDescFeatured := productFields[20].Descriptor()
+	// product.DefaultFeatured holds the default value on creation for the featured field.
+	product.DefaultFeatured = productDescFeatured.Default.(bool)
+	// productDescViewCount is the schema descriptor for view_count field.
+	productDescViewCount := productFields[21].Descriptor()
+	// product.DefaultViewCount holds the default value on creation for the view_count field.
+	product.DefaultViewCount = productDescViewCount.Default.(int)
+	// productDescClickCount is the schema descriptor for click_count field.
+	productDescClickCount := productFields[22].Descriptor()
+	// product.DefaultClickCount holds the default value on creation for the click_count field.
+	product.DefaultClickCount = productDescClickCount.Default.(int)
+	// productDescPriceNumeric is the schema descriptor for price_numeric field.
+	productDescPriceNumeric := productFields[23].Descriptor()
+	// product.PriceNumericValidator is a validator for the "price_numeric" field. It is called by the builders before save.
+	product.PriceNumericValidator = productDescPriceNumeric.Validators[0].(func(int) error)
+	// productDescRatingNumeric is the schema descriptor for rating_numeric field.
+	productDescRatingNumeric := productFields[24].Descriptor()
+	// product.RatingNumericValidator is a validator for the "rating_numeric" field. It is called by the builders before save.
+	product.RatingNumericValidator = func() func(float64) error {
+		validators := productDescRatingNumeric.Validators
+		fns := [...]func(float64) error{
+			validators[0].(func(float64) error),
+			validators[1].(func(float64) error),
+		}
+		return func(rating_numeric float64) error {
+			for _, fn := range fns {
+				if err := fn(rating_numeric); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
+	userFields := schema.User{}.Fields()
+	_ = userFields
+	// userDescAge is the schema descriptor for age field.
+	userDescAge := userFields[0].Descriptor()
+	// user.AgeValidator is a validator for the "age" field. It is called by the builders before save.
+	user.AgeValidator = userDescAge.Validators[0].(func(int) error)
+	// userDescName is the schema descriptor for name field.
+	userDescName := userFields[1].Descriptor()
+	// user.DefaultName holds the default value on creation for the name field.
+	user.DefaultName = userDescName.Default.(string)
+	// userDescEmail is the schema descriptor for email field.
+	userDescEmail := userFields[2].Descriptor()
+	// user.DefaultEmail holds the default value on creation for the email field.
+	user.DefaultEmail = userDescEmail.Default.(string)
+	// userDescPhone is the schema descriptor for phone field.
+	userDescPhone := userFields[3].Descriptor()
+	// user.DefaultPhone holds the default value on creation for the phone field.
+	user.DefaultPhone = userDescPhone.Default.(string)
+	// userDescUsername is the schema descriptor for username field.
+	userDescUsername := userFields[4].Descriptor()
+	// user.DefaultUsername holds the default value on creation for the username field.
+	user.DefaultUsername = userDescUsername.Default.(string)
+	// userDescPassword is the schema descriptor for password field.
+	userDescPassword := userFields[5].Descriptor()
+	// user.DefaultPassword holds the default value on creation for the password field.
+	user.DefaultPassword = userDescPassword.Default.(string)
+}
 
 const (
 	Version = "v0.14.5"                                         // Version of ent codegen.
