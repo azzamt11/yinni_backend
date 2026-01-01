@@ -86,27 +86,52 @@ func (s *ProductService) ListProducts(ctx context.Context, req *pb.ListProductsR
 func (s *ProductService) SearchProducts(ctx context.Context, req *pb.SearchProductsRequest) (*pb.ListProductsReply, error) {
 	s.log.WithContext(ctx).Infof("SearchProducts called: query=%s, limit=%d", req.Query, req.Limit)
 
-	params := &biz.ListProductsParams{
-		PageSize:    req.Limit,
-		Category:    req.Category,
-		SearchQuery: req.Query,
+	limit := int(req.Limit)
+	if limit == 0 {
+		limit = 10
+	}
+	if limit > 100 {
+		limit = 100
 	}
 
-	// Use PriceRange if provided
+	var products []*biz.Product
+	var err error
+
+	// Convert PriceRange
+	var priceRange *biz.PriceRange
 	if req.PriceRange != nil {
-		params.MinPrice = req.PriceRange.Min
-		params.MaxPrice = req.PriceRange.Max
+		priceRange = &biz.PriceRange{
+			Min: req.PriceRange.Min,
+			Max: req.PriceRange.Max,
+		}
 	}
 
-	products, total, err := s.uc.SearchProducts(ctx, req.Query, params)
+	// Try RAG search if embeddings are enabled
+	products, err = s.uc.RAGSearch(ctx, req.Query, limit, req.Category, priceRange)
 	if err != nil {
-		s.log.WithContext(ctx).Errorf("SearchProducts failed: %v", err)
-		return nil, err
+		s.log.WithContext(ctx).Warnf("RAG search failed: %v, falling back to traditional search", err)
+		// Fallback to traditional search
+		params := &biz.ListProductsParams{
+			PageSize:    int32(limit),
+			Category:    req.Category,
+			SearchQuery: req.Query,
+		}
+
+		if priceRange != nil {
+			params.MinPrice = priceRange.Min
+			params.MaxPrice = priceRange.Max
+		}
+
+		products, _, err = s.uc.SearchProducts(ctx, req.Query, params)
+		if err != nil {
+			s.log.WithContext(ctx).Errorf("Traditional search failed: %v", err)
+			return nil, err
+		}
 	}
 
 	return &pb.ListProductsReply{
 		Products: s.convertToProductList(products),
-		Total:    int32(total),
+		Total:    int32(len(products)),
 		PageSize: req.Limit,
 	}, nil
 }
@@ -114,7 +139,15 @@ func (s *ProductService) SearchProducts(ctx context.Context, req *pb.SearchProdu
 func (s *ProductService) GetFeaturedProducts(ctx context.Context, req *pb.GetFeaturedProductsRequest) (*pb.ListProductsReply, error) {
 	s.log.WithContext(ctx).Infof("GetFeaturedProducts called: limit=%d, category=%s", req.Limit, req.Category)
 
-	products, err := s.uc.GetFeaturedProducts(ctx, int(req.Limit), req.Category)
+	limit := int(req.Limit)
+	if limit == 0 {
+		limit = 10
+	}
+	if limit > 100 {
+		limit = 100
+	}
+
+	products, err := s.uc.GetFeaturedProducts(ctx, limit, req.Category)
 	if err != nil {
 		s.log.WithContext(ctx).Errorf("GetFeaturedProducts failed: %v", err)
 		return nil, err
@@ -129,7 +162,15 @@ func (s *ProductService) GetFeaturedProducts(ctx context.Context, req *pb.GetFea
 func (s *ProductService) GetSimilarProducts(ctx context.Context, req *pb.GetSimilarProductsRequest) (*pb.ListProductsReply, error) {
 	s.log.WithContext(ctx).Infof("GetSimilarProducts called: id=%d, limit=%d", req.Id, req.Limit)
 
-	products, err := s.uc.GetSimilarProducts(ctx, req.Id, int(req.Limit))
+	limit := int(req.Limit)
+	if limit == 0 {
+		limit = 10
+	}
+	if limit > 50 {
+		limit = 50
+	}
+
+	products, err := s.uc.GetSimilarProducts(ctx, req.Id, limit)
 	if err != nil {
 		s.log.WithContext(ctx).Errorf("GetSimilarProducts failed: %v", err)
 		return nil, err

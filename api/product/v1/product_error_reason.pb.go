@@ -26,13 +26,14 @@ const (
 type ErrorReason int32
 
 const (
-	ErrorReason_PRODUCT_UNSPECIFIED ErrorReason = 0
-	ErrorReason_PRODUCT_NOT_FOUND   ErrorReason = 1
-	ErrorReason_INVALID_PRODUCT_ID  ErrorReason = 2
-	ErrorReason_INVALID_PRICE_RANGE ErrorReason = 3
-	ErrorReason_INVALID_PARAMETERS  ErrorReason = 4
-	ErrorReason_DATABASE_ERROR      ErrorReason = 5
-	ErrorReason_SEARCH_FAILED       ErrorReason = 6
+	ErrorReason_PRODUCT_UNSPECIFIED      ErrorReason = 0
+	ErrorReason_PRODUCT_NOT_FOUND        ErrorReason = 1
+	ErrorReason_INVALID_PRODUCT_ID       ErrorReason = 2
+	ErrorReason_INVALID_PRICE_RANGE      ErrorReason = 3
+	ErrorReason_INVALID_PARAMETERS       ErrorReason = 4
+	ErrorReason_DATABASE_ERROR           ErrorReason = 5
+	ErrorReason_SEARCH_FAILED            ErrorReason = 6
+	ErrorReason_EMBEDDING_IS_NOT_ENABLED ErrorReason = 7
 )
 
 // Enum value maps for ErrorReason.
@@ -45,15 +46,17 @@ var (
 		4: "INVALID_PARAMETERS",
 		5: "DATABASE_ERROR",
 		6: "SEARCH_FAILED",
+		7: "EMBEDDING_IS_NOT_ENABLED",
 	}
 	ErrorReason_value = map[string]int32{
-		"PRODUCT_UNSPECIFIED": 0,
-		"PRODUCT_NOT_FOUND":   1,
-		"INVALID_PRODUCT_ID":  2,
-		"INVALID_PRICE_RANGE": 3,
-		"INVALID_PARAMETERS":  4,
-		"DATABASE_ERROR":      5,
-		"SEARCH_FAILED":       6,
+		"PRODUCT_UNSPECIFIED":      0,
+		"PRODUCT_NOT_FOUND":        1,
+		"INVALID_PRODUCT_ID":       2,
+		"INVALID_PRICE_RANGE":      3,
+		"INVALID_PARAMETERS":       4,
+		"DATABASE_ERROR":           5,
+		"SEARCH_FAILED":            6,
+		"EMBEDDING_IS_NOT_ENABLED": 7,
 	}
 )
 
@@ -88,7 +91,7 @@ var File_api_product_v1_product_error_reason_proto protoreflect.FileDescriptor
 
 const file_api_product_v1_product_error_reason_proto_rawDesc = "" +
 	"\n" +
-	")api/product/v1/product_error_reason.proto\x12\x0eapi.product.v1*\xad\x01\n" +
+	")api/product/v1/product_error_reason.proto\x12\x0eapi.product.v1*\xcb\x01\n" +
 	"\vErrorReason\x12\x17\n" +
 	"\x13PRODUCT_UNSPECIFIED\x10\x00\x12\x15\n" +
 	"\x11PRODUCT_NOT_FOUND\x10\x01\x12\x16\n" +
@@ -96,7 +99,8 @@ const file_api_product_v1_product_error_reason_proto_rawDesc = "" +
 	"\x13INVALID_PRICE_RANGE\x10\x03\x12\x16\n" +
 	"\x12INVALID_PARAMETERS\x10\x04\x12\x12\n" +
 	"\x0eDATABASE_ERROR\x10\x05\x12\x11\n" +
-	"\rSEARCH_FAILED\x10\x06B3\n" +
+	"\rSEARCH_FAILED\x10\x06\x12\x1c\n" +
+	"\x18EMBEDDING_IS_NOT_ENABLED\x10\aB3\n" +
 	"\x0eapi.product.v1P\x01Z\x1fyinni_backend/api/product/v1;v1b\x06proto3"
 
 var (

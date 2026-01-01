@@ -2,27 +2,45 @@ package data
 
 import (
 	"context"
+	"fmt"
 	"strings"
 
 	"yinni_backend/app/product/internal/biz"
 	"yinni_backend/ent"
 	"yinni_backend/ent/product"
+	"yinni_backend/internal/conf"
 
 	"github.com/go-kratos/kratos/v2/log"
+	openai "github.com/sashabaranov/go-openai"
 )
 
 type productRepo struct {
-	data *Data
-	log  *log.Helper
+	data     *Data
+	log      *log.Helper
+	aiClient *openai.Client
 }
 
 // NewProductRepo creates a new Product repository.
-func NewProductRepo(data *Data, logger log.Logger) biz.ProductRepo {
+func NewProductRepo(data *Data, cfg *conf.Embeddings, logger log.Logger) biz.ProductRepo {
+	var aiClient *openai.Client
+
+	// Initialize AI client if embeddings are enabled
+	if cfg != nil && cfg.ApiKey != "" {
+		openaiConfig := openai.DefaultConfig(cfg.ApiKey)
+		if cfg.BaseUrl != "" {
+			openaiConfig.BaseURL = cfg.BaseUrl
+		}
+		aiClient = openai.NewClientWithConfig(openaiConfig)
+	}
+
 	return &productRepo{
-		data: data,
-		log:  log.NewHelper(logger),
+		data:     data,
+		aiClient: aiClient,
+		log:      log.NewHelper(logger),
 	}
 }
+
+// ========== BASIC CRUD OPERATIONS ==========
 
 func (r *productRepo) Create(ctx context.Context, p *biz.Product) (*biz.Product, error) {
 	builder := r.data.ent.Product.Create().
@@ -149,6 +167,12 @@ func (r *productRepo) Update(ctx context.Context, p *biz.Product) (*biz.Product,
 	}
 	if p.Featured {
 		builder.SetFeatured(p.Featured)
+	}
+	if p.Embedding != nil {
+		builder.SetEmbedding(p.Embedding)
+	}
+	if p.SearchKeywords != nil {
+		builder.SetSearchKeywords(p.SearchKeywords)
 	}
 
 	row, err := builder.Save(ctx)
@@ -471,10 +495,200 @@ func (r *productRepo) IncrementClickCount(ctx context.Context, id int64) error {
 	return err
 }
 
+// ========== EMBEDDING OPERATIONS ==========
+
+// GenerateEmbedding generates embedding for a product or query
+func (r *productRepo) GenerateEmbedding(ctx context.Context, p *biz.Product) ([]float32, error) {
+	if r.aiClient == nil {
+		return nil, biz.ErrEmbeddingsNotEnabled
+	}
+
+	// Generate text representation
+	text := ""
+	if p.Description != "" {
+		// For products with description
+		text = fmt.Sprintf("%s %s %s %s", p.Title, p.Brand, p.Category, p.Description)
+	} else {
+		// For simple queries
+		text = fmt.Sprintf("%s %s", p.Title, p.Brand)
+	}
+
+	if len(text) > 8000 {
+		text = text[:8000]
+	}
+
+	// Call OpenAI/DeepSeek API
+	resp, err := r.aiClient.CreateEmbeddings(ctx, openai.EmbeddingRequest{
+		Model: openai.AdaEmbeddingV2,
+		Input: []string{text},
+	})
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to create embedding: %w", err)
+	}
+
+	if len(resp.Data) == 0 {
+		return nil, fmt.Errorf("no embedding data returned")
+	}
+
+	return resp.Data[0].Embedding, nil
+}
+
+// SearchSimilarProducts searches products using vector similarity
+func (r *productRepo) SearchSimilarProducts(ctx context.Context, queryEmbedding []float32, limit int, category string, priceRange *biz.PriceRange) ([]*biz.Product, error) {
+	if r.aiClient == nil {
+		return nil, biz.ErrEmbeddingsNotEnabled
+	}
+
+	// Get all products with embeddings
+	query := r.data.ent.Product.Query().
+		Where(product.EmbeddingNotNil()).
+		Limit(1000) // Limit for in-memory similarity calculation
+
+	if category != "" {
+		query = query.Where(product.Category(category))
+	}
+
+	if priceRange != nil {
+		if priceRange.Min > 0 {
+			query = query.Where(product.PriceNumericGTE(int(priceRange.Min)))
+		}
+		if priceRange.Max > 0 {
+			query = query.Where(product.PriceNumericLTE(int(priceRange.Max)))
+		}
+	}
+
+	products, err := query.All(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	// Calculate similarity scores
+	type scoredProduct struct {
+		product *biz.Product
+		score   float32
+	}
+
+	scoredProducts := make([]scoredProduct, 0, len(products))
+
+	for _, p := range products {
+		if len(p.Embedding) == 0 || len(p.Embedding) != len(queryEmbedding) {
+			continue
+		}
+
+		// Convert to float32 slice
+		embedding := make([]float32, len(p.Embedding))
+		for i, v := range p.Embedding {
+			embedding[i] = float32(v)
+		}
+
+		score := biz.CosineSimilarity(embedding, queryEmbedding)
+		if score > 0.3 { // Threshold
+			scoredProducts = append(scoredProducts, scoredProduct{
+				product: convertEntToBiz(p),
+				score:   score,
+			})
+		}
+	}
+
+	// Sort by similarity score (descending)
+	for i := 0; i < len(scoredProducts); i++ {
+		for j := i + 1; j < len(scoredProducts); j++ {
+			if scoredProducts[i].score < scoredProducts[j].score {
+				scoredProducts[i], scoredProducts[j] = scoredProducts[j], scoredProducts[i]
+			}
+		}
+	}
+
+	// Return top results
+	resultCount := limit
+	if len(scoredProducts) < limit {
+		resultCount = len(scoredProducts)
+	}
+
+	results := make([]*biz.Product, resultCount)
+	for i := 0; i < resultCount; i++ {
+		results[i] = scoredProducts[i].product
+	}
+
+	return results, nil
+}
+
+// UpdateProductEmbedding updates embedding for a single product
+func (r *productRepo) UpdateProductEmbedding(ctx context.Context, id int64, embedding []float32) error {
+	_, err := r.data.ent.Product.
+		UpdateOneID(int(id)).
+		SetEmbedding(embedding).
+		Save(ctx)
+
+	return err
+}
+
+// BatchUpdateEmbeddings updates embeddings for multiple products
+func (r *productRepo) BatchUpdateEmbeddings(ctx context.Context, productEmbeddings map[int64][]float32) error {
+	for productID, embedding := range productEmbeddings {
+		if err := r.UpdateProductEmbedding(ctx, productID, embedding); err != nil {
+			r.log.Errorf("Failed to update embedding for product %d: %v", productID, err)
+			continue
+		}
+	}
+
+	return nil
+}
+
+// GetProductsWithoutEmbeddings returns products that don't have embeddings
+func (r *productRepo) GetProductsWithoutEmbeddings(ctx context.Context, limit int) ([]*biz.Product, error) {
+	rows, err := r.data.ent.Product.
+		Query().
+		Where(product.EmbeddingIsNil()).
+		Limit(limit).
+		All(ctx)
+
+	if err != nil {
+		return nil, err
+	}
+
+	products := make([]*biz.Product, 0, len(rows))
+	for _, row := range rows {
+		products = append(products, convertEntToBiz(row))
+	}
+
+	return products, nil
+}
+
+// GetProductsWithEmbeddings returns products that have embeddings
+func (r *productRepo) GetProductsWithEmbeddings(ctx context.Context, limit int) ([]*biz.Product, error) {
+	rows, err := r.data.ent.Product.
+		Query().
+		Where(product.EmbeddingNotNil()).
+		Limit(limit).
+		All(ctx)
+
+	if err != nil {
+		return nil, err
+	}
+
+	products := make([]*biz.Product, 0, len(rows))
+	for _, row := range rows {
+		products = append(products, convertEntToBiz(row))
+	}
+
+	return products, nil
+}
+
 // Helper function to convert ent.Product to biz.Product
 func convertEntToBiz(p *ent.Product) *biz.Product {
 	if p == nil {
 		return nil
+	}
+
+	// Convert embedding from []float64 to []float32
+	var embedding []float32
+	if p.Embedding != nil {
+		embedding = make([]float32, len(p.Embedding))
+		for i, v := range p.Embedding {
+			embedding[i] = float32(v)
+		}
 	}
 
 	return &biz.Product{
@@ -504,7 +718,7 @@ func convertEntToBiz(p *ent.Product) *biz.Product {
 		ViewCount:      p.ViewCount,
 		ClickCount:     p.ClickCount,
 		Featured:       p.Featured,
-		Embedding:      p.Embedding,
+		Embedding:      embedding,
 		SearchKeywords: p.SearchKeywords,
 	}
 }
