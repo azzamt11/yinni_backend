@@ -14,3 +14,10 @@ data:
   database:
     driver: mysql
     source: ${DB_SOURCE}
+
+deepseek:
+  api_key: ${DEEPSEEK_API_KEY}
+  embedding_url: ${DEEPSEEK_EMBEDDING_URL}
+  chat_url: ${DEEPSEEK_CHAT_URL}
+  embedding_model: ${DEEPSEEK_EMBEDDING_MODEL}
+  chat_model: ${DEEPSEEK_CHAT_MODEL}
