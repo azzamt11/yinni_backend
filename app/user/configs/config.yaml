@@ -13,4 +13,4 @@ auth:
 data:
   database:
     driver: mysql
-    source: ${DB_SOURCE}
+    source: root:root@tcp(mysql:3306)/yinni_db?parseTime=true&charset=utf8mb4&loc=Local

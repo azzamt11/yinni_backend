@@ -14,7 +14,7 @@ message Bootstrap {
   Server server = 1;
   Data data = 2;
   Auth auth = 3;
-  Embeddings embeddings = 4;
+  Embeddings embeddings = 4;  // Changed back to Embeddings
 }
 
 message Server {
@@ -51,7 +51,7 @@ message Embeddings {
   string api_key = 1;
   string model = 2;
   int32 batch_size = 3;
-  string base_url = 4;  // For DeepSeek or other OpenAI-compatible APIs
+  string base_url = 4;
   int32 timeout_seconds = 5;
   int32 max_retries = 6;
 }

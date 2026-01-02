@@ -1,5 +1,5 @@
 # ---------- Build stage ----------
-FROM golang:1.24 AS builder
+FROM golang:1.25.5 AS builder
 
 WORKDIR /src
 COPY . .
@@ -26,5 +26,5 @@ EXPOSE 8000
 EXPOSE 9000
 VOLUME /data/conf
 
-CMD ["./server", "-conf", "/data/conf/config.runtime.yaml"]
+CMD ["./server", "-conf", "/data/conf"]
 

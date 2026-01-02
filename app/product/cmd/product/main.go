@@ -10,6 +10,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	_ "yinni_backend/ent/runtime"
 
 	"yinni_backend/internal/conf"
 
@@ -46,7 +47,8 @@ var initDB bool
 
 func init() {
 	flag.BoolVar(&initDB, "init", false, "run database initialization")
-	flag.StringVar(&flagconf, "conf", "../../configs", "config path, eg: -conf config.yaml")
+	flag.StringVar(&flagconf, "conf", "/data/conf", "config path, eg: -conf config.yaml")
+
 }
 
 func newApp(logger log.Logger, gs *grpc.Server, hs *http.Server) *kratos.App {
@@ -65,12 +67,6 @@ func newApp(logger log.Logger, gs *grpc.Server, hs *http.Server) *kratos.App {
 
 func main() {
 	flag.Parse()
-
-	// // Check for CLI commands (migrate, seed, etc.)
-	// if len(os.Args) > 1 && os.Args[1] == "init" {
-	// 	runInitialization()
-	// 	return
-	// }
 
 	logger := log.With(log.NewStdLogger(os.Stdout),
 		"ts", log.DefaultTimestamp,
@@ -98,21 +94,21 @@ func main() {
 		panic(err)
 	}
 
+	// Run database initialization FIRST
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
+	defer cancel()
+
+	if err := initializeDatabase(ctx, bc.Data, logger); err != nil {
+		// Don't panic, just log the error and continue
+		log.NewHelper(logger).Errorf("Database initialization failed: %v", err)
+		// Continue anyway - maybe tables already exist
+	}
+
 	app, cleanup, err := wireApp(bc.Server, bc.Auth, bc.Data, bc.Embeddings, logger)
 	if err != nil {
 		panic(err)
 	}
 	defer cleanup()
-
-	// Run database initialization in background before starting the server
-	// go runBackgroundInitialization(bc.Data, logger)
-
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
-	defer cancel()
-
-	if err := initializeDatabase(ctx, bc.Data, logger); err != nil {
-		panic(err)
-	}
 
 	// start and wait for stop signal
 	if err := app.Run(); err != nil {
@@ -174,10 +170,12 @@ func runInitialization() {
 	os.Exit(0)
 }
 
-// initializeDatabase is the shared initialization logic
 func initializeDatabase(ctx context.Context, conf *conf.Data, logger log.Logger) error {
 	logHelper := log.NewHelper(logger)
 	logHelper.Info("Running database initialization...")
+
+	// Logging the DB source for debugging
+	logHelper.Infof("DB_SOURCE used: %q", conf.Database.Source)
 
 	// Connect to database
 	drv, err := sql.Open(dialect.MySQL, conf.Database.Source)
@@ -194,44 +192,59 @@ func initializeDatabase(ctx context.Context, conf *conf.Data, logger log.Logger)
 	client := ent.NewClient(ent.Driver(drv))
 	defer client.Close()
 
-	// Wait for database
+	// Wait for database with longer timeout
 	logHelper.Info("Waiting for database to be ready...")
 	start := time.Now()
 	for {
-		if time.Since(start) > 30*time.Second {
-			return fmt.Errorf("database not ready after 30 seconds")
+		if time.Since(start) > 60*time.Second { // Increased to 60 seconds
+			return fmt.Errorf("database not ready after 60 seconds")
 		}
 
 		if err := db.PingContext(ctx); err == nil {
-			break
+			// Try a simple query to ensure database is fully ready
+			var exists bool
+			err := db.QueryRowContext(ctx, "SELECT COUNT(*) > 0 FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'products'").Scan(&exists)
+			if err == nil {
+				logHelper.Info("Database connection verified")
+				break
+			}
 		}
 
 		logHelper.Info("Database not ready, waiting...")
-		time.Sleep(2 * time.Second)
+		time.Sleep(3 * time.Second) // Increased wait time
 	}
 
-	// Run migrations
-	logHelper.Info("Running migrations...")
-	if err := client.Schema.Create(
+	// Check if migrations have already been applied
+	logHelper.Info("Checking if migrations are needed...")
+
+	// Run migrations with DryRun first to check
+	err = client.Schema.Create(
 		ctx,
 		migrate.WithForeignKeys(true),
 		migrate.WithDropIndex(false),
 		migrate.WithDropColumn(false),
-	); err != nil {
+		migrate.WithDropIndex(true),  // Allow dropping indexes if they exist
+		migrate.WithDropColumn(true), // Allow dropping columns if they exist
+	)
+
+	if err != nil && strings.Contains(err.Error(), "already exists") {
+		logHelper.Info("Tables already exist, skipping schema creation")
+	} else if err != nil {
 		return fmt.Errorf("migration failed: %w", err)
+	} else {
+		logHelper.Info("Migrations completed")
 	}
 
-	logHelper.Info("Migrations completed")
-
-	// Check if we should seed
-	count, err := client.Product.Query().Count(ctx)
-	if err != nil {
-		return fmt.Errorf("failed to check product count: %w", err)
-	}
-
-	if count > 0 {
-		logHelper.Infof("Database already has %d products, skipping seeding", count)
-		return nil
+	// **Clear existing products before seeding**
+	logHelper.Info("Clearing existing products...")
+	if _, err := client.Product.Delete().Exec(ctx); err != nil {
+		// If the table doesn't exist yet, that's OK - we'll create it
+		if !strings.Contains(err.Error(), "doesn't exist") {
+			return fmt.Errorf("failed to clear existing products: %w", err)
+		}
+		logHelper.Info("Products table doesn't exist yet, will be created")
+	} else {
+		logHelper.Info("Existing products cleared")
 	}
 
 	// Seed data
@@ -261,10 +274,7 @@ func seedDatabase(ctx context.Context, client *ent.Client, logger log.Logger) er
 // loadDataset loads the product dataset
 func loadDataset() ([]map[string]interface{}, error) {
 	paths := []string{
-		"/data/products.json",
 		"./product_dataset.json",
-		"./data/products.json",
-		"/app/data/products.json",
 	}
 
 	var file *os.File

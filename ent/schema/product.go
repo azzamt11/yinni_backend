@@ -88,6 +88,7 @@ func (Product) Fields() []ent.Field {
 		// URLs and identifiers
 		field.String("url").
 			Optional().
+			MaxLen(2048).
 			Comment("Product URL"),
 		field.String("pid").
 			Unique().

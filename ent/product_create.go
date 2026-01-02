@@ -434,6 +434,11 @@ func (_c *ProductCreate) check() error {
 	if _, ok := _c.mutation.OutOfStock(); !ok {
 		return &ValidationError{Name: "out_of_stock", err: errors.New(`ent: missing required field "Product.out_of_stock"`)}
 	}
+	if v, ok := _c.mutation.URL(); ok {
+		if err := product.URLValidator(v); err != nil {
+			return &ValidationError{Name: "url", err: fmt.Errorf(`ent: validator failed for field "Product.url": %w`, err)}
+		}
+	}
 	if _, ok := _c.mutation.Pid(); !ok {
 		return &ValidationError{Name: "pid", err: errors.New(`ent: missing required field "Product.pid"`)}
 	}

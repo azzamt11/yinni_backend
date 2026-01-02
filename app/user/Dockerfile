@@ -1,5 +1,5 @@
 # ---------- Build stage ----------
-FROM golang:1.24 AS builder
+FROM golang:1.25.5 AS builder
 
 WORKDIR /src
 COPY . .
@@ -22,8 +22,8 @@ COPY --from=builder /src/bin/user /app/server
 
 RUN chmod +x /app/server
 
-EXPOSE 8000
-EXPOSE 9000
+EXPOSE 8001
+EXPOSE 9001
 VOLUME /data/conf
 
-CMD ["./server", "-conf", "/data/conf/config.runtime.yaml"]
+CMD ["./server", "-conf", "/data/conf"]

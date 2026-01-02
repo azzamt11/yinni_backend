@@ -564,6 +564,11 @@ func (_u *ProductUpdate) check() error {
 			return &ValidationError{Name: "sub_category", err: fmt.Errorf(`ent: validator failed for field "Product.sub_category": %w`, err)}
 		}
 	}
+	if v, ok := _u.mutation.URL(); ok {
+		if err := product.URLValidator(v); err != nil {
+			return &ValidationError{Name: "url", err: fmt.Errorf(`ent: validator failed for field "Product.url": %w`, err)}
+		}
+	}
 	if v, ok := _u.mutation.PriceNumeric(); ok {
 		if err := product.PriceNumericValidator(v); err != nil {
 			return &ValidationError{Name: "price_numeric", err: fmt.Errorf(`ent: validator failed for field "Product.price_numeric": %w`, err)}
@@ -1310,6 +1315,11 @@ func (_u *ProductUpdateOne) check() error {
 	if v, ok := _u.mutation.SubCategory(); ok {
 		if err := product.SubCategoryValidator(v); err != nil {
 			return &ValidationError{Name: "sub_category", err: fmt.Errorf(`ent: validator failed for field "Product.sub_category": %w`, err)}
+		}
+	}
+	if v, ok := _u.mutation.URL(); ok {
+		if err := product.URLValidator(v); err != nil {
+			return &ValidationError{Name: "url", err: fmt.Errorf(`ent: validator failed for field "Product.url": %w`, err)}
 		}
 	}
 	if v, ok := _u.mutation.PriceNumeric(); ok {

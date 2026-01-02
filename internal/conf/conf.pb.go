@@ -79,7 +79,7 @@ type Bootstrap struct {
 	Server        *Server                `protobuf:"bytes,1,opt,name=server,proto3" json:"server,omitempty"`
 	Data          *Data                  `protobuf:"bytes,2,opt,name=data,proto3" json:"data,omitempty"`
 	Auth          *Auth                  `protobuf:"bytes,3,opt,name=auth,proto3" json:"auth,omitempty"`
-	Embeddings    *Embeddings            `protobuf:"bytes,4,opt,name=embeddings,proto3" json:"embeddings,omitempty"`
+	Embeddings    *Embeddings            `protobuf:"bytes,4,opt,name=embeddings,proto3" json:"embeddings,omitempty"` // Changed back to Embeddings
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -251,7 +251,7 @@ type Embeddings struct {
 	ApiKey         string                 `protobuf:"bytes,1,opt,name=api_key,json=apiKey,proto3" json:"api_key,omitempty"`
 	Model          string                 `protobuf:"bytes,2,opt,name=model,proto3" json:"model,omitempty"`
 	BatchSize      int32                  `protobuf:"varint,3,opt,name=batch_size,json=batchSize,proto3" json:"batch_size,omitempty"`
-	BaseUrl        string                 `protobuf:"bytes,4,opt,name=base_url,json=baseUrl,proto3" json:"base_url,omitempty"` // For DeepSeek or other OpenAI-compatible APIs
+	BaseUrl        string                 `protobuf:"bytes,4,opt,name=base_url,json=baseUrl,proto3" json:"base_url,omitempty"`
 	TimeoutSeconds int32                  `protobuf:"varint,5,opt,name=timeout_seconds,json=timeoutSeconds,proto3" json:"timeout_seconds,omitempty"`
 	MaxRetries     int32                  `protobuf:"varint,6,opt,name=max_retries,json=maxRetries,proto3" json:"max_retries,omitempty"`
 	unknownFields  protoimpl.UnknownFields

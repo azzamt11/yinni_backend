@@ -51,6 +51,10 @@ func init() {
 	productDescOutOfStock := productFields[9].Descriptor()
 	// product.DefaultOutOfStock holds the default value on creation for the out_of_stock field.
 	product.DefaultOutOfStock = productDescOutOfStock.Default.(bool)
+	// productDescURL is the schema descriptor for url field.
+	productDescURL := productFields[14].Descriptor()
+	// product.URLValidator is a validator for the "url" field. It is called by the builders before save.
+	product.URLValidator = productDescURL.Validators[0].(func(string) error)
 	// productDescFeatured is the schema descriptor for featured field.
 	productDescFeatured := productFields[20].Descriptor()
 	// product.DefaultFeatured holds the default value on creation for the featured field.

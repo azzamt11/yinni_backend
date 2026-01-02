@@ -27,7 +27,7 @@ var (
 		{Name: "average_rating", Type: field.TypeString, Nullable: true},
 		{Name: "images", Type: field.TypeJSON, Nullable: true},
 		{Name: "product_details", Type: field.TypeJSON, Nullable: true},
-		{Name: "url", Type: field.TypeString, Nullable: true},
+		{Name: "url", Type: field.TypeString, Nullable: true, Size: 2048},
 		{Name: "pid", Type: field.TypeString, Unique: true},
 		{Name: "style_code", Type: field.TypeString, Nullable: true},
 		{Name: "crawled_at", Type: field.TypeTime, Nullable: true},

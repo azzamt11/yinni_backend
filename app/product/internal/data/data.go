@@ -3,6 +3,7 @@ package data
 import (
 	"context"
 	"yinni_backend/ent"
+	_ "yinni_backend/ent/runtime"
 	"yinni_backend/internal/conf"
 
 	"github.com/go-kratos/kratos/v2/log"

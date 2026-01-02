@@ -137,6 +137,8 @@ var (
 	SubCategoryValidator func(string) error
 	// DefaultOutOfStock holds the default value on creation for the "out_of_stock" field.
 	DefaultOutOfStock bool
+	// URLValidator is a validator for the "url" field. It is called by the builders before save.
+	URLValidator func(string) error
 	// DefaultFeatured holds the default value on creation for the "featured" field.
 	DefaultFeatured bool
 	// DefaultViewCount holds the default value on creation for the "view_count" field.

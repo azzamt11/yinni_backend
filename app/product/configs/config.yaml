@@ -13,11 +13,12 @@ auth:
 data:
   database:
     driver: mysql
-    source: ${DB_SOURCE}
+    source: root:root@tcp(mysql:3306)/yinni_db?parseTime=true&charset=utf8mb4&loc=Local
 
-deepseek:
+embeddings:
   api_key: ${DEEPSEEK_API_KEY}
-  embedding_url: ${DEEPSEEK_EMBEDDING_URL}
-  chat_url: ${DEEPSEEK_CHAT_URL}
-  embedding_model: ${DEEPSEEK_EMBEDDING_MODEL}
-  chat_model: ${DEEPSEEK_CHAT_MODEL}
+  model: ${DEEPSEEK_EMBEDDING_MODEL}
+  batch_size: 16
+  base_url: ${DEEPSEEK_EMBEDDING_URL}
+  timeout_seconds: 30
+  max_retries: 3

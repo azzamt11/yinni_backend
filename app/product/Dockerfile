@@ -1,5 +1,5 @@
 # ---------- Build stage ----------
-FROM golang:1.24 AS builder
+FROM golang:1.25.5 AS builder
 
 WORKDIR /src
 COPY . .
@@ -17,13 +17,18 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 WORKDIR /app
 
-# 👇 COPY THE CORRECT OUTPUT
 COPY --from=builder /src/bin/product /app/server
+# 🔴 THIS WAS MISSING
+COPY ./configs /data/conf
+
+# 🔴 Copy dataset
+COPY app/product/product_dataset.json /app/product_dataset.json
 
 RUN chmod +x /app/server
 
-EXPOSE 8000
-EXPOSE 9000
+EXPOSE 8002
+EXPOSE 9002
+
 VOLUME /data/conf
 
-CMD ["./server", "-conf", "/data/conf/config.runtime.yaml"]
+CMD ["./server", "-conf", "/data/conf"]
