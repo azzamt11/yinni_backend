@@ -18,6 +18,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 WORKDIR /app
 
 COPY --from=builder /src/bin/product /app/server
+
 # 🔴 THIS WAS MISSING
 COPY ./configs /data/conf
 
