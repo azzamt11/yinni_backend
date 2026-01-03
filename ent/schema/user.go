@@ -3,6 +3,7 @@ package schema
 import (
 	"entgo.io/ent"
 	"entgo.io/ent/schema/field"
+	"entgo.io/ent/schema/mixin"
 )
 
 // User holds the schema definition for the User entity.
@@ -10,21 +11,33 @@ type User struct {
 	ent.Schema
 }
 
+// Mixin defines the mixins for the User entity.
+func (User) Mixin() []ent.Mixin {
+	return []ent.Mixin{
+		mixin.Time{},
+		// Alternatively, you can use:
+		// mixin.CreateTime{},
+		// mixin.UpdateTime{},
+	}
+}
+
 // Fields of the User.
 func (User) Fields() []ent.Field {
 	return []ent.Field{
 		field.Int("age").
-			Positive(),
+			Positive().
+			Optional(), // Make optional since auth might not need age
 		field.String("name").
-			Default(""),
+			NotEmpty(),
 		field.String("email").
-			Default(""),
+			NotEmpty().
+			Unique(),
 		field.String("phone").
-			Default(""),
+			Optional(),
 		field.String("username").
-			Default(""),
+			Optional(),
 		field.String("password").
-			Default(""),
+			NotEmpty(),
 	}
 }
 

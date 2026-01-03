@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 	"yinni_backend/ent/user"
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
@@ -19,9 +20,45 @@ type UserCreate struct {
 	hooks    []Hook
 }
 
+// SetCreateTime sets the "create_time" field.
+func (_c *UserCreate) SetCreateTime(v time.Time) *UserCreate {
+	_c.mutation.SetCreateTime(v)
+	return _c
+}
+
+// SetNillableCreateTime sets the "create_time" field if the given value is not nil.
+func (_c *UserCreate) SetNillableCreateTime(v *time.Time) *UserCreate {
+	if v != nil {
+		_c.SetCreateTime(*v)
+	}
+	return _c
+}
+
+// SetUpdateTime sets the "update_time" field.
+func (_c *UserCreate) SetUpdateTime(v time.Time) *UserCreate {
+	_c.mutation.SetUpdateTime(v)
+	return _c
+}
+
+// SetNillableUpdateTime sets the "update_time" field if the given value is not nil.
+func (_c *UserCreate) SetNillableUpdateTime(v *time.Time) *UserCreate {
+	if v != nil {
+		_c.SetUpdateTime(*v)
+	}
+	return _c
+}
+
 // SetAge sets the "age" field.
 func (_c *UserCreate) SetAge(v int) *UserCreate {
 	_c.mutation.SetAge(v)
+	return _c
+}
+
+// SetNillableAge sets the "age" field if the given value is not nil.
+func (_c *UserCreate) SetNillableAge(v *int) *UserCreate {
+	if v != nil {
+		_c.SetAge(*v)
+	}
 	return _c
 }
 
@@ -31,25 +68,9 @@ func (_c *UserCreate) SetName(v string) *UserCreate {
 	return _c
 }
 
-// SetNillableName sets the "name" field if the given value is not nil.
-func (_c *UserCreate) SetNillableName(v *string) *UserCreate {
-	if v != nil {
-		_c.SetName(*v)
-	}
-	return _c
-}
-
 // SetEmail sets the "email" field.
 func (_c *UserCreate) SetEmail(v string) *UserCreate {
 	_c.mutation.SetEmail(v)
-	return _c
-}
-
-// SetNillableEmail sets the "email" field if the given value is not nil.
-func (_c *UserCreate) SetNillableEmail(v *string) *UserCreate {
-	if v != nil {
-		_c.SetEmail(*v)
-	}
 	return _c
 }
 
@@ -84,14 +105,6 @@ func (_c *UserCreate) SetNillableUsername(v *string) *UserCreate {
 // SetPassword sets the "password" field.
 func (_c *UserCreate) SetPassword(v string) *UserCreate {
 	_c.mutation.SetPassword(v)
-	return _c
-}
-
-// SetNillablePassword sets the "password" field if the given value is not nil.
-func (_c *UserCreate) SetNillablePassword(v *string) *UserCreate {
-	if v != nil {
-		_c.SetPassword(*v)
-	}
 	return _c
 }
 
@@ -130,32 +143,23 @@ func (_c *UserCreate) ExecX(ctx context.Context) {
 
 // defaults sets the default values of the builder before save.
 func (_c *UserCreate) defaults() {
-	if _, ok := _c.mutation.Name(); !ok {
-		v := user.DefaultName
-		_c.mutation.SetName(v)
+	if _, ok := _c.mutation.CreateTime(); !ok {
+		v := user.DefaultCreateTime()
+		_c.mutation.SetCreateTime(v)
 	}
-	if _, ok := _c.mutation.Email(); !ok {
-		v := user.DefaultEmail
-		_c.mutation.SetEmail(v)
-	}
-	if _, ok := _c.mutation.Phone(); !ok {
-		v := user.DefaultPhone
-		_c.mutation.SetPhone(v)
-	}
-	if _, ok := _c.mutation.Username(); !ok {
-		v := user.DefaultUsername
-		_c.mutation.SetUsername(v)
-	}
-	if _, ok := _c.mutation.Password(); !ok {
-		v := user.DefaultPassword
-		_c.mutation.SetPassword(v)
+	if _, ok := _c.mutation.UpdateTime(); !ok {
+		v := user.DefaultUpdateTime()
+		_c.mutation.SetUpdateTime(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
 func (_c *UserCreate) check() error {
-	if _, ok := _c.mutation.Age(); !ok {
-		return &ValidationError{Name: "age", err: errors.New(`ent: missing required field "User.age"`)}
+	if _, ok := _c.mutation.CreateTime(); !ok {
+		return &ValidationError{Name: "create_time", err: errors.New(`ent: missing required field "User.create_time"`)}
+	}
+	if _, ok := _c.mutation.UpdateTime(); !ok {
+		return &ValidationError{Name: "update_time", err: errors.New(`ent: missing required field "User.update_time"`)}
 	}
 	if v, ok := _c.mutation.Age(); ok {
 		if err := user.AgeValidator(v); err != nil {
@@ -165,17 +169,26 @@ func (_c *UserCreate) check() error {
 	if _, ok := _c.mutation.Name(); !ok {
 		return &ValidationError{Name: "name", err: errors.New(`ent: missing required field "User.name"`)}
 	}
+	if v, ok := _c.mutation.Name(); ok {
+		if err := user.NameValidator(v); err != nil {
+			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "User.name": %w`, err)}
+		}
+	}
 	if _, ok := _c.mutation.Email(); !ok {
 		return &ValidationError{Name: "email", err: errors.New(`ent: missing required field "User.email"`)}
 	}
-	if _, ok := _c.mutation.Phone(); !ok {
-		return &ValidationError{Name: "phone", err: errors.New(`ent: missing required field "User.phone"`)}
-	}
-	if _, ok := _c.mutation.Username(); !ok {
-		return &ValidationError{Name: "username", err: errors.New(`ent: missing required field "User.username"`)}
+	if v, ok := _c.mutation.Email(); ok {
+		if err := user.EmailValidator(v); err != nil {
+			return &ValidationError{Name: "email", err: fmt.Errorf(`ent: validator failed for field "User.email": %w`, err)}
+		}
 	}
 	if _, ok := _c.mutation.Password(); !ok {
 		return &ValidationError{Name: "password", err: errors.New(`ent: missing required field "User.password"`)}
+	}
+	if v, ok := _c.mutation.Password(); ok {
+		if err := user.PasswordValidator(v); err != nil {
+			return &ValidationError{Name: "password", err: fmt.Errorf(`ent: validator failed for field "User.password": %w`, err)}
+		}
 	}
 	return nil
 }
@@ -203,6 +216,14 @@ func (_c *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 		_node = &User{config: _c.config}
 		_spec = sqlgraph.NewCreateSpec(user.Table, sqlgraph.NewFieldSpec(user.FieldID, field.TypeInt))
 	)
+	if value, ok := _c.mutation.CreateTime(); ok {
+		_spec.SetField(user.FieldCreateTime, field.TypeTime, value)
+		_node.CreateTime = value
+	}
+	if value, ok := _c.mutation.UpdateTime(); ok {
+		_spec.SetField(user.FieldUpdateTime, field.TypeTime, value)
+		_node.UpdateTime = value
+	}
 	if value, ok := _c.mutation.Age(); ok {
 		_spec.SetField(user.FieldAge, field.TypeInt, value)
 		_node.Age = value

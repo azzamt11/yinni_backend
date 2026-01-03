@@ -6,6 +6,8 @@
 package main
 
 import (
+	"yinni_backend/app/auth/internal/biz"
+	"yinni_backend/app/auth/internal/data"
 	"yinni_backend/app/auth/internal/server"
 	"yinni_backend/app/auth/internal/service"
 	"yinni_backend/internal/conf"
@@ -16,6 +18,6 @@ import (
 )
 
 // wireApp init kratos application.
-func wireApp(*conf.Server, *conf.Auth, *conf.Data, log.Logger) (*kratos.App, func(), error) {
-	panic(wire.Build(server.ProviderSet, service.ProviderSet, newApp))
+func wireApp(confServer *conf.Server, confAuth *conf.Auth, confData *conf.Data, logger log.Logger) (*kratos.App, func(), error) {
+	panic(wire.Build(server.ProviderSet, data.ProviderSet, biz.ProviderSet, service.ProviderSet, newApp))
 }
