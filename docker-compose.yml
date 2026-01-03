@@ -12,11 +12,11 @@ services:
     volumes:
       - ./app/auth/configs:/data/conf
     environment:
-      JWT_SECRET: ${JWT_SECRET}
-      JWT_EXPIRE: ${JWT_EXPIRE}
-      AUTH_HTTP_PORT: ${AUTH_HTTP_PORT}
-      AUTH_GRPC_PORT: ${AUTH_GRPC_PORT}
-      DB_SOURCE: ${DB_SOURCE}
+      KRATOS_SERVER_HTTP_ADDR: 0.0.0.0:${AUTH_HTTP_PORT}
+      KRATOS_SERVER_GRPC_ADDR: 0.0.0.0:${AUTH_GRPC_PORT}
+      KRATOS_AUTH_JWT_SECRET: ${JWT_SECRET}
+      KRATOS_AUTH_JWT_EXPIRE: ${JWT_EXPIRE}
+      KRATOS_DATA_DATABASE_SOURCE: ${DB_SOURCE}
     depends_on:
       mysql:
         condition: service_healthy
@@ -78,35 +78,3 @@ services:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
       timeout: 10s
       retries: 5
-
-
-
-# services:
-#   mysql:
-#     image: mysql:8.0
-#     restart: always
-#     environment:
-#       MYSQL_ROOT_PASSWORD: root
-#       MYSQL_DATABASE: yinni_db
-#     ports:
-#       - "3306:3306"
-#     healthcheck:
-#       test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost"]
-#       timeout: 20s
-#       retries: 10
-
-#   app:
-#     build:
-#       context: .
-#       dockerfile: Dockerfile
-#     command: ["./yinni_backend", "-conf", "/data/conf"] 
-#     ports:
-#       - "8000:8000"
-#       - "9000:9000"
-#     volumes:
-#       - ./configs:/data/conf
-#     depends_on:
-#       mysql:
-#         condition: service_healthy
-#     environment:
-#       - DB_SOURCE=root:root@tcp(mysql:3306)/yinni_db?parseTime=True

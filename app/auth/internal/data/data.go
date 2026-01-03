@@ -1,7 +1,6 @@
 package data
 
 import (
-	"context"
 	"yinni_backend/ent"
 	"yinni_backend/internal/conf"
 
@@ -19,23 +18,25 @@ type Data struct {
 
 // NewData .
 func NewData(c *conf.Data, logger log.Logger) (*Data, func(), error) {
-	log := log.NewHelper(logger)
+	logHelper := log.NewHelper(log.With(logger, "module", "auth/data"))
 
-	client, err := ent.Open(
-		"mysql",
-		c.Database.Source,
-	)
+	logHelper.Infof("Connecting to database: %s", c.Database.Source)
 
+	// Create Ent client
+	client, err := ent.Open("mysql", c.Database.Source)
 	if err != nil {
+		logHelper.Errorf("Failed to open database: %v", err)
 		return nil, nil, err
 	}
 
-	if err := client.Schema.Create(context.Background()); err != nil {
-		return nil, nil, err
-	}
+	// DO NOT create schema here!
+	// The tables should already exist or will be created by individual services
 
 	cleanup := func() {
-		log.Info("closing the data resources")
+		logHelper.Info("closing the data resources")
+		client.Close()
 	}
+
+	logHelper.Info("Database connection established successfully")
 	return &Data{ent: client}, cleanup, nil
 }

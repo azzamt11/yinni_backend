@@ -17,6 +17,7 @@ import (
 )
 
 import (
+	_ "github.com/go-sql-driver/mysql"
 	_ "go.uber.org/automaxprocs"
 )
 
@@ -34,7 +35,7 @@ func wireApp(confServer *conf.Server, confAuth *conf.Auth, confData *conf.Data, 
 		cleanup()
 		return nil, nil, err
 	}
-	authService := service.NewAuthService(authUsecase)
+	authService := service.NewAuthService(authUsecase, logger)
 	grpcServer := server.NewGRPCServer(confServer, authService, logger)
 	httpServer := server.NewHTTPServer(confServer, authService, logger)
 	app := newApp(logger, grpcServer, httpServer)
