@@ -12,6 +12,8 @@ import (
 	"time"
 	_ "yinni_backend/ent/runtime"
 
+	_ "github.com/go-sql-driver/mysql"
+
 	"yinni_backend/internal/conf"
 
 	"yinni_backend/ent"
@@ -21,6 +23,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"github.com/go-kratos/kratos/v2"
 	"github.com/go-kratos/kratos/v2/config"
+	"github.com/go-kratos/kratos/v2/config/env"
 	"github.com/go-kratos/kratos/v2/config/file"
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/go-kratos/kratos/v2/middleware/tracing"
@@ -78,9 +81,12 @@ func main() {
 		"span.id", tracing.SpanID(),
 	)
 
+	logHelper := log.NewHelper(logger)
+
 	c := config.New(
 		config.WithSource(
 			file.NewSource(flagconf),
+			env.NewSource(),
 		),
 	)
 	defer c.Close()
@@ -93,6 +99,13 @@ func main() {
 	if err := c.Scan(&bc); err != nil {
 		panic(err)
 	}
+
+	// ---- sanity logs ----
+	logHelper.Infof("HTTP addr: %s", bc.Server.Http.Addr)
+	logHelper.Infof("gRPC addr: %s", bc.Server.Grpc.Addr)
+	logHelper.Infof("DB source: %s", bc.Data.Database.Source)
+	logHelper.Infof("JWT secret: %s", bc.Auth.JwtSecret)
+	logHelper.Infof("JWT expire: %s", bc.Auth.JwtExpire)
 
 	// Run database initialization FIRST
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)

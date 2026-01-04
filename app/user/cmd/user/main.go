@@ -8,6 +8,7 @@ import (
 
 	"github.com/go-kratos/kratos/v2"
 	"github.com/go-kratos/kratos/v2/config"
+	"github.com/go-kratos/kratos/v2/config/env"
 	"github.com/go-kratos/kratos/v2/config/file"
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/go-kratos/kratos/v2/middleware/tracing"
@@ -59,9 +60,13 @@ func main() {
 		"trace.id", tracing.TraceID(),
 		"span.id", tracing.SpanID(),
 	)
+
+	logHelper := log.NewHelper(logger)
+
 	c := config.New(
 		config.WithSource(
 			file.NewSource(flagconf),
+			env.NewSource(),
 		),
 	)
 	defer c.Close()
@@ -75,10 +80,18 @@ func main() {
 		panic(err)
 	}
 
+	// ---- sanity logs ----
+	logHelper.Infof("HTTP addr: %s", bc.Server.Http.Addr)
+	logHelper.Infof("gRPC addr: %s", bc.Server.Grpc.Addr)
+	logHelper.Infof("DB source: %s", bc.Data.Database.Source)
+	logHelper.Infof("JWT secret: %s", bc.Auth.JwtSecret)
+	logHelper.Infof("JWT expire: %s", bc.Auth.JwtExpire)
+
 	app, cleanup, err := wireApp(bc.Server, bc.Auth, bc.Data, logger)
 	if err != nil {
 		panic(err)
 	}
+
 	defer cleanup()
 
 	// start and wait for stop signal

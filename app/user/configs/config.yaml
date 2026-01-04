@@ -1,16 +1,16 @@
 server:
   http:
-    addr: 0.0.0.0:${USER_HTTP_PORT}
+    addr: ${KRATOS_SERVER_HTTP_ADDR:0.0.0.0:8081}
     timeout: 1s
   grpc:
-    addr: 0.0.0.0:${USER_GRPC_PORT}
+    addr: ${KRATOS_SERVER_GRPC_ADDR:0.0.0.0:9091}
     timeout: 1s
 
 auth:
-  jwt_secret: ${JWT_SECRET}
-  jwt_expire: 3600
+  jwt_secret: ${KRATOS_AUTH_JWT_SECRET:no-secret}
+  jwt_expire: ${KRATOS_AUTH_JWT_EXPIRE:3600}
 
 data:
   database:
     driver: mysql
-    source: root:root@tcp(mysql:3306)/yinni_db?parseTime=true&charset=utf8mb4&loc=Local
+    source: ${KRATOS_DATA_DATABASE_SOURCE}

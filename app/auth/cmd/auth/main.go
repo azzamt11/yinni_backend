@@ -20,23 +20,17 @@ import (
 	_ "go.uber.org/automaxprocs"
 )
 
-// go build -ldflags "-X main.Version=x.y.z"
 var (
-	// Name is the name of the compiled software.
-	Name string = "auth-service" // Set default value
-	// Version is the version of the compiled software.
-	Version string = "v1.0.0" // Set default value
-	// flagconf is the config flag.
+	Name     = "auth-service"
+	Version  = "v1.0.0"
 	flagconf string
-
-	id, _ = os.Hostname()
+	id, _    = os.Hostname()
 )
 
 func init() {
-	// You can override these with build flags if needed
-	flag.StringVar(&Name, "name", "auth-service", "service name")
-	flag.StringVar(&Version, "version", "v1.0.0", "service version")
-	flag.StringVar(&flagconf, "conf", "../../configs", "config path, eg: -conf config.yaml")
+	flag.StringVar(&Name, "name", Name, "service name")
+	flag.StringVar(&Version, "version", Version, "service version")
+	flag.StringVar(&flagconf, "conf", "/data/conf", "config path")
 }
 
 func newApp(logger log.Logger, gs *grpc.Server, hs *http.Server) *kratos.App {
@@ -44,37 +38,33 @@ func newApp(logger log.Logger, gs *grpc.Server, hs *http.Server) *kratos.App {
 		kratos.ID(id),
 		kratos.Name(Name),
 		kratos.Version(Version),
-		kratos.Metadata(map[string]string{}),
 		kratos.Logger(logger),
-		kratos.Server(
-			gs,
-			hs,
-		),
+		kratos.Server(gs, hs),
 	)
 }
 
 func main() {
 	flag.Parse()
-	logger := log.With(log.NewStdLogger(os.Stdout),
+
+	logger := log.With(
+		log.NewStdLogger(os.Stdout),
 		"ts", log.DefaultTimestamp,
 		"caller", log.DefaultCaller,
 		"service.id", id,
-		"service.name", Name, // This should now have the value
-		"service.version", Version, // This should now have the value
+		"service.name", Name,
+		"service.version", Version,
 		"trace.id", tracing.TraceID(),
 		"span.id", tracing.SpanID(),
 	)
 
-	// Add a log helper
 	logHelper := log.NewHelper(logger)
-	logHelper.Info("Starting auth service...")
+	logHelper.Info("Starting service...")
 
+	// 🔴 IMPORTANT: env.NewSource() ONLY
 	c := config.New(
 		config.WithSource(
 			file.NewSource(flagconf),
-			env.NewSource(
-				env.WithPrefix(""), // 🔥 THIS IS THE KEY LINE
-			),
+			env.NewSource(),
 		),
 	)
 	defer c.Close()
@@ -88,19 +78,12 @@ func main() {
 		panic(err)
 	}
 
-	// ===== ADD THIS: Log the config values =====
-	if bc.Server != nil && bc.Server.Http != nil {
-		logHelper.Infof("HTTP port from config: %s", bc.Server.Http.Addr)
-	} else {
-		logHelper.Error("HTTP config is nil!")
-	}
-
-	if bc.Server != nil && bc.Server.Grpc != nil {
-		logHelper.Infof("gRPC port from config: %s", bc.Server.Grpc.Addr)
-	} else {
-		logHelper.Error("gRPC config is nil!")
-	}
-	// ===== END OF ADDED CODE =====
+	// ---- sanity logs ----
+	logHelper.Infof("HTTP addr: %s", bc.Server.Http.Addr)
+	logHelper.Infof("gRPC addr: %s", bc.Server.Grpc.Addr)
+	logHelper.Infof("DB source: %s", bc.Data.Database.Source)
+	logHelper.Infof("JWT secret: %s", bc.Auth.JwtSecret)
+	logHelper.Infof("JWT expire: %s", bc.Auth.JwtExpire)
 
 	app, cleanup, err := wireApp(bc.Server, bc.Auth, bc.Data, logger)
 	if err != nil {
@@ -108,7 +91,6 @@ func main() {
 	}
 	defer cleanup()
 
-	// start and wait for stop signal
 	if err := app.Run(); err != nil {
 		panic(err)
 	}

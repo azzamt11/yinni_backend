@@ -1,7 +1,7 @@
 version: "3.9"
 
 services:
-  # --- Auth Microservice ---
+  # ---------- AUTH SERVICE ----------
   auth-service:
     build:
       context: .
@@ -12,8 +12,8 @@ services:
     volumes:
       - ./app/auth/configs:/data/conf
     environment:
-      KRATOS_SERVER_HTTP_ADDR: 0.0.0.0:${AUTH_HTTP_PORT}
-      KRATOS_SERVER_GRPC_ADDR: 0.0.0.0:${AUTH_GRPC_PORT}
+      KRATOS_SERVER_HTTP_ADDR: 0.0.0.0:8000
+      KRATOS_SERVER_GRPC_ADDR: 0.0.0.0:9000
       KRATOS_AUTH_JWT_SECRET: ${JWT_SECRET}
       KRATOS_AUTH_JWT_EXPIRE: ${JWT_EXPIRE}
       KRATOS_DATA_DATABASE_SOURCE: ${DB_SOURCE}
@@ -21,60 +21,61 @@ services:
       mysql:
         condition: service_healthy
 
-  # --- Product Microservice ---
+  # ---------- PRODUCT SERVICE ----------
   product-service:
     build:
       context: .
       dockerfile: app/product/Dockerfile
     ports:
-      - "${PRODUCT_HTTP_PORT}:8000"
-      - "${PRODUCT_GRPC_PORT}:9000"
+      - "${PRODUCT_HTTP_PORT}:8002"
+      - "${PRODUCT_GRPC_PORT}:9002"
     volumes:
       - ./app/product/configs:/data/conf
     environment:
-      JWT_SECRET: ${JWT_SECRET}
-      JWT_EXPIRE: ${JWT_EXPIRE}
-      PRODUCT_HTTP_PORT: ${PRODUCT_HTTP_PORT}
-      PRODUCT_GRPC_PORT: ${PRODUCT_GRPC_PORT}
-      DB_SOURCE: ${DB_SOURCE}
+      KRATOS_SERVER_HTTP_ADDR: 0.0.0.0:8002
+      KRATOS_SERVER_GRPC_ADDR: 0.0.0.0:9002
+      KRATOS_DATA_DATABASE_SOURCE: ${DB_SOURCE}
+      KRATOS_AUTH_JWT_SECRET: ${JWT_SECRET}
+      KRATOS_AUTH_JWT_EXPIRE: ${JWT_EXPIRE}
       DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY}
-      DEEPSEEK_EMBEDDING_URL: ${DEEPSEEK_EMBEDDING_URL}
       DEEPSEEK_CHAT_URL: ${DEEPSEEK_CHAT_URL}
-      DEEPSEEK_EMBEDDING_MODEL: ${DEEPSEEK_EMBEDDING_MODEL}
+      DEEPSEEK_EMBEDDING_URL: ${DEEPSEEK_EMBEDDING_URL}
       DEEPSEEK_CHAT_MODEL: ${DEEPSEEK_CHAT_MODEL}
+      DEEPSEEK_EMBEDDING_MODEL: ${DEEPSEEK_EMBEDDING_MODEL}
     depends_on:
       mysql:
         condition: service_healthy
 
-  # --- User Microservice ---
+  # ---------- USER SERVICE ----------
   user-service:
     build:
       context: .
       dockerfile: app/user/Dockerfile
     ports:
-      - "${USER_HTTP_PORT}:8000"
-      - "${USER_GRPC_PORT}:9000"
+      - "${USER_HTTP_PORT}:8001"
+      - "${USER_GRPC_PORT}:9001"
     volumes:
       - ./app/user/configs:/data/conf
     environment:
-      JWT_SECRET: ${JWT_SECRET}
-      JWT_EXPIRE: ${JWT_EXPIRE}
-      USER_HTTP_PORT: ${USER_HTTP_PORT}
-      USER_GRPC_PORT: ${USER_GRPC_PORT}
-      DB_SOURCE: ${DB_SOURCE}
+      KRATOS_SERVER_HTTP_ADDR: 0.0.0.0:8001
+      KRATOS_SERVER_GRPC_ADDR: 0.0.0.0:9001
+      KRATOS_DATA_DATABASE_SOURCE: ${DB_SOURCE}
+      KRATOS_AUTH_JWT_SECRET: ${JWT_SECRET}
+      KRATOS_AUTH_JWT_EXPIRE: ${JWT_EXPIRE}
     depends_on:
       mysql:
         condition: service_healthy
 
-  # --- MySQL Database ---
+  # ---------- MYSQL ----------
   mysql:
     image: mysql:8.0
+    ports:
+      - "${MYSQL_PORT}:3306"
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       MYSQL_DATABASE: ${MYSQL_DATABASE}
-    ports:
-      - "${MYSQL_PORT}:3306"
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 5s
       timeout: 10s
       retries: 5
