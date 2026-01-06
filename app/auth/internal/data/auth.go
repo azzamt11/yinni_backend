@@ -2,11 +2,11 @@ package data
 
 import (
 	"context"
+	"errors"
 	"strings"
 
 	"yinni_backend/app/auth/internal/biz"
 	"yinni_backend/ent"
-	"yinni_backend/ent/migrate"
 	"yinni_backend/ent/user"
 
 	"github.com/go-kratos/kratos/v2/log"
@@ -26,33 +26,64 @@ func NewAuthRepo(data *Data, logger log.Logger) biz.AuthRepo {
 }
 
 func (r *authRepo) CreateUser(ctx context.Context, u *biz.User) (*biz.User, error) {
-	// Try to create the user
-	entUser, err := r.data.ent.User.
-		Create().
-		SetEmail(u.Email).
-		SetPassword(u.Password).
-		SetName(u.Name).
-		Save(ctx)
+	r.log.Debug("Creating user with:",
+		"email", u.Email,
+		"name", u.Name,
+		"has_password", u.Password != "",
+	)
+
+	// Check if ent client is nil
+	if r.data.ent == nil {
+		r.log.Error("Ent client is nil!")
+		return nil, errors.New("database client not initialized")
+	}
+
+	// Step by step creation
+	r.log.Debug("Creating builder...")
+	builder := r.data.ent.User.Create()
+	if builder == nil {
+		r.log.Error("Builder is nil!")
+		return nil, errors.New("failed to create builder")
+	}
+
+	r.log.Debug("Setting email...")
+	builder = builder.SetEmail(u.Email)
+	if builder == nil {
+		r.log.Error("Builder became nil after SetEmail!")
+		return nil, errors.New("failed to set email")
+	}
+
+	r.log.Debug("Setting password...")
+	builder = builder.SetPassword(u.Password)
+	if builder == nil {
+		r.log.Error("Builder became nil after SetPassword!")
+		return nil, errors.New("failed to set password")
+	}
+
+	r.log.Debug("Setting name...")
+	builder = builder.SetName(u.Name)
+	if builder == nil {
+		r.log.Error("Builder became nil after SetName!")
+		return nil, errors.New("failed to set name")
+	}
+
+	r.log.Debug("Builder created, about to save...")
+
+	entUser, err := builder.Save(ctx)
 
 	if err != nil {
-		// Check if the error is because the users table doesn't exist
-		if strings.Contains(err.Error(), "doesn't exist") ||
-			strings.Contains(err.Error(), "table") ||
-			strings.Contains(err.Error(), "unknown table") {
+		r.log.Errorf("Database error creating user: %v", err)
+		r.log.Errorf("Error type: %T", err)
 
-			r.log.Warn("Users table doesn't exist, creating it...")
+		// If error contains "table" or "doesn't exist", the migration might have failed
+		if strings.Contains(strings.ToLower(err.Error()), "table") ||
+			strings.Contains(strings.ToLower(err.Error()), "doesn't exist") ||
+			strings.Contains(strings.ToLower(err.Error()), "unknown") {
 
-			// Create the users table using Ent's migration
-			if err := r.data.ent.Schema.Create(ctx, migrate.WithDropIndex(false), migrate.WithDropColumn(false)); err != nil {
-				r.log.Errorf("Failed to create users table: %v", err)
-				return nil, err
-			}
-
-			r.log.Info("Users table created successfully")
-
-			// Try creating the user again
-			return r.CreateUser(ctx, u)
+			r.log.Error("Table might not exist. Migration likely failed.")
+			return nil, biz.NewAuthError("database schema not ready. Please check migration logs.", biz.ErrInternal)
 		}
+
 		return nil, err
 	}
 
@@ -61,8 +92,8 @@ func (r *authRepo) CreateUser(ctx context.Context, u *biz.User) (*biz.User, erro
 		Email:     entUser.Email,
 		Password:  entUser.Password,
 		Name:      entUser.Name,
-		CreatedAt: entUser.CreateTime,
-		UpdatedAt: entUser.UpdateTime,
+		CreatedAt: entUser.CreatedAt,
+		UpdatedAt: entUser.UpdatedAt,
 	}, nil
 }
 
@@ -92,8 +123,8 @@ func (r *authRepo) FindByEmail(ctx context.Context, email string) (*biz.User, er
 		Email:     entUser.Email,
 		Password:  entUser.Password,
 		Name:      entUser.Name,
-		CreatedAt: entUser.CreateTime,
-		UpdatedAt: entUser.UpdateTime,
+		CreatedAt: entUser.CreatedAt,
+		UpdatedAt: entUser.UpdatedAt,
 	}, nil
 }
 
@@ -109,7 +140,7 @@ func (r *authRepo) GetUserByID(ctx context.Context, id int64) (*biz.User, error)
 		Email:     entUser.Email,
 		Password:  entUser.Password,
 		Name:      entUser.Name,
-		CreatedAt: entUser.CreateTime,
-		UpdatedAt: entUser.UpdateTime,
+		CreatedAt: entUser.CreatedAt,
+		UpdatedAt: entUser.UpdatedAt,
 	}, nil
 }

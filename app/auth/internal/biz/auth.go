@@ -90,14 +90,18 @@ func (uc *AuthUsecase) generateJWTToken(userID int64) (string, error) {
 func (uc *AuthUsecase) SignUp(ctx context.Context, email, password, name string) (*User, string, error) {
 	// Check if user already exists
 	existingUser, err := uc.repo.FindByEmail(ctx, email)
-	if err == nil && existingUser != nil {
+	if err != nil {
+		return nil, "", NewAuthError("failed to check existing user: "+err.Error(), ErrInternal)
+	}
+
+	if existingUser != nil {
 		return nil, "", NewAuthError("user already exists", ErrUserAlreadyExists)
 	}
 
 	// Hash password
 	hashedPassword, err := hashPassword(password)
 	if err != nil {
-		return nil, "", NewAuthError("failed to hash password", ErrInternal)
+		return nil, "", NewAuthError("failed to hash password: "+err.Error(), ErrInternal)
 	}
 
 	// Create user
@@ -109,13 +113,13 @@ func (uc *AuthUsecase) SignUp(ctx context.Context, email, password, name string)
 
 	createdUser, err := uc.repo.CreateUser(ctx, user)
 	if err != nil {
-		return nil, "", NewAuthError("failed to create user", ErrInternal)
+		return nil, "", NewAuthError("failed to create user: "+err.Error(), ErrInternal)
 	}
 
 	// Generate JWT token
 	token, err := uc.generateJWTToken(createdUser.ID)
 	if err != nil {
-		return nil, "", NewAuthError("failed to generate token", ErrInternal)
+		return nil, "", NewAuthError("failed to generate token: "+err.Error(), ErrInternal)
 	}
 
 	return createdUser, token, nil
@@ -125,7 +129,11 @@ func (uc *AuthUsecase) SignUp(ctx context.Context, email, password, name string)
 func (uc *AuthUsecase) SignIn(ctx context.Context, email, password string) (*User, string, error) {
 	// Find user by email
 	user, err := uc.repo.FindByEmail(ctx, email)
-	if err != nil || user == nil {
+	if err != nil {
+		return nil, "", NewAuthError("failed to find user: "+err.Error(), ErrInternal)
+	}
+
+	if user == nil {
 		return nil, "", NewAuthError("invalid email or password", ErrInvalidCredentials)
 	}
 
@@ -137,7 +145,7 @@ func (uc *AuthUsecase) SignIn(ctx context.Context, email, password string) (*Use
 	// Generate JWT token
 	token, err := uc.generateJWTToken(user.ID)
 	if err != nil {
-		return nil, "", NewAuthError("failed to generate token", ErrInternal)
+		return nil, "", NewAuthError("failed to generate token: "+err.Error(), ErrInternal)
 	}
 
 	return user, token, nil

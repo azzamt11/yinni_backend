@@ -45,8 +45,14 @@ func (s *AuthService) SignUp(ctx context.Context, req *pb.SignUpRequest) (*pb.Si
 	// Call usecase
 	user, token, err := s.uc.SignUp(ctx, req.Email, req.Password, req.Name)
 	if err != nil {
+		// Log the actual error message
+		errorMsg := "unknown error"
+		if err != nil {
+			errorMsg = err.Error()
+		}
+
 		s.logger.Errorw("signup_usecase_failed",
-			"error", err,
+			"error", errorMsg,
 			"error_type", getErrorType(err),
 		)
 
@@ -61,7 +67,7 @@ func (s *AuthService) SignUp(ctx context.Context, req *pb.SignUpRequest) (*pb.Si
 				return nil, errors.New("internal server error")
 			}
 		}
-		return nil, err
+		return nil, errors.New("internal server error")
 	}
 
 	s.logger.Infow("signup_success",
@@ -96,8 +102,14 @@ func (s *AuthService) SignIn(ctx context.Context, req *pb.SignInRequest) (*pb.Si
 	// Call usecase
 	user, token, err := s.uc.SignIn(ctx, req.Email, req.Password)
 	if err != nil {
+		// Log the actual error message
+		errorMsg := "unknown error"
+		if err != nil {
+			errorMsg = err.Error()
+		}
+
 		s.logger.Errorw("signin_usecase_failed",
-			"error", err,
+			"error", errorMsg,
 			"error_type", getErrorType(err),
 			"email", req.Email,
 		)
@@ -111,7 +123,7 @@ func (s *AuthService) SignIn(ctx context.Context, req *pb.SignInRequest) (*pb.Si
 				return nil, errors.New("internal server error")
 			}
 		}
-		return nil, err
+		return nil, errors.New("internal server error")
 	}
 
 	s.logger.Infow("signin_success",

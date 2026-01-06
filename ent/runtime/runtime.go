@@ -89,25 +89,8 @@ func init() {
 			return nil
 		}
 	}()
-	userMixin := schema.User{}.Mixin()
-	userMixinFields0 := userMixin[0].Fields()
-	_ = userMixinFields0
 	userFields := schema.User{}.Fields()
 	_ = userFields
-	// userDescCreateTime is the schema descriptor for create_time field.
-	userDescCreateTime := userMixinFields0[0].Descriptor()
-	// user.DefaultCreateTime holds the default value on creation for the create_time field.
-	user.DefaultCreateTime = userDescCreateTime.Default.(func() time.Time)
-	// userDescUpdateTime is the schema descriptor for update_time field.
-	userDescUpdateTime := userMixinFields0[1].Descriptor()
-	// user.DefaultUpdateTime holds the default value on creation for the update_time field.
-	user.DefaultUpdateTime = userDescUpdateTime.Default.(func() time.Time)
-	// user.UpdateDefaultUpdateTime holds the default value on update for the update_time field.
-	user.UpdateDefaultUpdateTime = userDescUpdateTime.UpdateDefault.(func() time.Time)
-	// userDescAge is the schema descriptor for age field.
-	userDescAge := userFields[0].Descriptor()
-	// user.AgeValidator is a validator for the "age" field. It is called by the builders before save.
-	user.AgeValidator = userDescAge.Validators[0].(func(int) error)
 	// userDescName is the schema descriptor for name field.
 	userDescName := userFields[1].Descriptor()
 	// user.NameValidator is a validator for the "name" field. It is called by the builders before save.
