@@ -10,6 +10,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"yinni_backend/ent/product"
 	_ "yinni_backend/ent/runtime"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -278,27 +279,32 @@ func seedDatabase(ctx context.Context, client *ent.Client, logger log.Logger) er
 	dataset, err := loadDataset()
 	if err != nil {
 		logHelper.Warn("Failed to load dataset: ", err, ", using sample data")
-		return seedSampleData(ctx, client, logger)
+		return fmt.Errorf("failed to load dataset: %w", err)
 	}
 
 	return seedFromDataset(ctx, client, dataset, logger)
 }
 
-// loadDataset loads the product dataset
+// Add debug logging to loadDataset()
 func loadDataset() ([]map[string]interface{}, error) {
 	paths := []string{
 		"./product_dataset.json",
+		"../product_dataset.json",    // Try parent directory
+		"/data/product_dataset.json", // Try absolute path
 	}
 
 	var file *os.File
 	var err error
 
 	for _, path := range paths {
+		fmt.Printf("Trying to load dataset from: %s\n", path)
 		file, err = os.Open(path)
 		if err == nil {
 			defer file.Close()
+			fmt.Printf("Successfully opened: %s\n", path)
 			break
 		}
+		fmt.Printf("Failed: %v\n", err)
 	}
 
 	if err != nil {
@@ -310,11 +316,14 @@ func loadDataset() ([]map[string]interface{}, error) {
 		return nil, err
 	}
 
+	fmt.Printf("Dataset file size: %d bytes\n", len(content))
+
 	var dataset []map[string]interface{}
 	if err := json.Unmarshal(content, &dataset); err != nil {
 		return nil, err
 	}
 
+	fmt.Printf("Loaded %d products from dataset\n", len(dataset))
 	return dataset, nil
 }
 
@@ -324,14 +333,28 @@ func seedFromDataset(ctx context.Context, client *ent.Client, dataset []map[stri
 	logHelper.Infof("Seeding %d products from dataset", len(dataset))
 
 	// Limit to 1000 products for initial seeding
-	maxProducts := 1000
-	if len(dataset) > maxProducts {
-		dataset = dataset[:maxProducts]
-	}
+	// maxProducts := 1000
+	// if len(dataset) > maxProducts {
+	// 	dataset = dataset[:maxProducts]
+	// }
+	logHelper.Infof("Will seed %d products (limited from %d)", len(dataset), len(dataset))
 
 	bulk := make([]*ent.ProductCreate, 0, len(dataset))
 
 	for i, data := range dataset {
+		existing, err := client.Product.
+			Query().
+			Where(product.Pid(data["pid"].(string))).
+			First(ctx)
+
+		if err == nil && existing != nil {
+			// Product already exists, skip or update
+			continue // Skip this item
+		} else if !ent.IsNotFound(err) {
+			// Some other error
+			return err
+		}
+
 		create := client.Product.Create()
 
 		// Set fields from dataset
@@ -447,85 +470,6 @@ func seedFromDataset(ctx context.Context, client *ent.Client, dataset []map[stri
 	}
 
 	logHelper.Infof("Successfully seeded %d products", seeded)
-	return nil
-}
-
-// seedSampleData seeds with minimal sample data
-func seedSampleData(ctx context.Context, client *ent.Client, logger log.Logger) error {
-	logHelper := log.NewHelper(logger)
-	logHelper.Info("Seeding sample data...")
-
-	sampleProducts := []*ent.ProductCreate{
-		client.Product.Create().
-			SetTitle("Solid Men Multicolor Track Pants").
-			SetBrand("York").
-			SetCategory("Clothing and Accessories").
-			SetSubCategory("Bottomwear").
-			SetDescription("Yorker trackpants made from 100% rich combed cotton giving it a rich look. Designed for Comfort, Skin friendly fabric, itch-free waistband & great for all year round use Proudly made in India").
-			SetActualPrice("2,999").
-			SetSellingPrice("921").
-			SetDiscount("69% off").
-			SetPriceNumeric(921).
-			SetPid("TKPFCZ9EA7H5FYZH").
-			SetOriginalID("fa8e22d6-c0b6-5229-bb9e-ad52eda39a0a").
-			SetSeller("Shyam Enterprises").
-			SetAverageRating("3.9").
-			SetRatingNumeric(3.9).
-			SetImages([]string{
-				"https://rukminim1.flixcart.com/image/128/128/jr3t5e80/track-pant/z/y/n/m-1005combo2-yorker-original-imafczg3xfh5qqd4.jpeg?q=70",
-				"https://rukminim1.flixcart.com/image/128/128/jr58l8w0/track-pant/w/d/a/l-1005combo8-yorker-original-imafczg3pgtxgraq.jpeg?q=70",
-			}).
-			SetProductDetails([]map[string]string{
-				{"Style Code": "1005COMBO2"},
-				{"Closure": "Elastic"},
-				{"Pockets": "Side Pockets"},
-				{"Fabric": "Cotton Blend"},
-				{"Pattern": "Solid"},
-				{"Color": "Multicolor"},
-			}).
-			SetURL("https://www.flipkart.com/yorker-solid-men-multicolor-track-pants/p/itmd2c76aadce459?pid=TKPFCZ9EA7H5FYZH&lid=LSTTKPFCZ9EA7H5FYZHVYXWP0&marketplace=FLIPKART&srno=b_1_1&otracker=browse&fm=organic&iid=177a46eb-d053-4732-b3de-fcad6ff59cbd.TKPFCZ9EA7H5FYZH.SEARCH&ssid=utkd4t3gb40000001612415717799").
-			SetStyleCode("1005COMBO2").
-			SetCrawledAt(parseTime("02/10/2021, 20:11:51")).
-			SetFeatured(true),
-
-		client.Product.Create().
-			SetTitle("Solid Men Blue Track Pants").
-			SetBrand("York").
-			SetCategory("Clothing and Accessories").
-			SetSubCategory("Bottomwear").
-			SetDescription("Yorker trackpants made from 100% rich combed cotton giving it a rich look. Designed for Comfort, Skin friendly fabric, itch-free waistband & great for all year round use Proudly made in India").
-			SetActualPrice("1,499").
-			SetSellingPrice("499").
-			SetDiscount("66% off").
-			SetPriceNumeric(499).
-			SetPid("TKPFCZ9EJZV2UVRZ").
-			SetOriginalID("893e6980-f2a0-531f-b056-34dd63fe912c").
-			SetSeller("Shyam Enterprises").
-			SetAverageRating("3.9").
-			SetRatingNumeric(3.9).
-			SetImages([]string{
-				"https://rukminim1.flixcart.com/image/128/128/kfyasnk0/track-pant/g/5/y/s-19876-yorker-original-imafwamyzrwjynkf.jpeg?q=70",
-				"https://rukminim1.flixcart.com/image/128/128/kfyasnk0/track-pant/g/5/y/s-19876-yorker-original-imafwamynyeuu5zq.jpeg?q=70",
-			}).
-			SetProductDetails([]map[string]string{
-				{"Style Code": "1005BLUE"},
-				{"Closure": "Drawstring, Elastic"},
-				{"Pockets": "Side Pockets"},
-				{"Fabric": "Cotton Blend"},
-				{"Pattern": "Solid"},
-				{"Color": "Blue"},
-			}).
-			SetURL("https://www.flipkart.com/yorker-solid-men-blue-track-pants/p/itmfczez7v6rzwer?pid=TKPFCZ9EJZV2UVRZ&lid=LSTTKPFCZ9EJZV2UVRZ9HEITU&marketplace=FLIPKART&srno=b_1_2&otracker=browse&fm=organic&iid=177a46eb-d053-4732-b3de-fcad6ff59cbd.TKPFCZ9EJZV2UVRZ.SEARCH&ssid=utkd4t3gb40000001612415717799").
-			SetStyleCode("1005BLUE").
-			SetCrawledAt(parseTime("02/10/2021, 20:11:52")),
-	}
-
-	_, err := client.Product.CreateBulk(sampleProducts...).Save(ctx)
-	if err != nil {
-		return err
-	}
-
-	logHelper.Info("Sample data seeded successfully")
 	return nil
 }
 
