@@ -124,12 +124,27 @@ var (
 		{Name: "phone", Type: field.TypeString, Nullable: true},
 		{Name: "image", Type: field.TypeString, Nullable: true},
 		{Name: "password", Type: field.TypeString},
+		{Name: "is_admin", Type: field.TypeBool, Default: false},
+		{Name: "roles", Type: field.TypeJSON},
+		{Name: "permissions", Type: field.TypeJSON, Nullable: true},
 	}
 	// UsersTable holds the schema information for the "users" table.
 	UsersTable = &schema.Table{
 		Name:       "users",
 		Columns:    UsersColumns,
 		PrimaryKey: []*schema.Column{UsersColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "user_email",
+				Unique:  true,
+				Columns: []*schema.Column{UsersColumns[5]},
+			},
+			{
+				Name:    "user_is_admin",
+				Unique:  false,
+				Columns: []*schema.Column{UsersColumns[10]},
+			},
+		},
 	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{

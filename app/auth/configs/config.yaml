@@ -10,6 +10,12 @@ auth:
   jwt_secret: ${KRATOS_AUTH_JWT_SECRET:no-secret}
   jwt_expire: ${KRATOS_AUTH_JWT_EXPIRE:3600}
 
+admin:
+  enabled: true 
+  email: ${KRATOS_ADMIN_EMAIL:noemail@yinni.com}
+  password: ${KRATOS_ADMIN_PASSWORD:admin123}
+  name: ${KRATOS_ADMIN_NAME:System Administrator}
+
 data:
   database:
     driver: mysql

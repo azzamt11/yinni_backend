@@ -15,6 +15,7 @@ message Bootstrap {
   Data data = 2;
   Auth auth = 3;
   Embeddings embeddings = 4;  // Changed back to Embeddings
+  Admin admin = 5; 
 }
 
 message Server {
@@ -45,6 +46,13 @@ message Data {
   }
   Database database = 1;
   Redis redis = 2;
+}
+
+message Admin {
+  string email = 1;
+  string password = 2;
+  string name = 3;
+  bool enabled = 4;
 }
 
 message Embeddings {

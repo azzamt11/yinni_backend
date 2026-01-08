@@ -722,3 +722,57 @@ func convertEntToBiz(p *ent.Product) *biz.Product {
 		SearchKeywords: p.SearchKeywords,
 	}
 }
+
+// CountProducts counts all products
+func (r *productRepo) CountProducts(ctx context.Context) (int, error) {
+	count, err := r.data.ent.Product.Query().Count(ctx)
+	if err != nil {
+		return 0, err
+	}
+	return count, nil
+}
+
+// CountProductsWithoutEmbeddings counts products without embeddings
+func (r *productRepo) CountProductsWithoutEmbeddings(ctx context.Context) (int, error) {
+	count, err := r.data.ent.Product.
+		Query().
+		Where(product.EmbeddingIsNil()).
+		Count(ctx)
+	if err != nil {
+		return 0, err
+	}
+	return count, nil
+}
+
+// GenerateEmbeddingsForProducts generates embeddings for specific products
+func (r *productRepo) GenerateEmbeddingsForProducts(ctx context.Context, productIDs []int64) error {
+	if r.aiClient == nil {
+		return biz.ErrEmbeddingsNotEnabled
+	}
+
+	for _, productID := range productIDs {
+		// Get the product
+		p, err := r.data.ent.Product.Get(ctx, int(productID))
+		if err != nil {
+			r.log.Errorf("Failed to get product %d: %v", productID, err)
+			continue
+		}
+
+		// Convert to biz.Product
+		bizProduct := convertEntToBiz(p)
+
+		// Generate embedding
+		embedding, err := r.GenerateEmbedding(ctx, bizProduct)
+		if err != nil {
+			r.log.Errorf("Failed to generate embedding for product %d: %v", productID, err)
+			continue
+		}
+
+		// Update embedding
+		if err := r.UpdateProductEmbedding(ctx, productID, embedding); err != nil {
+			r.log.Errorf("Failed to update embedding for product %d: %v", productID, err)
+		}
+	}
+
+	return nil
+}

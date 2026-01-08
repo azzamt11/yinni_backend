@@ -13,6 +13,7 @@ import (
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
+	emptypb "google.golang.org/protobuf/types/known/emptypb"
 )
 
 // This is a compile-time assertion to ensure that this generated file
@@ -21,12 +22,15 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	Product_GetProduct_FullMethodName          = "/api.product.v1.Product/GetProduct"
-	Product_GetProductByPID_FullMethodName     = "/api.product.v1.Product/GetProductByPID"
-	Product_ListProducts_FullMethodName        = "/api.product.v1.Product/ListProducts"
-	Product_SearchProducts_FullMethodName      = "/api.product.v1.Product/SearchProducts"
-	Product_GetFeaturedProducts_FullMethodName = "/api.product.v1.Product/GetFeaturedProducts"
-	Product_GetSimilarProducts_FullMethodName  = "/api.product.v1.Product/GetSimilarProducts"
+	Product_GetProduct_FullMethodName                = "/api.product.v1.Product/GetProduct"
+	Product_GetProductByPID_FullMethodName           = "/api.product.v1.Product/GetProductByPID"
+	Product_ListProducts_FullMethodName              = "/api.product.v1.Product/ListProducts"
+	Product_SearchProducts_FullMethodName            = "/api.product.v1.Product/SearchProducts"
+	Product_GetFeaturedProducts_FullMethodName       = "/api.product.v1.Product/GetFeaturedProducts"
+	Product_GetSimilarProducts_FullMethodName        = "/api.product.v1.Product/GetSimilarProducts"
+	Product_GenerateEmbeddings_FullMethodName        = "/api.product.v1.Product/GenerateEmbeddings"
+	Product_GetEmbeddingStatus_FullMethodName        = "/api.product.v1.Product/GetEmbeddingStatus"
+	Product_CancelEmbeddingGeneration_FullMethodName = "/api.product.v1.Product/CancelEmbeddingGeneration"
 )
 
 // ProductClient is the client API for Product service.
@@ -45,6 +49,12 @@ type ProductClient interface {
 	GetFeaturedProducts(ctx context.Context, in *GetFeaturedProductsRequest, opts ...grpc.CallOption) (*ListProductsReply, error)
 	// Get similar products
 	GetSimilarProducts(ctx context.Context, in *GetSimilarProductsRequest, opts ...grpc.CallOption) (*ListProductsReply, error)
+	// Admin-only: Generate embeddings
+	GenerateEmbeddings(ctx context.Context, in *GenerateEmbeddingsRequest, opts ...grpc.CallOption) (*GenerateEmbeddingsResponse, error)
+	// Admin-only: Get embedding status
+	GetEmbeddingStatus(ctx context.Context, in *GetEmbeddingStatusRequest, opts ...grpc.CallOption) (*GetEmbeddingStatusResponse, error)
+	// Admin-only: Cancel embedding generation
+	CancelEmbeddingGeneration(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
 
 type productClient struct {
@@ -115,6 +125,36 @@ func (c *productClient) GetSimilarProducts(ctx context.Context, in *GetSimilarPr
 	return out, nil
 }
 
+func (c *productClient) GenerateEmbeddings(ctx context.Context, in *GenerateEmbeddingsRequest, opts ...grpc.CallOption) (*GenerateEmbeddingsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GenerateEmbeddingsResponse)
+	err := c.cc.Invoke(ctx, Product_GenerateEmbeddings_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *productClient) GetEmbeddingStatus(ctx context.Context, in *GetEmbeddingStatusRequest, opts ...grpc.CallOption) (*GetEmbeddingStatusResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetEmbeddingStatusResponse)
+	err := c.cc.Invoke(ctx, Product_GetEmbeddingStatus_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *productClient) CancelEmbeddingGeneration(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, Product_CancelEmbeddingGeneration_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ProductServer is the server API for Product service.
 // All implementations must embed UnimplementedProductServer
 // for forward compatibility.
@@ -131,6 +171,12 @@ type ProductServer interface {
 	GetFeaturedProducts(context.Context, *GetFeaturedProductsRequest) (*ListProductsReply, error)
 	// Get similar products
 	GetSimilarProducts(context.Context, *GetSimilarProductsRequest) (*ListProductsReply, error)
+	// Admin-only: Generate embeddings
+	GenerateEmbeddings(context.Context, *GenerateEmbeddingsRequest) (*GenerateEmbeddingsResponse, error)
+	// Admin-only: Get embedding status
+	GetEmbeddingStatus(context.Context, *GetEmbeddingStatusRequest) (*GetEmbeddingStatusResponse, error)
+	// Admin-only: Cancel embedding generation
+	CancelEmbeddingGeneration(context.Context, *emptypb.Empty) (*emptypb.Empty, error)
 	mustEmbedUnimplementedProductServer()
 }
 
@@ -158,6 +204,15 @@ func (UnimplementedProductServer) GetFeaturedProducts(context.Context, *GetFeatu
 }
 func (UnimplementedProductServer) GetSimilarProducts(context.Context, *GetSimilarProductsRequest) (*ListProductsReply, error) {
 	return nil, status.Error(codes.Unimplemented, "method GetSimilarProducts not implemented")
+}
+func (UnimplementedProductServer) GenerateEmbeddings(context.Context, *GenerateEmbeddingsRequest) (*GenerateEmbeddingsResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GenerateEmbeddings not implemented")
+}
+func (UnimplementedProductServer) GetEmbeddingStatus(context.Context, *GetEmbeddingStatusRequest) (*GetEmbeddingStatusResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetEmbeddingStatus not implemented")
+}
+func (UnimplementedProductServer) CancelEmbeddingGeneration(context.Context, *emptypb.Empty) (*emptypb.Empty, error) {
+	return nil, status.Error(codes.Unimplemented, "method CancelEmbeddingGeneration not implemented")
 }
 func (UnimplementedProductServer) mustEmbedUnimplementedProductServer() {}
 func (UnimplementedProductServer) testEmbeddedByValue()                 {}
@@ -288,6 +343,60 @@ func _Product_GetSimilarProducts_Handler(srv interface{}, ctx context.Context, d
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Product_GenerateEmbeddings_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GenerateEmbeddingsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ProductServer).GenerateEmbeddings(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Product_GenerateEmbeddings_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ProductServer).GenerateEmbeddings(ctx, req.(*GenerateEmbeddingsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Product_GetEmbeddingStatus_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetEmbeddingStatusRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ProductServer).GetEmbeddingStatus(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Product_GetEmbeddingStatus_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ProductServer).GetEmbeddingStatus(ctx, req.(*GetEmbeddingStatusRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Product_CancelEmbeddingGeneration_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(emptypb.Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ProductServer).CancelEmbeddingGeneration(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Product_CancelEmbeddingGeneration_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ProductServer).CancelEmbeddingGeneration(ctx, req.(*emptypb.Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Product_ServiceDesc is the grpc.ServiceDesc for Product service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -318,6 +427,18 @@ var Product_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetSimilarProducts",
 			Handler:    _Product_GetSimilarProducts_Handler,
+		},
+		{
+			MethodName: "GenerateEmbeddings",
+			Handler:    _Product_GenerateEmbeddings_Handler,
+		},
+		{
+			MethodName: "GetEmbeddingStatus",
+			Handler:    _Product_GetEmbeddingStatus_Handler,
+		},
+		{
+			MethodName: "CancelEmbeddingGeneration",
+			Handler:    _Product_CancelEmbeddingGeneration_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

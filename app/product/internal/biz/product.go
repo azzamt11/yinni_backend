@@ -104,6 +104,9 @@ type ProductRepo interface {
 	BatchUpdateEmbeddings(ctx context.Context, productEmbeddings map[int64][]float32) error
 	GetProductsWithoutEmbeddings(ctx context.Context, limit int) ([]*Product, error)
 	GetProductsWithEmbeddings(ctx context.Context, limit int) ([]*Product, error)
+	CountProducts(ctx context.Context) (int, error)
+	CountProductsWithoutEmbeddings(ctx context.Context) (int, error)
+	GenerateEmbeddingsForProducts(ctx context.Context, productIDs []int64) error
 }
 
 // ListProductsParams defines parameters for listing products
@@ -409,8 +412,81 @@ func (uc *ProductUsecase) RAGSearch(ctx context.Context, prompt string, limit in
 	return products[:min(limit, len(products))], nil
 }
 
-// GenerateAllEmbeddings generates embeddings for all products
-func (uc *ProductUsecase) GenerateAllEmbeddings(ctx context.Context, batchSize int) error {
+// // GenerateAllEmbeddings generates embeddings for all products
+// func (uc *ProductUsecase) GenerateAllEmbeddings(ctx context.Context, batchSize int) error {
+// 	if !uc.embeddingsEnabled() {
+// 		return ErrEmbeddingsNotEnabled
+// 	}
+
+// 	uc.log.Info("Starting embedding generation for all products")
+
+// 	page := 1
+// 	for {
+// 		// Get products without embeddings
+// 		params := &ListProductsParams{
+// 			Page:     int32(page),
+// 			PageSize: int32(batchSize),
+// 		}
+
+// 		products, _, err := uc.ListProducts(ctx, params)
+// 		if err != nil {
+// 			return fmt.Errorf("failed to list products: %w", err)
+// 		}
+
+// 		if len(products) == 0 {
+// 			break
+// 		}
+
+// 		// Process batch
+// 		productEmbeddings := make(map[int64][]float32)
+// 		for _, product := range products {
+// 			// Skip if already has embedding
+// 			if len(product.Embedding) > 0 {
+// 				continue
+// 			}
+
+// 			embedding, err := uc.GenerateEmbedding(ctx, product)
+// 			if err != nil {
+// 				uc.log.Errorf("Failed to generate embedding for product %d: %v", product.ID, err)
+// 				continue
+// 			}
+
+// 			productEmbeddings[product.ID] = embedding
+// 			uc.log.Infof("Generated embedding for product %d: %s", product.ID, product.Title)
+
+// 			// Rate limiting
+// 			time.Sleep(100 * time.Millisecond)
+// 		}
+
+// 		// Batch update embeddings
+// 		if len(productEmbeddings) > 0 {
+// 			if err := uc.repo.BatchUpdateEmbeddings(ctx, productEmbeddings); err != nil {
+// 				uc.log.Errorf("Failed to batch update embeddings: %v", err)
+// 			}
+// 		}
+
+// 		page++
+// 	}
+
+// 	uc.log.Info("Embedding generation completed")
+// 	return nil
+// }
+
+// In your ProductUsecase struct
+func (uc *ProductUsecase) CountProducts(ctx context.Context) (int, error) {
+	return uc.repo.CountProducts(ctx)
+}
+
+func (uc *ProductUsecase) CountProductsWithoutEmbeddings(ctx context.Context) (int, error) {
+	return uc.repo.CountProductsWithoutEmbeddings(ctx)
+}
+
+func (uc *ProductUsecase) GenerateEmbeddingsForProducts(ctx context.Context, productIDs []int64) error {
+	return uc.repo.GenerateEmbeddingsForProducts(ctx, productIDs)
+}
+
+// Update your existing GenerateAllEmbeddings to accept a callback
+func (uc *ProductUsecase) GenerateAllEmbeddings(ctx context.Context, batchSize int, progressCallback func(processed int)) error {
 	if !uc.embeddingsEnabled() {
 		return ErrEmbeddingsNotEnabled
 	}
@@ -418,6 +494,7 @@ func (uc *ProductUsecase) GenerateAllEmbeddings(ctx context.Context, batchSize i
 	uc.log.Info("Starting embedding generation for all products")
 
 	page := 1
+	totalProcessed := 0
 	for {
 		// Get products without embeddings
 		params := &ListProductsParams{
@@ -449,6 +526,13 @@ func (uc *ProductUsecase) GenerateAllEmbeddings(ctx context.Context, batchSize i
 			}
 
 			productEmbeddings[product.ID] = embedding
+			totalProcessed++
+
+			// Update progress
+			if progressCallback != nil {
+				progressCallback(totalProcessed)
+			}
+
 			uc.log.Infof("Generated embedding for product %d: %s", product.ID, product.Title)
 
 			// Rate limiting
@@ -465,7 +549,7 @@ func (uc *ProductUsecase) GenerateAllEmbeddings(ctx context.Context, batchSize i
 		page++
 	}
 
-	uc.log.Info("Embedding generation completed")
+	uc.log.Infof("Embedding generation completed. Total processed: %d", totalProcessed)
 	return nil
 }
 

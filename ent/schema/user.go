@@ -5,6 +5,7 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/schema/field"
+	"entgo.io/ent/schema/index"
 	"entgo.io/ent/schema/mixin"
 )
 
@@ -53,9 +54,19 @@ func (User) Fields() []ent.Field {
 		field.String("phone").Optional(),
 		field.String("image").Optional(),
 		field.String("password").NotEmpty(),
+		field.Bool("is_admin").Default(false).Comment("Admin users can access admin endpoints"),
+		field.JSON("roles", []string{}).Default([]string{"user"}), // Simple array of role names
+		field.JSON("permissions", []string{}).Optional(),          // Optional granular permissions
 	}
 }
 
 func (User) Edges() []ent.Edge {
-	return nil
+	return nil // No edges for simple implementation
+}
+
+func (User) Indexes() []ent.Index {
+	return []ent.Index{
+		index.Fields("email").Unique(),
+		index.Fields("is_admin"), // For quick admin lookups
+	}
 }

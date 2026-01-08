@@ -2,28 +2,62 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"strconv"
 	"strings"
+	"sync"
+	"time"
 
 	pb "yinni_backend/api/product/v1"
 	"yinni_backend/app/product/internal/biz"
+	"yinni_backend/pkg/middleware"
 
+	"github.com/go-kratos/kratos/v2/errors"
 	"github.com/go-kratos/kratos/v2/log"
+	"google.golang.org/protobuf/types/known/emptypb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 type ProductService struct {
 	pb.UnimplementedProductServer
-	uc  *biz.ProductUsecase
-	log *log.Helper
+	uc     *biz.ProductUsecase
+	log    *log.Helper
+	jobMgr *EmbeddingJobManager
+}
+
+// EmbeddingJobManager manages embedding generation jobs
+type EmbeddingJobManager struct {
+	mu        sync.RWMutex
+	activeJob *EmbeddingJob
+	log       *log.Helper
+	uc        *biz.ProductUsecase
+}
+
+// EmbeddingJob represents an embedding generation job
+type EmbeddingJob struct {
+	ID          string
+	Status      string // "pending", "running", "completed", "failed", "cancelled"
+	Processed   int
+	Total       int
+	Error       string
+	StartedAt   time.Time
+	LastUpdated time.Time
+	Request     *pb.GenerateEmbeddingsRequest
+	CreatedBy   int64 // User ID who started the job
 }
 
 func NewProductService(uc *biz.ProductUsecase, logger log.Logger) *ProductService {
 	return &ProductService{
 		uc:  uc,
 		log: log.NewHelper(logger),
+		jobMgr: &EmbeddingJobManager{
+			log: log.NewHelper(log.With(logger, "module", "embedding-job")),
+			uc:  uc,
+		},
 	}
 }
+
+// ===================== EXISTING METHODS =====================
 
 func (s *ProductService) GetProduct(ctx context.Context, req *pb.GetProductRequest) (*pb.ProductInfo, error) {
 	s.log.WithContext(ctx).Infof("GetProduct called with id: %d", req.Id)
@@ -34,7 +68,7 @@ func (s *ProductService) GetProduct(ctx context.Context, req *pb.GetProductReque
 		return nil, err
 	}
 
-	return s.convertToProductInfo(product), nil
+	return s.convertToProductInfo(product)
 }
 
 func (s *ProductService) GetProductByPID(ctx context.Context, req *pb.GetProductByPIDRequest) (*pb.ProductInfo, error) {
@@ -46,7 +80,7 @@ func (s *ProductService) GetProductByPID(ctx context.Context, req *pb.GetProduct
 		return nil, err
 	}
 
-	return s.convertToProductInfo(product), nil
+	return s.convertToProductInfo(product)
 }
 
 func (s *ProductService) ListProducts(ctx context.Context, req *pb.ListProductsRequest) (*pb.ListProductsReply, error) {
@@ -182,11 +216,249 @@ func (s *ProductService) GetSimilarProducts(ctx context.Context, req *pb.GetSimi
 	}, nil
 }
 
-// Helper methods for conversion
+// ===================== ADMIN EMBEDDING METHODS =====================
 
-func (s *ProductService) convertToProductInfo(p *biz.Product) *pb.ProductInfo {
+// GenerateEmbeddings - Admin only endpoint to generate embeddings
+func (s *ProductService) GenerateEmbeddings(ctx context.Context, req *pb.GenerateEmbeddingsRequest) (*pb.GenerateEmbeddingsResponse, error) {
+	// Get user info from context (set by middleware)
+	claims, err := middleware.ExtractClaimsFromContext(ctx)
+	if err != nil {
+		s.log.WithContext(ctx).Errorf("Failed to extract user claims: %v", err)
+		return nil, errors.Unauthorized("UNAUTHORIZED", "authentication required")
+	}
+
+	s.log.WithContext(ctx).Infof("Admin %d generating embeddings: regenerate_all=%v, batch_size=%d, product_ids=%d",
+		claims.UserID, req.RegenerateAll, req.BatchSize, len(req.ProductIds))
+
+	// Start embedding generation
+	job, err := s.jobMgr.StartJob(ctx, req, claims.UserID)
+	if err != nil {
+		s.log.WithContext(ctx).Errorf("Failed to start embedding job: %v", err)
+		return nil, err
+	}
+
+	// Estimate time (rough estimate: 2 seconds per product)
+	estimatedTime := int32(job.Total * 2)
+
+	return &pb.GenerateEmbeddingsResponse{
+		JobId:                job.ID,
+		Status:               job.Status,
+		EstimatedTimeSeconds: estimatedTime,
+		TotalProducts:        int32(job.Total),
+	}, nil
+}
+
+// GetEmbeddingStatus - Admin only endpoint to check embedding generation status
+func (s *ProductService) GetEmbeddingStatus(ctx context.Context, req *pb.GetEmbeddingStatusRequest) (*pb.GetEmbeddingStatusResponse, error) {
+	s.log.WithContext(ctx).Infof("GetEmbeddingStatus called: job_id=%s", req.JobId)
+
+	job := s.jobMgr.GetJob(req.JobId)
+	if job == nil {
+		return nil, errors.NotFound("EMBEDDING_JOB_NOT_FOUND", "embedding job not found")
+	}
+
+	progress := float32(0)
+	if job.Total > 0 {
+		progress = float32(job.Processed) / float32(job.Total)
+	}
+
+	// Estimate completion time
+	var estimatedCompletion *timestamppb.Timestamp
+	if job.Status == "running" && job.Processed > 0 {
+		elapsed := time.Since(job.StartedAt).Seconds()
+		rate := float64(job.Processed) / elapsed
+		if rate > 0 {
+			remaining := float64(job.Total-job.Processed) / rate
+			estTime := time.Now().Add(time.Duration(remaining) * time.Second)
+			estimatedCompletion = timestamppb.New(estTime)
+		}
+	}
+
+	return &pb.GetEmbeddingStatusResponse{
+		JobId:               job.ID,
+		Status:              job.Status,
+		Processed:           int32(job.Processed),
+		Total:               int32(job.Total),
+		Progress:            progress,
+		ErrorMessage:        job.Error,
+		StartedAt:           timestamppb.New(job.StartedAt),
+		LastUpdated:         timestamppb.New(job.LastUpdated),
+		EstimatedCompletion: estimatedCompletion,
+	}, nil
+}
+
+// CancelEmbeddingGeneration - Admin only endpoint to cancel embedding generation
+func (s *ProductService) CancelEmbeddingGeneration(ctx context.Context, _ *emptypb.Empty) (*emptypb.Empty, error) {
+	s.log.WithContext(ctx).Info("CancelEmbeddingGeneration called")
+
+	if err := s.jobMgr.CancelJob(); err != nil {
+		s.log.WithContext(ctx).Errorf("Failed to cancel embedding job: %v", err)
+		return nil, err
+	}
+
+	return &emptypb.Empty{}, nil
+}
+
+// ===================== EMBEDDING JOB MANAGER METHODS =====================
+
+// StartJob starts a new embedding generation job
+func (m *EmbeddingJobManager) StartJob(ctx context.Context, req *pb.GenerateEmbeddingsRequest, userID int64) (*EmbeddingJob, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	// Check if job is already running
+	if m.activeJob != nil && (m.activeJob.Status == "running" || m.activeJob.Status == "pending") {
+		return nil, errors.Conflict("EMBEDDING_JOB_ALREADY_RUNNING", "embedding generation already in progress")
+	}
+
+	// Generate job ID
+	jobID := generateJobID()
+
+	// Get total product count
+	total := 0
+	if req.RegenerateAll {
+		// Count all products
+		count, err := m.uc.CountProducts(ctx)
+		if err != nil {
+			return nil, errors.InternalServer("DATABASE_ERROR", fmt.Sprintf("failed to count products: %v", err))
+		}
+		total = count
+	} else if len(req.ProductIds) > 0 {
+		total = len(req.ProductIds)
+	} else {
+		// Count products without embeddings
+		count, err := m.uc.CountProductsWithoutEmbeddings(ctx)
+		if err != nil {
+			return nil, errors.InternalServer("DATABASE_ERROR", fmt.Sprintf("failed to count products without embeddings: %v", err))
+		}
+		total = count
+	}
+
+	if total == 0 {
+		return nil, errors.BadRequest("INVALID_PARAMETERS", "no products to process")
+	}
+
+	job := &EmbeddingJob{
+		ID:          jobID,
+		Status:      "pending",
+		Total:       total,
+		StartedAt:   time.Now(),
+		LastUpdated: time.Now(),
+		Request:     req,
+		CreatedBy:   userID,
+	}
+
+	m.activeJob = job
+	m.log.Infof("Embedding job %s created for %d products (user: %d)", job.ID, job.Total, userID)
+
+	// Start processing in background
+	go m.processJob(ctx, job)
+
+	return job, nil
+}
+
+// processJob processes the embedding generation job in the background
+func (m *EmbeddingJobManager) processJob(ctx context.Context, job *EmbeddingJob) {
+	m.mu.Lock()
+	job.Status = "running"
+	job.LastUpdated = time.Now()
+	m.mu.Unlock()
+
+	m.log.Infof("Starting embedding job %s for %d products", job.ID, job.Total)
+
+	batchSize := 50
+	if job.Request.BatchSize > 0 {
+		batchSize = int(job.Request.BatchSize)
+	}
+
+	var err error
+	if job.Request.RegenerateAll {
+		err = m.uc.GenerateAllEmbeddings(ctx, batchSize, func(processed int) {
+			m.mu.Lock()
+			job.Processed = processed
+			job.LastUpdated = time.Now()
+			m.mu.Unlock()
+		})
+	} else if len(job.Request.ProductIds) > 0 {
+		err = m.uc.GenerateEmbeddingsForProducts(ctx, job.Request.ProductIds)
+		if err == nil {
+			m.mu.Lock()
+			job.Processed = job.Total
+			m.mu.Unlock()
+		}
+	} else {
+		err = m.uc.GenerateAllEmbeddings(ctx, batchSize, func(processed int) {
+			m.mu.Lock()
+			job.Processed = processed
+			job.LastUpdated = time.Now()
+			m.mu.Unlock()
+		})
+	}
+
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	if err != nil {
+		job.Status = "failed"
+		job.Error = err.Error()
+		m.log.Errorf("Embedding job %s failed: %v", job.ID, err)
+	} else {
+		job.Status = "completed"
+		job.Processed = job.Total
+		m.log.Infof("Embedding job %s completed successfully", job.ID)
+	}
+	job.LastUpdated = time.Now()
+}
+
+// GetJob returns a job by ID
+func (m *EmbeddingJobManager) GetJob(jobID string) *EmbeddingJob {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+
+	if m.activeJob != nil && m.activeJob.ID == jobID {
+		return m.activeJob
+	}
+	return nil
+}
+
+// CancelJob cancels the active embedding job
+func (m *EmbeddingJobManager) CancelJob() error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	if m.activeJob == nil || (m.activeJob.Status != "running" && m.activeJob.Status != "pending") {
+		return errors.BadRequest("EMBEDDING_JOB_NOT_RUNNING", "no active embedding job to cancel")
+	}
+
+	m.activeJob.Status = "cancelled"
+	m.activeJob.LastUpdated = time.Now()
+	m.log.Infof("Embedding job %s cancelled", m.activeJob.ID)
+
+	return nil
+}
+
+// ===================== HELPER METHODS =====================
+
+// Helper function to generate job ID
+func generateJobID() string {
+	return "embed_" + strconv.FormatInt(time.Now().UnixNano(), 36)
+}
+
+// Helper function to check if slice contains string
+func contains(slice []string, item string) bool {
+	for _, s := range slice {
+		if s == item {
+			return true
+		}
+	}
+	return false
+}
+
+// ===================== EXISTING HELPER METHODS =====================
+
+func (s *ProductService) convertToProductInfo(p *biz.Product) (*pb.ProductInfo, error) {
 	if p == nil {
-		return nil
+		return nil, nil
 	}
 
 	// Convert product details to map
@@ -205,6 +477,18 @@ func (s *ProductService) convertToProductInfo(p *biz.Product) *pb.ProductInfo {
 
 	// Calculate discount percentage
 	discountPct := s.calculateDiscountPercentage(p.ActualPrice, p.SellingPrice)
+
+	// Create timestamps
+	var crawledAt, createdAt, updatedAt *timestamppb.Timestamp
+	if !p.CrawledAt.IsZero() {
+		crawledAt = timestamppb.New(p.CrawledAt)
+	}
+	if !p.CreatedAt.IsZero() {
+		createdAt = timestamppb.New(p.CreatedAt)
+	}
+	if !p.UpdatedAt.IsZero() {
+		updatedAt = timestamppb.New(p.UpdatedAt)
+	}
 
 	return &pb.ProductInfo{
 		Id:                 p.ID,
@@ -229,19 +513,24 @@ func (s *ProductService) convertToProductInfo(p *biz.Product) *pb.ProductInfo {
 		Url:                p.URL,
 		Pid:                p.PID,
 		StyleCode:          p.StyleCode,
-		CrawledAt:          timestamppb.New(p.CrawledAt),
-		CreatedAt:          timestamppb.New(p.CreatedAt),
-		UpdatedAt:          timestamppb.New(p.UpdatedAt),
+		CrawledAt:          crawledAt,
+		CreatedAt:          createdAt,
+		UpdatedAt:          updatedAt,
 		ViewCount:          int32(p.ViewCount),
 		ClickCount:         int32(p.ClickCount),
 		Featured:           p.Featured,
-	}
+	}, nil
 }
 
 func (s *ProductService) convertToProductList(products []*biz.Product) []*pb.ProductInfo {
 	result := make([]*pb.ProductInfo, len(products))
 	for i, p := range products {
-		result[i] = s.convertToProductInfo(p)
+		info, err := s.convertToProductInfo(p)
+		if err != nil {
+			s.log.Errorf("Failed to convert product %d: %v", p.ID, err)
+			continue
+		}
+		result[i] = info
 	}
 	return result
 }

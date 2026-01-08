@@ -27,6 +27,7 @@ func NewHTTPServer(c *conf.Server, authConf *conf.Auth, product *service.Product
 			recovery.Recovery(),
 			logging.Server(logger),
 			middleware.JWT(authConf.JwtSecret),
+			middleware.Admin(authConf.JwtSecret),
 		),
 		http.Filter(corsHandler.Handler),
 	}

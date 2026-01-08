@@ -10,6 +10,7 @@ import (
 	context "context"
 	http "github.com/go-kratos/kratos/v2/transport/http"
 	binding "github.com/go-kratos/kratos/v2/transport/http/binding"
+	emptypb "google.golang.org/protobuf/types/known/emptypb"
 )
 
 // This is a compile-time assertion to ensure that this generated file
@@ -19,6 +20,9 @@ var _ = binding.EncodeURL
 
 const _ = http.SupportPackageIsVersion1
 
+const OperationProductCancelEmbeddingGeneration = "/api.product.v1.Product/CancelEmbeddingGeneration"
+const OperationProductGenerateEmbeddings = "/api.product.v1.Product/GenerateEmbeddings"
+const OperationProductGetEmbeddingStatus = "/api.product.v1.Product/GetEmbeddingStatus"
 const OperationProductGetFeaturedProducts = "/api.product.v1.Product/GetFeaturedProducts"
 const OperationProductGetProduct = "/api.product.v1.Product/GetProduct"
 const OperationProductGetProductByPID = "/api.product.v1.Product/GetProductByPID"
@@ -27,6 +31,12 @@ const OperationProductListProducts = "/api.product.v1.Product/ListProducts"
 const OperationProductSearchProducts = "/api.product.v1.Product/SearchProducts"
 
 type ProductHTTPServer interface {
+	// CancelEmbeddingGenerationAdmin-only: Cancel embedding generation
+	CancelEmbeddingGeneration(context.Context, *emptypb.Empty) (*emptypb.Empty, error)
+	// GenerateEmbeddings Admin-only: Generate embeddings
+	GenerateEmbeddings(context.Context, *GenerateEmbeddingsRequest) (*GenerateEmbeddingsResponse, error)
+	// GetEmbeddingStatusAdmin-only: Get embedding status
+	GetEmbeddingStatus(context.Context, *GetEmbeddingStatusRequest) (*GetEmbeddingStatusResponse, error)
 	// GetFeaturedProducts Get featured products
 	GetFeaturedProducts(context.Context, *GetFeaturedProductsRequest) (*ListProductsReply, error)
 	// GetProduct Get product by ID
@@ -49,6 +59,9 @@ func RegisterProductHTTPServer(s *http.Server, srv ProductHTTPServer) {
 	r.GET("/v1/products/search", _Product_SearchProducts0_HTTP_Handler(srv))
 	r.GET("/v1/products/featured", _Product_GetFeaturedProducts0_HTTP_Handler(srv))
 	r.GET("/v1/products/{id}/similar", _Product_GetSimilarProducts0_HTTP_Handler(srv))
+	r.POST("/v1/admin/embeddings/generate", _Product_GenerateEmbeddings0_HTTP_Handler(srv))
+	r.GET("/v1/admin/embeddings/status", _Product_GetEmbeddingStatus0_HTTP_Handler(srv))
+	r.POST("/v1/admin/embeddings/cancel", _Product_CancelEmbeddingGeneration0_HTTP_Handler(srv))
 }
 
 func _Product_GetProduct0_HTTP_Handler(srv ProductHTTPServer) func(ctx http.Context) error {
@@ -174,7 +187,76 @@ func _Product_GetSimilarProducts0_HTTP_Handler(srv ProductHTTPServer) func(ctx h
 	}
 }
 
+func _Product_GenerateEmbeddings0_HTTP_Handler(srv ProductHTTPServer) func(ctx http.Context) error {
+	return func(ctx http.Context) error {
+		var in GenerateEmbeddingsRequest
+		if err := ctx.Bind(&in); err != nil {
+			return err
+		}
+		if err := ctx.BindQuery(&in); err != nil {
+			return err
+		}
+		http.SetOperation(ctx, OperationProductGenerateEmbeddings)
+		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
+			return srv.GenerateEmbeddings(ctx, req.(*GenerateEmbeddingsRequest))
+		})
+		out, err := h(ctx, &in)
+		if err != nil {
+			return err
+		}
+		reply := out.(*GenerateEmbeddingsResponse)
+		return ctx.Result(200, reply)
+	}
+}
+
+func _Product_GetEmbeddingStatus0_HTTP_Handler(srv ProductHTTPServer) func(ctx http.Context) error {
+	return func(ctx http.Context) error {
+		var in GetEmbeddingStatusRequest
+		if err := ctx.BindQuery(&in); err != nil {
+			return err
+		}
+		http.SetOperation(ctx, OperationProductGetEmbeddingStatus)
+		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
+			return srv.GetEmbeddingStatus(ctx, req.(*GetEmbeddingStatusRequest))
+		})
+		out, err := h(ctx, &in)
+		if err != nil {
+			return err
+		}
+		reply := out.(*GetEmbeddingStatusResponse)
+		return ctx.Result(200, reply)
+	}
+}
+
+func _Product_CancelEmbeddingGeneration0_HTTP_Handler(srv ProductHTTPServer) func(ctx http.Context) error {
+	return func(ctx http.Context) error {
+		var in emptypb.Empty
+		if err := ctx.Bind(&in); err != nil {
+			return err
+		}
+		if err := ctx.BindQuery(&in); err != nil {
+			return err
+		}
+		http.SetOperation(ctx, OperationProductCancelEmbeddingGeneration)
+		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
+			return srv.CancelEmbeddingGeneration(ctx, req.(*emptypb.Empty))
+		})
+		out, err := h(ctx, &in)
+		if err != nil {
+			return err
+		}
+		reply := out.(*emptypb.Empty)
+		return ctx.Result(200, reply)
+	}
+}
+
 type ProductHTTPClient interface {
+	// CancelEmbeddingGenerationAdmin-only: Cancel embedding generation
+	CancelEmbeddingGeneration(ctx context.Context, req *emptypb.Empty, opts ...http.CallOption) (rsp *emptypb.Empty, err error)
+	// GenerateEmbeddings Admin-only: Generate embeddings
+	GenerateEmbeddings(ctx context.Context, req *GenerateEmbeddingsRequest, opts ...http.CallOption) (rsp *GenerateEmbeddingsResponse, err error)
+	// GetEmbeddingStatusAdmin-only: Get embedding status
+	GetEmbeddingStatus(ctx context.Context, req *GetEmbeddingStatusRequest, opts ...http.CallOption) (rsp *GetEmbeddingStatusResponse, err error)
 	// GetFeaturedProducts Get featured products
 	GetFeaturedProducts(ctx context.Context, req *GetFeaturedProductsRequest, opts ...http.CallOption) (rsp *ListProductsReply, err error)
 	// GetProduct Get product by ID
@@ -195,6 +277,48 @@ type ProductHTTPClientImpl struct {
 
 func NewProductHTTPClient(client *http.Client) ProductHTTPClient {
 	return &ProductHTTPClientImpl{client}
+}
+
+// CancelEmbeddingGenerationAdmin-only: Cancel embedding generation
+func (c *ProductHTTPClientImpl) CancelEmbeddingGeneration(ctx context.Context, in *emptypb.Empty, opts ...http.CallOption) (*emptypb.Empty, error) {
+	var out emptypb.Empty
+	pattern := "/v1/admin/embeddings/cancel"
+	path := binding.EncodeURL(pattern, in, false)
+	opts = append(opts, http.Operation(OperationProductCancelEmbeddingGeneration))
+	opts = append(opts, http.PathTemplate(pattern))
+	err := c.cc.Invoke(ctx, "POST", path, in, &out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+// GenerateEmbeddings Admin-only: Generate embeddings
+func (c *ProductHTTPClientImpl) GenerateEmbeddings(ctx context.Context, in *GenerateEmbeddingsRequest, opts ...http.CallOption) (*GenerateEmbeddingsResponse, error) {
+	var out GenerateEmbeddingsResponse
+	pattern := "/v1/admin/embeddings/generate"
+	path := binding.EncodeURL(pattern, in, false)
+	opts = append(opts, http.Operation(OperationProductGenerateEmbeddings))
+	opts = append(opts, http.PathTemplate(pattern))
+	err := c.cc.Invoke(ctx, "POST", path, in, &out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+// GetEmbeddingStatusAdmin-only: Get embedding status
+func (c *ProductHTTPClientImpl) GetEmbeddingStatus(ctx context.Context, in *GetEmbeddingStatusRequest, opts ...http.CallOption) (*GetEmbeddingStatusResponse, error) {
+	var out GetEmbeddingStatusResponse
+	pattern := "/v1/admin/embeddings/status"
+	path := binding.EncodeURL(pattern, in, true)
+	opts = append(opts, http.Operation(OperationProductGetEmbeddingStatus))
+	opts = append(opts, http.PathTemplate(pattern))
+	err := c.cc.Invoke(ctx, "GET", path, nil, &out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
 }
 
 // GetFeaturedProducts Get featured products

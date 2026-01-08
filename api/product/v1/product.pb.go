@@ -12,6 +12,7 @@ import (
 	_ "google.golang.org/genproto/googleapis/api/annotations"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
+	emptypb "google.golang.org/protobuf/types/known/emptypb"
 	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
 	reflect "reflect"
 	sync "sync"
@@ -433,6 +434,110 @@ func (x *GetSimilarProductsRequest) GetLimit() int32 {
 	return 0
 }
 
+type GenerateEmbeddingsRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	RegenerateAll bool                   `protobuf:"varint,1,opt,name=regenerate_all,json=regenerateAll,proto3" json:"regenerate_all,omitempty"` // Whether to regenerate all embeddings
+	BatchSize     int32                  `protobuf:"varint,2,opt,name=batch_size,json=batchSize,proto3" json:"batch_size,omitempty"`             // Batch size for processing
+	ProductIds    []int64                `protobuf:"varint,3,rep,packed,name=product_ids,json=productIds,proto3" json:"product_ids,omitempty"`   // Specific products to process
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GenerateEmbeddingsRequest) Reset() {
+	*x = GenerateEmbeddingsRequest{}
+	mi := &file_api_product_v1_product_proto_msgTypes[6]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GenerateEmbeddingsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GenerateEmbeddingsRequest) ProtoMessage() {}
+
+func (x *GenerateEmbeddingsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_api_product_v1_product_proto_msgTypes[6]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GenerateEmbeddingsRequest.ProtoReflect.Descriptor instead.
+func (*GenerateEmbeddingsRequest) Descriptor() ([]byte, []int) {
+	return file_api_product_v1_product_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *GenerateEmbeddingsRequest) GetRegenerateAll() bool {
+	if x != nil {
+		return x.RegenerateAll
+	}
+	return false
+}
+
+func (x *GenerateEmbeddingsRequest) GetBatchSize() int32 {
+	if x != nil {
+		return x.BatchSize
+	}
+	return 0
+}
+
+func (x *GenerateEmbeddingsRequest) GetProductIds() []int64 {
+	if x != nil {
+		return x.ProductIds
+	}
+	return nil
+}
+
+type GetEmbeddingStatusRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	JobId         string                 `protobuf:"bytes,1,opt,name=job_id,json=jobId,proto3" json:"job_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetEmbeddingStatusRequest) Reset() {
+	*x = GetEmbeddingStatusRequest{}
+	mi := &file_api_product_v1_product_proto_msgTypes[7]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetEmbeddingStatusRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetEmbeddingStatusRequest) ProtoMessage() {}
+
+func (x *GetEmbeddingStatusRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_api_product_v1_product_proto_msgTypes[7]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetEmbeddingStatusRequest.ProtoReflect.Descriptor instead.
+func (*GetEmbeddingStatusRequest) Descriptor() ([]byte, []int) {
+	return file_api_product_v1_product_proto_rawDescGZIP(), []int{7}
+}
+
+func (x *GetEmbeddingStatusRequest) GetJobId() string {
+	if x != nil {
+		return x.JobId
+	}
+	return ""
+}
+
 type ListProductsReply struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Products      []*ProductInfo         `protobuf:"bytes,1,rep,name=products,proto3" json:"products,omitempty"`
@@ -445,7 +550,7 @@ type ListProductsReply struct {
 
 func (x *ListProductsReply) Reset() {
 	*x = ListProductsReply{}
-	mi := &file_api_product_v1_product_proto_msgTypes[6]
+	mi := &file_api_product_v1_product_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -457,7 +562,7 @@ func (x *ListProductsReply) String() string {
 func (*ListProductsReply) ProtoMessage() {}
 
 func (x *ListProductsReply) ProtoReflect() protoreflect.Message {
-	mi := &file_api_product_v1_product_proto_msgTypes[6]
+	mi := &file_api_product_v1_product_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -470,7 +575,7 @@ func (x *ListProductsReply) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListProductsReply.ProtoReflect.Descriptor instead.
 func (*ListProductsReply) Descriptor() ([]byte, []int) {
-	return file_api_product_v1_product_proto_rawDescGZIP(), []int{6}
+	return file_api_product_v1_product_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *ListProductsReply) GetProducts() []*ProductInfo {
@@ -499,6 +604,182 @@ func (x *ListProductsReply) GetPageSize() int32 {
 		return x.PageSize
 	}
 	return 0
+}
+
+type GenerateEmbeddingsResponse struct {
+	state                protoimpl.MessageState `protogen:"open.v1"`
+	JobId                string                 `protobuf:"bytes,1,opt,name=job_id,json=jobId,proto3" json:"job_id,omitempty"`
+	Status               string                 `protobuf:"bytes,2,opt,name=status,proto3" json:"status,omitempty"`
+	EstimatedTimeSeconds int32                  `protobuf:"varint,3,opt,name=estimated_time_seconds,json=estimatedTimeSeconds,proto3" json:"estimated_time_seconds,omitempty"`
+	TotalProducts        int32                  `protobuf:"varint,4,opt,name=total_products,json=totalProducts,proto3" json:"total_products,omitempty"`
+	unknownFields        protoimpl.UnknownFields
+	sizeCache            protoimpl.SizeCache
+}
+
+func (x *GenerateEmbeddingsResponse) Reset() {
+	*x = GenerateEmbeddingsResponse{}
+	mi := &file_api_product_v1_product_proto_msgTypes[9]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GenerateEmbeddingsResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GenerateEmbeddingsResponse) ProtoMessage() {}
+
+func (x *GenerateEmbeddingsResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_api_product_v1_product_proto_msgTypes[9]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GenerateEmbeddingsResponse.ProtoReflect.Descriptor instead.
+func (*GenerateEmbeddingsResponse) Descriptor() ([]byte, []int) {
+	return file_api_product_v1_product_proto_rawDescGZIP(), []int{9}
+}
+
+func (x *GenerateEmbeddingsResponse) GetJobId() string {
+	if x != nil {
+		return x.JobId
+	}
+	return ""
+}
+
+func (x *GenerateEmbeddingsResponse) GetStatus() string {
+	if x != nil {
+		return x.Status
+	}
+	return ""
+}
+
+func (x *GenerateEmbeddingsResponse) GetEstimatedTimeSeconds() int32 {
+	if x != nil {
+		return x.EstimatedTimeSeconds
+	}
+	return 0
+}
+
+func (x *GenerateEmbeddingsResponse) GetTotalProducts() int32 {
+	if x != nil {
+		return x.TotalProducts
+	}
+	return 0
+}
+
+type GetEmbeddingStatusResponse struct {
+	state               protoimpl.MessageState `protogen:"open.v1"`
+	JobId               string                 `protobuf:"bytes,1,opt,name=job_id,json=jobId,proto3" json:"job_id,omitempty"`
+	Status              string                 `protobuf:"bytes,2,opt,name=status,proto3" json:"status,omitempty"` // "pending", "running", "completed", "failed", "cancelled"
+	Processed           int32                  `protobuf:"varint,3,opt,name=processed,proto3" json:"processed,omitempty"`
+	Total               int32                  `protobuf:"varint,4,opt,name=total,proto3" json:"total,omitempty"`
+	Progress            float32                `protobuf:"fixed32,5,opt,name=progress,proto3" json:"progress,omitempty"` // 0.0 to 1.0
+	ErrorMessage        string                 `protobuf:"bytes,6,opt,name=error_message,json=errorMessage,proto3" json:"error_message,omitempty"`
+	StartedAt           *timestamppb.Timestamp `protobuf:"bytes,7,opt,name=started_at,json=startedAt,proto3" json:"started_at,omitempty"`
+	LastUpdated         *timestamppb.Timestamp `protobuf:"bytes,8,opt,name=last_updated,json=lastUpdated,proto3" json:"last_updated,omitempty"`
+	EstimatedCompletion *timestamppb.Timestamp `protobuf:"bytes,9,opt,name=estimated_completion,json=estimatedCompletion,proto3" json:"estimated_completion,omitempty"`
+	unknownFields       protoimpl.UnknownFields
+	sizeCache           protoimpl.SizeCache
+}
+
+func (x *GetEmbeddingStatusResponse) Reset() {
+	*x = GetEmbeddingStatusResponse{}
+	mi := &file_api_product_v1_product_proto_msgTypes[10]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetEmbeddingStatusResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetEmbeddingStatusResponse) ProtoMessage() {}
+
+func (x *GetEmbeddingStatusResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_api_product_v1_product_proto_msgTypes[10]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetEmbeddingStatusResponse.ProtoReflect.Descriptor instead.
+func (*GetEmbeddingStatusResponse) Descriptor() ([]byte, []int) {
+	return file_api_product_v1_product_proto_rawDescGZIP(), []int{10}
+}
+
+func (x *GetEmbeddingStatusResponse) GetJobId() string {
+	if x != nil {
+		return x.JobId
+	}
+	return ""
+}
+
+func (x *GetEmbeddingStatusResponse) GetStatus() string {
+	if x != nil {
+		return x.Status
+	}
+	return ""
+}
+
+func (x *GetEmbeddingStatusResponse) GetProcessed() int32 {
+	if x != nil {
+		return x.Processed
+	}
+	return 0
+}
+
+func (x *GetEmbeddingStatusResponse) GetTotal() int32 {
+	if x != nil {
+		return x.Total
+	}
+	return 0
+}
+
+func (x *GetEmbeddingStatusResponse) GetProgress() float32 {
+	if x != nil {
+		return x.Progress
+	}
+	return 0
+}
+
+func (x *GetEmbeddingStatusResponse) GetErrorMessage() string {
+	if x != nil {
+		return x.ErrorMessage
+	}
+	return ""
+}
+
+func (x *GetEmbeddingStatusResponse) GetStartedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.StartedAt
+	}
+	return nil
+}
+
+func (x *GetEmbeddingStatusResponse) GetLastUpdated() *timestamppb.Timestamp {
+	if x != nil {
+		return x.LastUpdated
+	}
+	return nil
+}
+
+func (x *GetEmbeddingStatusResponse) GetEstimatedCompletion() *timestamppb.Timestamp {
+	if x != nil {
+		return x.EstimatedCompletion
+	}
+	return nil
 }
 
 type ProductInfo struct {
@@ -547,7 +828,7 @@ type ProductInfo struct {
 
 func (x *ProductInfo) Reset() {
 	*x = ProductInfo{}
-	mi := &file_api_product_v1_product_proto_msgTypes[7]
+	mi := &file_api_product_v1_product_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -559,7 +840,7 @@ func (x *ProductInfo) String() string {
 func (*ProductInfo) ProtoMessage() {}
 
 func (x *ProductInfo) ProtoReflect() protoreflect.Message {
-	mi := &file_api_product_v1_product_proto_msgTypes[7]
+	mi := &file_api_product_v1_product_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -572,7 +853,7 @@ func (x *ProductInfo) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ProductInfo.ProtoReflect.Descriptor instead.
 func (*ProductInfo) Descriptor() ([]byte, []int) {
-	return file_api_product_v1_product_proto_rawDescGZIP(), []int{7}
+	return file_api_product_v1_product_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *ProductInfo) GetId() int64 {
@@ -781,7 +1062,7 @@ type PriceRange struct {
 
 func (x *PriceRange) Reset() {
 	*x = PriceRange{}
-	mi := &file_api_product_v1_product_proto_msgTypes[8]
+	mi := &file_api_product_v1_product_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -793,7 +1074,7 @@ func (x *PriceRange) String() string {
 func (*PriceRange) ProtoMessage() {}
 
 func (x *PriceRange) ProtoReflect() protoreflect.Message {
-	mi := &file_api_product_v1_product_proto_msgTypes[8]
+	mi := &file_api_product_v1_product_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -806,7 +1087,7 @@ func (x *PriceRange) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PriceRange.ProtoReflect.Descriptor instead.
 func (*PriceRange) Descriptor() ([]byte, []int) {
-	return file_api_product_v1_product_proto_rawDescGZIP(), []int{8}
+	return file_api_product_v1_product_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *PriceRange) GetMin() int32 {
@@ -827,7 +1108,7 @@ var File_api_product_v1_product_proto protoreflect.FileDescriptor
 
 const file_api_product_v1_product_proto_rawDesc = "" +
 	"\n" +
-	"\x1capi/product/v1/product.proto\x12\x0eapi.product.v1\x1a\x1cgoogle/api/annotations.proto\x1a\x1fgoogle/protobuf/timestamp.proto\x1a)api/product/v1/product_error_reason.proto\"#\n" +
+	"\x1capi/product/v1/product.proto\x12\x0eapi.product.v1\x1a\x1cgoogle/api/annotations.proto\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x1bgoogle/protobuf/empty.proto\x1a)api/product/v1/product_error_reason.proto\"#\n" +
 	"\x11GetProductRequest\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x03R\x02id\"*\n" +
 	"\x16GetProductByPIDRequest\x12\x10\n" +
@@ -861,12 +1142,36 @@ const file_api_product_v1_product_proto_rawDesc = "" +
 	"\bcategory\x18\x02 \x01(\tR\bcategory\"A\n" +
 	"\x19GetSimilarProductsRequest\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x03R\x02id\x12\x14\n" +
-	"\x05limit\x18\x02 \x01(\x05R\x05limit\"\x93\x01\n" +
+	"\x05limit\x18\x02 \x01(\x05R\x05limit\"\x82\x01\n" +
+	"\x19GenerateEmbeddingsRequest\x12%\n" +
+	"\x0eregenerate_all\x18\x01 \x01(\bR\rregenerateAll\x12\x1d\n" +
+	"\n" +
+	"batch_size\x18\x02 \x01(\x05R\tbatchSize\x12\x1f\n" +
+	"\vproduct_ids\x18\x03 \x03(\x03R\n" +
+	"productIds\"2\n" +
+	"\x19GetEmbeddingStatusRequest\x12\x15\n" +
+	"\x06job_id\x18\x01 \x01(\tR\x05jobId\"\x93\x01\n" +
 	"\x11ListProductsReply\x127\n" +
 	"\bproducts\x18\x01 \x03(\v2\x1b.api.product.v1.ProductInfoR\bproducts\x12\x14\n" +
 	"\x05total\x18\x02 \x01(\x05R\x05total\x12\x12\n" +
 	"\x04page\x18\x03 \x01(\x05R\x04page\x12\x1b\n" +
-	"\tpage_size\x18\x04 \x01(\x05R\bpageSize\"\xb7\b\n" +
+	"\tpage_size\x18\x04 \x01(\x05R\bpageSize\"\xa8\x01\n" +
+	"\x1aGenerateEmbeddingsResponse\x12\x15\n" +
+	"\x06job_id\x18\x01 \x01(\tR\x05jobId\x12\x16\n" +
+	"\x06status\x18\x02 \x01(\tR\x06status\x124\n" +
+	"\x16estimated_time_seconds\x18\x03 \x01(\x05R\x14estimatedTimeSeconds\x12%\n" +
+	"\x0etotal_products\x18\x04 \x01(\x05R\rtotalProducts\"\x89\x03\n" +
+	"\x1aGetEmbeddingStatusResponse\x12\x15\n" +
+	"\x06job_id\x18\x01 \x01(\tR\x05jobId\x12\x16\n" +
+	"\x06status\x18\x02 \x01(\tR\x06status\x12\x1c\n" +
+	"\tprocessed\x18\x03 \x01(\x05R\tprocessed\x12\x14\n" +
+	"\x05total\x18\x04 \x01(\x05R\x05total\x12\x1a\n" +
+	"\bprogress\x18\x05 \x01(\x02R\bprogress\x12#\n" +
+	"\rerror_message\x18\x06 \x01(\tR\ferrorMessage\x129\n" +
+	"\n" +
+	"started_at\x18\a \x01(\v2\x1a.google.protobuf.TimestampR\tstartedAt\x12=\n" +
+	"\flast_updated\x18\b \x01(\v2\x1a.google.protobuf.TimestampR\vlastUpdated\x12M\n" +
+	"\x14estimated_completion\x18\t \x01(\v2\x1a.google.protobuf.TimestampR\x13estimatedCompletion\"\xb7\b\n" +
 	"\vProductInfo\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x03R\x02id\x12\x1f\n" +
 	"\voriginal_id\x18\x02 \x01(\tR\n" +
@@ -911,7 +1216,7 @@ const file_api_product_v1_product_proto_rawDesc = "" +
 	"\n" +
 	"PriceRange\x12\x10\n" +
 	"\x03min\x18\x01 \x01(\x05R\x03min\x12\x10\n" +
-	"\x03max\x18\x02 \x01(\x05R\x03max2\xdf\x05\n" +
+	"\x03max\x18\x02 \x01(\x05R\x03max2\xff\b\n" +
 	"\aProduct\x12g\n" +
 	"\n" +
 	"GetProduct\x12!.api.product.v1.GetProductRequest\x1a\x1b.api.product.v1.ProductInfo\"\x19\x82\xd3\xe4\x93\x02\x13\x12\x11/v1/products/{id}\x12v\n" +
@@ -919,7 +1224,10 @@ const file_api_product_v1_product_proto_rawDesc = "" +
 	"\fListProducts\x12#.api.product.v1.ListProductsRequest\x1a!.api.product.v1.ListProductsReply\"\x14\x82\xd3\xe4\x93\x02\x0e\x12\f/v1/products\x12w\n" +
 	"\x0eSearchProducts\x12%.api.product.v1.SearchProductsRequest\x1a!.api.product.v1.ListProductsReply\"\x1b\x82\xd3\xe4\x93\x02\x15\x12\x13/v1/products/search\x12\x83\x01\n" +
 	"\x13GetFeaturedProducts\x12*.api.product.v1.GetFeaturedProductsRequest\x1a!.api.product.v1.ListProductsReply\"\x1d\x82\xd3\xe4\x93\x02\x17\x12\x15/v1/products/featured\x12\x85\x01\n" +
-	"\x12GetSimilarProducts\x12).api.product.v1.GetSimilarProductsRequest\x1a!.api.product.v1.ListProductsReply\"!\x82\xd3\xe4\x93\x02\x1b\x12\x19/v1/products/{id}/similarB3\n" +
+	"\x12GetSimilarProducts\x12).api.product.v1.GetSimilarProductsRequest\x1a!.api.product.v1.ListProductsReply\"!\x82\xd3\xe4\x93\x02\x1b\x12\x19/v1/products/{id}/similar\x12\x95\x01\n" +
+	"\x12GenerateEmbeddings\x12).api.product.v1.GenerateEmbeddingsRequest\x1a*.api.product.v1.GenerateEmbeddingsResponse\"(\x82\xd3\xe4\x93\x02\":\x01*\"\x1d/v1/admin/embeddings/generate\x12\x90\x01\n" +
+	"\x12GetEmbeddingStatus\x12).api.product.v1.GetEmbeddingStatusRequest\x1a*.api.product.v1.GetEmbeddingStatusResponse\"#\x82\xd3\xe4\x93\x02\x1d\x12\x1b/v1/admin/embeddings/status\x12s\n" +
+	"\x19CancelEmbeddingGeneration\x12\x16.google.protobuf.Empty\x1a\x16.google.protobuf.Empty\"&\x82\xd3\xe4\x93\x02 :\x01*\"\x1b/v1/admin/embeddings/cancelB3\n" +
 	"\x0eapi.product.v1P\x01Z\x1fyinni_backend/api/product/v1;v1b\x06proto3"
 
 var (
@@ -934,7 +1242,7 @@ func file_api_product_v1_product_proto_rawDescGZIP() []byte {
 	return file_api_product_v1_product_proto_rawDescData
 }
 
-var file_api_product_v1_product_proto_msgTypes = make([]protoimpl.MessageInfo, 10)
+var file_api_product_v1_product_proto_msgTypes = make([]protoimpl.MessageInfo, 14)
 var file_api_product_v1_product_proto_goTypes = []any{
 	(*GetProductRequest)(nil),          // 0: api.product.v1.GetProductRequest
 	(*GetProductByPIDRequest)(nil),     // 1: api.product.v1.GetProductByPIDRequest
@@ -942,36 +1250,50 @@ var file_api_product_v1_product_proto_goTypes = []any{
 	(*SearchProductsRequest)(nil),      // 3: api.product.v1.SearchProductsRequest
 	(*GetFeaturedProductsRequest)(nil), // 4: api.product.v1.GetFeaturedProductsRequest
 	(*GetSimilarProductsRequest)(nil),  // 5: api.product.v1.GetSimilarProductsRequest
-	(*ListProductsReply)(nil),          // 6: api.product.v1.ListProductsReply
-	(*ProductInfo)(nil),                // 7: api.product.v1.ProductInfo
-	(*PriceRange)(nil),                 // 8: api.product.v1.PriceRange
-	nil,                                // 9: api.product.v1.ProductInfo.ProductDetailsEntry
-	(*timestamppb.Timestamp)(nil),      // 10: google.protobuf.Timestamp
+	(*GenerateEmbeddingsRequest)(nil),  // 6: api.product.v1.GenerateEmbeddingsRequest
+	(*GetEmbeddingStatusRequest)(nil),  // 7: api.product.v1.GetEmbeddingStatusRequest
+	(*ListProductsReply)(nil),          // 8: api.product.v1.ListProductsReply
+	(*GenerateEmbeddingsResponse)(nil), // 9: api.product.v1.GenerateEmbeddingsResponse
+	(*GetEmbeddingStatusResponse)(nil), // 10: api.product.v1.GetEmbeddingStatusResponse
+	(*ProductInfo)(nil),                // 11: api.product.v1.ProductInfo
+	(*PriceRange)(nil),                 // 12: api.product.v1.PriceRange
+	nil,                                // 13: api.product.v1.ProductInfo.ProductDetailsEntry
+	(*timestamppb.Timestamp)(nil),      // 14: google.protobuf.Timestamp
+	(*emptypb.Empty)(nil),              // 15: google.protobuf.Empty
 }
 var file_api_product_v1_product_proto_depIdxs = []int32{
-	8,  // 0: api.product.v1.SearchProductsRequest.price_range:type_name -> api.product.v1.PriceRange
-	7,  // 1: api.product.v1.ListProductsReply.products:type_name -> api.product.v1.ProductInfo
-	9,  // 2: api.product.v1.ProductInfo.product_details:type_name -> api.product.v1.ProductInfo.ProductDetailsEntry
-	10, // 3: api.product.v1.ProductInfo.crawled_at:type_name -> google.protobuf.Timestamp
-	10, // 4: api.product.v1.ProductInfo.created_at:type_name -> google.protobuf.Timestamp
-	10, // 5: api.product.v1.ProductInfo.updated_at:type_name -> google.protobuf.Timestamp
-	0,  // 6: api.product.v1.Product.GetProduct:input_type -> api.product.v1.GetProductRequest
-	1,  // 7: api.product.v1.Product.GetProductByPID:input_type -> api.product.v1.GetProductByPIDRequest
-	2,  // 8: api.product.v1.Product.ListProducts:input_type -> api.product.v1.ListProductsRequest
-	3,  // 9: api.product.v1.Product.SearchProducts:input_type -> api.product.v1.SearchProductsRequest
-	4,  // 10: api.product.v1.Product.GetFeaturedProducts:input_type -> api.product.v1.GetFeaturedProductsRequest
-	5,  // 11: api.product.v1.Product.GetSimilarProducts:input_type -> api.product.v1.GetSimilarProductsRequest
-	7,  // 12: api.product.v1.Product.GetProduct:output_type -> api.product.v1.ProductInfo
-	7,  // 13: api.product.v1.Product.GetProductByPID:output_type -> api.product.v1.ProductInfo
-	6,  // 14: api.product.v1.Product.ListProducts:output_type -> api.product.v1.ListProductsReply
-	6,  // 15: api.product.v1.Product.SearchProducts:output_type -> api.product.v1.ListProductsReply
-	6,  // 16: api.product.v1.Product.GetFeaturedProducts:output_type -> api.product.v1.ListProductsReply
-	6,  // 17: api.product.v1.Product.GetSimilarProducts:output_type -> api.product.v1.ListProductsReply
-	12, // [12:18] is the sub-list for method output_type
-	6,  // [6:12] is the sub-list for method input_type
-	6,  // [6:6] is the sub-list for extension type_name
-	6,  // [6:6] is the sub-list for extension extendee
-	0,  // [0:6] is the sub-list for field type_name
+	12, // 0: api.product.v1.SearchProductsRequest.price_range:type_name -> api.product.v1.PriceRange
+	11, // 1: api.product.v1.ListProductsReply.products:type_name -> api.product.v1.ProductInfo
+	14, // 2: api.product.v1.GetEmbeddingStatusResponse.started_at:type_name -> google.protobuf.Timestamp
+	14, // 3: api.product.v1.GetEmbeddingStatusResponse.last_updated:type_name -> google.protobuf.Timestamp
+	14, // 4: api.product.v1.GetEmbeddingStatusResponse.estimated_completion:type_name -> google.protobuf.Timestamp
+	13, // 5: api.product.v1.ProductInfo.product_details:type_name -> api.product.v1.ProductInfo.ProductDetailsEntry
+	14, // 6: api.product.v1.ProductInfo.crawled_at:type_name -> google.protobuf.Timestamp
+	14, // 7: api.product.v1.ProductInfo.created_at:type_name -> google.protobuf.Timestamp
+	14, // 8: api.product.v1.ProductInfo.updated_at:type_name -> google.protobuf.Timestamp
+	0,  // 9: api.product.v1.Product.GetProduct:input_type -> api.product.v1.GetProductRequest
+	1,  // 10: api.product.v1.Product.GetProductByPID:input_type -> api.product.v1.GetProductByPIDRequest
+	2,  // 11: api.product.v1.Product.ListProducts:input_type -> api.product.v1.ListProductsRequest
+	3,  // 12: api.product.v1.Product.SearchProducts:input_type -> api.product.v1.SearchProductsRequest
+	4,  // 13: api.product.v1.Product.GetFeaturedProducts:input_type -> api.product.v1.GetFeaturedProductsRequest
+	5,  // 14: api.product.v1.Product.GetSimilarProducts:input_type -> api.product.v1.GetSimilarProductsRequest
+	6,  // 15: api.product.v1.Product.GenerateEmbeddings:input_type -> api.product.v1.GenerateEmbeddingsRequest
+	7,  // 16: api.product.v1.Product.GetEmbeddingStatus:input_type -> api.product.v1.GetEmbeddingStatusRequest
+	15, // 17: api.product.v1.Product.CancelEmbeddingGeneration:input_type -> google.protobuf.Empty
+	11, // 18: api.product.v1.Product.GetProduct:output_type -> api.product.v1.ProductInfo
+	11, // 19: api.product.v1.Product.GetProductByPID:output_type -> api.product.v1.ProductInfo
+	8,  // 20: api.product.v1.Product.ListProducts:output_type -> api.product.v1.ListProductsReply
+	8,  // 21: api.product.v1.Product.SearchProducts:output_type -> api.product.v1.ListProductsReply
+	8,  // 22: api.product.v1.Product.GetFeaturedProducts:output_type -> api.product.v1.ListProductsReply
+	8,  // 23: api.product.v1.Product.GetSimilarProducts:output_type -> api.product.v1.ListProductsReply
+	9,  // 24: api.product.v1.Product.GenerateEmbeddings:output_type -> api.product.v1.GenerateEmbeddingsResponse
+	10, // 25: api.product.v1.Product.GetEmbeddingStatus:output_type -> api.product.v1.GetEmbeddingStatusResponse
+	15, // 26: api.product.v1.Product.CancelEmbeddingGeneration:output_type -> google.protobuf.Empty
+	18, // [18:27] is the sub-list for method output_type
+	9,  // [9:18] is the sub-list for method input_type
+	9,  // [9:9] is the sub-list for extension type_name
+	9,  // [9:9] is the sub-list for extension extendee
+	0,  // [0:9] is the sub-list for field type_name
 }
 
 func init() { file_api_product_v1_product_proto_init() }
@@ -986,7 +1308,7 @@ func file_api_product_v1_product_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_api_product_v1_product_proto_rawDesc), len(file_api_product_v1_product_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   10,
+			NumMessages:   14,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

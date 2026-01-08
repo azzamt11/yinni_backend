@@ -17,6 +17,10 @@ services:
       KRATOS_AUTH_JWT_SECRET: ${JWT_SECRET}
       KRATOS_AUTH_JWT_EXPIRE: ${JWT_EXPIRE}
       KRATOS_DATA_DATABASE_SOURCE: ${DB_SOURCE}
+      KRATOS_ADMIN_EMAIL: ${ADMIN_EMAIL}
+      KRATOS_ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+      KRATOS_ADMIN_NAME: ${ADMIN_NAME}
+      KRATOS_ADMIN_ENABLED: "true"
     depends_on:
       mysql:
         condition: service_healthy

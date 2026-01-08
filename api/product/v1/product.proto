@@ -5,6 +5,7 @@ package api.product.v1;
 
 import "google/api/annotations.proto";
 import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
 import "api/product/v1/product_error_reason.proto";
 
 option go_package = "yinni_backend/api/product/v1;v1";
@@ -53,6 +54,29 @@ service Product {
       get: "/v1/products/{id}/similar"
     };
   }
+
+  // Admin-only: Generate embeddings
+  rpc GenerateEmbeddings(GenerateEmbeddingsRequest) returns (GenerateEmbeddingsResponse) {
+    option (google.api.http) = {
+      post: "/v1/admin/embeddings/generate"
+      body: "*"
+    };
+  }
+  
+  //Admin-only: Get embedding status 
+  rpc GetEmbeddingStatus(GetEmbeddingStatusRequest) returns (GetEmbeddingStatusResponse) {
+    option (google.api.http) = {
+      get: "/v1/admin/embeddings/status"
+    };
+  }
+  
+  //Admin-only: Cancel embedding generation
+  rpc CancelEmbeddingGeneration(google.protobuf.Empty) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      post: "/v1/admin/embeddings/cancel"
+      body: "*"
+    };
+  }
 }
 
 // ========== REQUEST MESSAGES ==========
@@ -99,6 +123,16 @@ message GetSimilarProductsRequest {
   int32 limit = 2;
 }
 
+message GenerateEmbeddingsRequest {
+  bool regenerate_all = 1;  // Whether to regenerate all embeddings
+  int32 batch_size = 2;     // Batch size for processing
+  repeated int64 product_ids = 3;  // Specific products to process
+}
+
+message GetEmbeddingStatusRequest {
+  string job_id = 1;
+}
+
 // ========== RESPONSE MESSAGES ==========
 
 message ListProductsReply {
@@ -106,6 +140,25 @@ message ListProductsReply {
   int32 total = 2;
   int32 page = 3;
   int32 page_size = 4;
+}
+
+message GenerateEmbeddingsResponse {
+  string job_id = 1;
+  string status = 2;
+  int32 estimated_time_seconds = 3;
+  int32 total_products = 4;
+}
+
+message GetEmbeddingStatusResponse {
+  string job_id = 1;
+  string status = 2;  // "pending", "running", "completed", "failed", "cancelled"
+  int32 processed = 3;
+  int32 total = 4;
+  float progress = 5;  // 0.0 to 1.0
+  string error_message = 6;
+  google.protobuf.Timestamp started_at = 7;
+  google.protobuf.Timestamp last_updated = 8;
+  google.protobuf.Timestamp estimated_completion = 9;
 }
 
 // ========== DATA MESSAGES ==========
