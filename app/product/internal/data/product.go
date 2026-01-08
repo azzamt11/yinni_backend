@@ -513,13 +513,16 @@ func (r *productRepo) GenerateEmbedding(ctx context.Context, p *biz.Product) ([]
 		text = fmt.Sprintf("%s %s", p.Title, p.Brand)
 	}
 
+	// Truncate if too long (OpenAI models have 8191 token limit)
 	if len(text) > 8000 {
 		text = text[:8000]
 	}
 
-	// Call OpenAI/DeepSeek API
+	// Call OpenAI API with correct model
 	resp, err := r.aiClient.CreateEmbeddings(ctx, openai.EmbeddingRequest{
-		Model: openai.AdaEmbeddingV2,
+		Model: openai.SmallEmbedding3, // Updated! Use from config
+		// Model: openai.TextEmbedding3Large,  // Alternative
+		// Model: openai.TextEmbeddingAda002,  // Legacy but still works
 		Input: []string{text},
 	})
 

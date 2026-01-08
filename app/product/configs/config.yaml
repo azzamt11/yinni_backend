@@ -16,9 +16,9 @@ data:
     source: ${KRATOS_DATA_DATABASE_SOURCE}
 
 embeddings:
-  api_key: ${DEEPSEEK_API_KEY}
-  model: ${DEEPSEEK_EMBEDDING_MODEL:deepseek-embedder}
+  api_key: ${AI_API_KEY}
+  model: ${AI_EMBEDDING_MODEL:openai-embedder}
   batch_size: 16
-  base_url: ${DEEPSEEK_EMBEDDING_URL:https://api.deepseek.com}
+  base_url: ${AI_EMBEDDING_URL:https://api.openai.com}
   timeout_seconds: 30
   max_retries: 3
