@@ -23,8 +23,8 @@
               "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"your_password\",\n  \"name\": \"John Doe\"\n}"
             },
             "url": {
-              "raw": "{{base_url}}/v1/auth/sign-up",
-              "host": ["{{base_url}}"],
+              "raw": "{{base_url_auth}}/v1/auth/sign-up",
+              "host": ["{{base_url_auth}}"],
               "path": ["v1", "auth", "sign-up"]
             },
             "description": "Register new user"
@@ -32,7 +32,30 @@
           "response": []
         },
         {
-          "name": "Sign In",
+          "name": "Sign In (Admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@yinni.com\",\n  \"password\": \"StrongAdminPass123!\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url_auth}}/v1/auth/sign-in",
+              "host": ["{{base_url_auth}}"],
+              "path": ["v1", "auth", "sign-in"]
+            },
+            "description": "Login as admin user (creates admin token)"
+          },
+          "response": []
+        },
+        {
+          "name": "Sign In (Regular User)",
           "request": {
             "method": "POST",
             "header": [
@@ -46,18 +69,18 @@
               "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"your_password\"\n}"
             },
             "url": {
-              "raw": "{{base_url}}/v1/auth/sign-in",
-              "host": ["{{base_url}}"],
+              "raw": "{{base_url_auth}}/v1/auth/sign-in",
+              "host": ["{{base_url_auth}}"],
               "path": ["v1", "auth", "sign-in"]
             },
-            "description": "Login existing user"
+            "description": "Login as regular user"
           },
           "response": []
         }
       ]
     },
     {
-      "name": "Product Service",
+      "name": "Product Service - Public Endpoints",
       "item": [
         {
           "name": "Get Product by ID",
@@ -71,8 +94,8 @@
               }
             ],
             "url": {
-              "raw": "{{base_url}}/v1/products/1",
-              "host": ["{{base_url}}"],
+              "raw": "{{base_url_product}}/v1/products/1",
+              "host": ["{{base_url_product}}"],
               "path": ["v1", "products", "1"]
             },
             "description": "Get product by ID"
@@ -91,8 +114,8 @@
               }
             ],
             "url": {
-              "raw": "{{base_url}}/v1/products/pid/MOBFZAPZU4HZEVXH",
-              "host": ["{{base_url}}"],
+              "raw": "{{base_url_product}}/v1/products/pid/MOBFZAPZU4HZEVXH",
+              "host": ["{{base_url_product}}"],
               "path": ["v1", "products", "pid", "MOBFZAPZU4HZEVXH"]
             },
             "description": "Get product by Flipkart PID"
@@ -111,8 +134,8 @@
               }
             ],
             "url": {
-              "raw": "{{base_url}}/v1/products?page=1&page_size=20&category=electronics&brand=Samsung&min_price=1000&max_price=50000&sort_by=price&sort_order=asc",
-              "host": ["{{base_url}}"],
+              "raw": "{{base_url_product}}/v1/products?page=1&page_size=20&category=electronics&brand=Samsung&min_price=1000&max_price=50000&sort_by=price&sort_order=asc",
+              "host": ["{{base_url_product}}"],
               "path": ["v1", "products"],
               "query": [
                 {
@@ -165,8 +188,8 @@
               }
             ],
             "url": {
-              "raw": "{{base_url}}/v1/products/search?query=samsung+phone&limit=10&category=electronics",
-              "host": ["{{base_url}}"],
+              "raw": "{{base_url_product}}/v1/products/search?query=samsung+phone&limit=10&category=electronics",
+              "host": ["{{base_url_product}}"],
               "path": ["v1", "products", "search"],
               "query": [
                 {
@@ -183,7 +206,7 @@
                 }
               ]
             },
-            "description": "Search products by query"
+            "description": "Search products by query (uses embeddings if available)"
           },
           "response": []
         },
@@ -199,8 +222,8 @@
               }
             ],
             "url": {
-              "raw": "{{base_url}}/v1/products/featured?limit=5&category=electronics",
-              "host": ["{{base_url}}"],
+              "raw": "{{base_url_product}}/v1/products/featured?limit=5&category=electronics",
+              "host": ["{{base_url_product}}"],
               "path": ["v1", "products", "featured"],
               "query": [
                 {
@@ -229,8 +252,8 @@
               }
             ],
             "url": {
-              "raw": "{{base_url}}/v1/products/1/similar?limit=5",
-              "host": ["{{base_url}}"],
+              "raw": "{{base_url_product}}/v1/products/1/similar?limit=5",
+              "host": ["{{base_url_product}}"],
               "path": ["v1", "products", "1", "similar"],
               "query": [
                 {
@@ -239,7 +262,143 @@
                 }
               ]
             },
-            "description": "Get similar products for a given product ID"
+            "description": "Get similar products for a given product ID (uses embeddings)"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Product Service - Admin Endpoints",
+      "item": [
+        {
+          "name": "Generate Embeddings",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_access_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"regenerate_all\": false,\n  \"batch_size\": 50,\n  \"product_ids\": []\n}"
+            },
+            "url": {
+              "raw": "{{base_url_product}}/v1/admin/embeddings/generate",
+              "host": ["{{base_url_product}}"],
+              "path": ["v1", "admin", "embeddings", "generate"]
+            },
+            "description": "Start embedding generation job (Admin only)\n\nOptions:\n- regenerate_all: true to regenerate all embeddings\n- batch_size: number of products per batch\n- product_ids: specific products to process (leave empty for all without embeddings)"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Embedding Status",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_access_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url_product}}/v1/admin/embeddings/status",
+              "host": ["{{base_url_product}}"],
+              "path": ["v1", "admin", "embeddings", "status"]
+            },
+            "description": "Get status of active embedding generation job (Admin only)"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Embedding Status by Job ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_access_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url_product}}/v1/admin/embeddings/status?job_id=embed_xxxxxxxx",
+              "host": ["{{base_url_product}}"],
+              "path": ["v1", "admin", "embeddings", "status"],
+              "query": [
+                {
+                  "key": "job_id",
+                  "value": "embed_xxxxxxxx",
+                  "description": "Job ID from generate embeddings response"
+                }
+              ]
+            },
+            "description": "Get status of specific embedding job (Admin only)"
+          },
+          "response": []
+        },
+        {
+          "name": "Cancel Embedding Generation",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_access_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            },
+            "url": {
+              "raw": "{{base_url_product}}/v1/admin/embeddings/cancel",
+              "host": ["{{base_url_product}}"],
+              "path": ["v1", "admin", "embeddings", "cancel"]
+            },
+            "description": "Cancel active embedding generation job (Admin only)"
+          },
+          "response": []
+        },
+        {
+          "name": "Test Admin Access (Denied)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"regenerate_all\": false\n}"
+            },
+            "url": {
+              "raw": "{{base_url_product}}/v1/admin/embeddings/generate",
+              "host": ["{{base_url_product}}"],
+              "path": ["v1", "admin", "embeddings", "generate"]
+            },
+            "description": "Test that non-admin users cannot access admin endpoints"
           },
           "response": []
         }
@@ -248,16 +407,28 @@
   ],
   "variable": [
     {
-      "key": "base_url",
+      "key": "base_url_auth",
       "value": "http://localhost:8000",
       "type": "string",
-      "description": "Base URL for the API"
+      "description": "Base URL for Auth Service"
+    },
+    {
+      "key": "base_url_product",
+      "value": "http://localhost:8002",
+      "type": "string",
+      "description": "Base URL for Product Service"
     },
     {
       "key": "access_token",
       "value": "",
       "type": "string",
-      "description": "JWT access token obtained from Sign In"
+      "description": "JWT access token obtained from Sign In (regular user)"
+    },
+    {
+      "key": "admin_access_token",
+      "value": "",
+      "type": "string",
+      "description": "JWT access token obtained from Admin Sign In"
     }
   ],
   "event": [
@@ -266,7 +437,8 @@
       "script": {
         "type": "text/javascript",
         "exec": [
-          "console.log('Request URL:', pm.request.url);"
+          "console.log('Request URL:', pm.request.url);",
+          "console.log('Authorization:', pm.request.headers.get('Authorization'));"
         ]
       }
     },
@@ -275,23 +447,52 @@
       "script": {
         "type": "text/javascript",
         "exec": [
-          "// Save access token from Sign In response",
+          "// Save tokens from Sign In responses",
           "if (pm.response.code === 200) {",
           "    const response = pm.response.json();",
           "    if (response.access_token) {",
-          "        pm.collectionVariables.set('access_token', response.access_token);",
-          "        console.log('Access token saved:', response.access_token);",
+          "        // Check if admin sign in (by email)",
+          "        const requestBody = JSON.parse(pm.request.body.raw);",
+          "        if (requestBody.email && requestBody.email.includes('admin')) {",
+          "            pm.collectionVariables.set('admin_access_token', response.access_token);",
+          "            console.log('Admin access token saved:', response.access_token.slice(0, 20) + '...');",
+          "        } else {",
+          "            pm.collectionVariables.set('access_token', response.access_token);",
+          "            console.log('Regular access token saved:', response.access_token.slice(0, 20) + '...');",
+          "        }",
           "    }",
           "}",
           "",
           "// Test response structure",
-          "pm.test(\"Status code is 200\", function () {",
-          "    pm.response.to.have.status(200);",
+          "pm.test(\"Status code is 2xx\", function () {",
+          "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 202]);",
           "});",
           "",
-          "pm.test(\"Response has JSON body\", function () {",
-          "    pm.response.to.be.json;",
-          "});"
+          "// For admin endpoints, verify admin access",
+          "if (pm.request.url.toString().includes('/admin/')) {",
+          "    if (pm.response.code === 200 || pm.response.code === 202) {",
+          "        pm.test(\"Admin endpoint accessible\", function () {",
+          "            pm.response.to.have.jsonBody('job_id');",
+          "        });",
+          "    } else if (pm.response.code === 403) {",
+          "        pm.test(\"Admin access required - correctly denied\", function () {",
+          "            pm.response.to.have.jsonBody('message');",
+          "        });",
+          "    }",
+          "}",
+          "",
+          "// For embedding status, check structure",
+          "if (pm.request.url.toString().includes('/embeddings/status')) {",
+          "    if (pm.response.code === 200) {",
+          "        pm.test(\"Embedding status response valid\", function () {",
+          "            const jsonData = pm.response.json();",
+          "            pm.expect(jsonData).to.have.property('status');",
+          "            pm.expect(jsonData).to.have.property('progress');",
+          "            pm.expect(jsonData.progress).to.be.a('number');",
+          "            pm.expect(jsonData.progress).to.be.within(0, 1);",
+          "        });",
+          "    }",
+          "}"
         ]
       }
     }
