@@ -2,6 +2,7 @@ package biz
 
 import (
 	"context"
+	"log"
 	"time"
 	"yinni_backend/internal/conf"
 
@@ -45,11 +46,18 @@ type AuthUsecase struct {
 }
 
 func NewAuthUsecase(repo AuthRepo, c *conf.Auth) (*AuthUsecase, error) {
-	// Convert int64 nanoseconds to time.Duration
-	jwtExpire := time.Duration(c.JwtExpire)
-	if jwtExpire == 0 {
-		jwtExpire = 24 * time.Hour // default 24 hours
+	// Convert seconds to proper time.Duration
+	jwtExpireSeconds := c.JwtExpire
+	if jwtExpireSeconds == 0 {
+		jwtExpireSeconds = 86400 // default 24 hours in seconds
 	}
+
+	// IMPORTANT: Convert seconds to nanoseconds for time.Duration
+	jwtExpire := time.Duration(jwtExpireSeconds) * time.Second
+
+	// DEBUG logging
+	log.Printf("JWT Expire Configuration: %d seconds = %v duration",
+		jwtExpireSeconds, jwtExpire)
 
 	return &AuthUsecase{
 		repo:      repo,

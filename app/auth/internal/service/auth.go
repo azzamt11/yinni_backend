@@ -47,9 +47,7 @@ func (s *AuthService) SignUp(ctx context.Context, req *pb.SignUpRequest) (*pb.Si
 	if err != nil {
 		// Log the actual error message
 		errorMsg := "unknown error"
-		if err != nil {
-			errorMsg = err.Error()
-		}
+		errorMsg = err.Error()
 
 		s.logger.Errorw("signup_usecase_failed",
 			"error", errorMsg,
@@ -104,9 +102,7 @@ func (s *AuthService) SignIn(ctx context.Context, req *pb.SignInRequest) (*pb.Si
 	if err != nil {
 		// Log the actual error message
 		errorMsg := "unknown error"
-		if err != nil {
-			errorMsg = err.Error()
-		}
+		errorMsg = err.Error()
 
 		s.logger.Errorw("signin_usecase_failed",
 			"error", errorMsg,
