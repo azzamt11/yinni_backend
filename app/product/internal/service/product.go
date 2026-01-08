@@ -357,8 +357,63 @@ func (m *EmbeddingJobManager) StartJob(ctx context.Context, req *pb.GenerateEmbe
 	return job, nil
 }
 
+// // processJob processes the embedding generation job in the background
+// func (m *EmbeddingJobManager) processJob(ctx context.Context, job *EmbeddingJob) {
+// 	m.mu.Lock()
+// 	job.Status = "running"
+// 	job.LastUpdated = time.Now()
+// 	m.mu.Unlock()
+
+// 	m.log.Infof("Starting embedding job %s for %d products", job.ID, job.Total)
+
+// 	batchSize := 50
+// 	if job.Request.BatchSize > 0 {
+// 		batchSize = int(job.Request.BatchSize)
+// 	}
+
+// 	var err error
+// 	if job.Request.RegenerateAll {
+// 		err = m.uc.GenerateAllEmbeddings(ctx, batchSize, func(processed int) {
+// 			m.mu.Lock()
+// 			job.Processed = processed
+// 			job.LastUpdated = time.Now()
+// 			m.mu.Unlock()
+// 		})
+// 	} else if len(job.Request.ProductIds) > 0 {
+// 		err = m.uc.GenerateEmbeddingsForProducts(ctx, job.Request.ProductIds)
+// 		if err == nil {
+// 			m.mu.Lock()
+// 			job.Processed = job.Total
+// 			m.mu.Unlock()
+// 		}
+// 	} else {
+// 		err = m.uc.GenerateAllEmbeddings(ctx, batchSize, func(processed int) {
+// 			m.mu.Lock()
+// 			job.Processed = processed
+// 			job.LastUpdated = time.Now()
+// 			m.mu.Unlock()
+// 		})
+// 	}
+
+// 	m.mu.Lock()
+// 	defer m.mu.Unlock()
+
+// 	if err != nil {
+// 		job.Status = "failed"
+// 		job.Error = err.Error()
+// 		m.log.Errorf("Embedding job %s failed: %v", job.ID, err)
+// 	} else {
+// 		job.Status = "completed"
+// 		job.Processed = job.Total
+// 		m.log.Infof("Embedding job %s completed successfully", job.ID)
+// 	}
+// 	job.LastUpdated = time.Now()
+// }
+
 // processJob processes the embedding generation job in the background
 func (m *EmbeddingJobManager) processJob(ctx context.Context, job *EmbeddingJob) {
+	m.log.Infof("Process job started, original context err: %v", ctx.Err())
+
 	m.mu.Lock()
 	job.Status = "running"
 	job.LastUpdated = time.Now()
@@ -371,23 +426,30 @@ func (m *EmbeddingJobManager) processJob(ctx context.Context, job *EmbeddingJob)
 		batchSize = int(job.Request.BatchSize)
 	}
 
+	// Create a new background context (not tied to HTTP request)
+	bgCtx := context.Background()
+
+	// Optional: Add timeout (e.g., 2 hours for large batches)
+	bgCtx, cancel := context.WithTimeout(bgCtx, 2*time.Hour)
+	defer cancel()
+
 	var err error
 	if job.Request.RegenerateAll {
-		err = m.uc.GenerateAllEmbeddings(ctx, batchSize, func(processed int) {
+		err = m.uc.GenerateAllEmbeddings(bgCtx, batchSize, func(processed int) {
 			m.mu.Lock()
 			job.Processed = processed
 			job.LastUpdated = time.Now()
 			m.mu.Unlock()
 		})
 	} else if len(job.Request.ProductIds) > 0 {
-		err = m.uc.GenerateEmbeddingsForProducts(ctx, job.Request.ProductIds)
+		err = m.uc.GenerateEmbeddingsForProducts(bgCtx, job.Request.ProductIds)
 		if err == nil {
 			m.mu.Lock()
 			job.Processed = job.Total
 			m.mu.Unlock()
 		}
 	} else {
-		err = m.uc.GenerateAllEmbeddings(ctx, batchSize, func(processed int) {
+		err = m.uc.GenerateAllEmbeddings(bgCtx, batchSize, func(processed int) {
 			m.mu.Lock()
 			job.Processed = processed
 			job.LastUpdated = time.Now()

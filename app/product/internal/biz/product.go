@@ -485,7 +485,6 @@ func (uc *ProductUsecase) GenerateEmbeddingsForProducts(ctx context.Context, pro
 	return uc.repo.GenerateEmbeddingsForProducts(ctx, productIDs)
 }
 
-// Update your existing GenerateAllEmbeddings to accept a callback
 func (uc *ProductUsecase) GenerateAllEmbeddings(ctx context.Context, batchSize int, progressCallback func(processed int)) error {
 	if !uc.embeddingsEnabled() {
 		return ErrEmbeddingsNotEnabled
@@ -496,6 +495,14 @@ func (uc *ProductUsecase) GenerateAllEmbeddings(ctx context.Context, batchSize i
 	page := 1
 	totalProcessed := 0
 	for {
+		// Check if context is cancelled
+		select {
+		case <-ctx.Done():
+			return fmt.Errorf("embedding generation cancelled: %w", ctx.Err())
+		default:
+			// Continue
+		}
+
 		// Get products without embeddings
 		params := &ListProductsParams{
 			Page:     int32(page),
@@ -535,8 +542,13 @@ func (uc *ProductUsecase) GenerateAllEmbeddings(ctx context.Context, batchSize i
 
 			uc.log.Infof("Generated embedding for product %d: %s", product.ID, product.Title)
 
-			// Rate limiting
-			time.Sleep(100 * time.Millisecond)
+			// Rate limiting (but check context)
+			select {
+			case <-ctx.Done():
+				return fmt.Errorf("embedding generation cancelled: %w", ctx.Err())
+			case <-time.After(100 * time.Millisecond):
+				// Continue
+			}
 		}
 
 		// Batch update embeddings
