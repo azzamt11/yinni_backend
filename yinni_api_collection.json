@@ -1,0 +1,300 @@
+{
+  "info": {
+    "name": "Kratos-Go Microservices API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "API collection for Kratos-Go Microservices with Auth and Product services"
+  },
+  "item": [
+    {
+      "name": "Auth Service",
+      "item": [
+        {
+          "name": "Sign Up",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"your_password\",\n  \"name\": \"John Doe\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/v1/auth/sign-up",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "auth", "sign-up"]
+            },
+            "description": "Register new user"
+          },
+          "response": []
+        },
+        {
+          "name": "Sign In",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"your_password\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/v1/auth/sign-in",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "auth", "sign-in"]
+            },
+            "description": "Login existing user"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Product Service",
+      "item": [
+        {
+          "name": "Get Product by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/products/1",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "products", "1"]
+            },
+            "description": "Get product by ID"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Product by PID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/products/pid/MOBFZAPZU4HZEVXH",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "products", "pid", "MOBFZAPZU4HZEVXH"]
+            },
+            "description": "Get product by Flipkart PID"
+          },
+          "response": []
+        },
+        {
+          "name": "List Products",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/products?page=1&page_size=20&category=electronics&brand=Samsung&min_price=1000&max_price=50000&sort_by=price&sort_order=asc",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "products"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "page_size",
+                  "value": "20"
+                },
+                {
+                  "key": "category",
+                  "value": "electronics"
+                },
+                {
+                  "key": "brand",
+                  "value": "Samsung"
+                },
+                {
+                  "key": "min_price",
+                  "value": "1000"
+                },
+                {
+                  "key": "max_price",
+                  "value": "50000"
+                },
+                {
+                  "key": "sort_by",
+                  "value": "price"
+                },
+                {
+                  "key": "sort_order",
+                  "value": "asc"
+                }
+              ]
+            },
+            "description": "List products with filtering and pagination"
+          },
+          "response": []
+        },
+        {
+          "name": "Search Products",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/products/search?query=samsung+phone&limit=10&category=electronics",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "products", "search"],
+              "query": [
+                {
+                  "key": "query",
+                  "value": "samsung phone"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "category",
+                  "value": "electronics"
+                }
+              ]
+            },
+            "description": "Search products by query"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Featured Products",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/products/featured?limit=5&category=electronics",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "products", "featured"],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "5"
+                },
+                {
+                  "key": "category",
+                  "value": "electronics"
+                }
+              ]
+            },
+            "description": "Get featured products"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Similar Products",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/products/1/similar?limit=5",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "products", "1", "similar"],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "5"
+                }
+              ]
+            },
+            "description": "Get similar products for a given product ID"
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8000",
+      "type": "string",
+      "description": "Base URL for the API"
+    },
+    {
+      "key": "access_token",
+      "value": "",
+      "type": "string",
+      "description": "JWT access token obtained from Sign In"
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "console.log('Request URL:', pm.request.url);"
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Save access token from Sign In response",
+          "if (pm.response.code === 200) {",
+          "    const response = pm.response.json();",
+          "    if (response.access_token) {",
+          "        pm.collectionVariables.set('access_token', response.access_token);",
+          "        console.log('Access token saved:', response.access_token);",
+          "    }",
+          "}",
+          "",
+          "// Test response structure",
+          "pm.test(\"Status code is 200\", function () {",
+          "    pm.response.to.have.status(200);",
+          "});",
+          "",
+          "pm.test(\"Response has JSON body\", function () {",
+          "    pm.response.to.be.json;",
+          "});"
+        ]
+      }
+    }
+  ],
+  "auth": null
+}
