@@ -37,5 +37,23 @@ bin/
 .idea/
 *.swp
 
-# env
-*.env
+# ========== ENVIRONMENT FILES ==========
+# Dotenv files
+.env
+.env.local
+.env.*.local
+.env.development
+.env.production
+.env.test
+.env.staging
+
+# Environment variable files
+.envrc
+.env.example
+.env.sample
+
+# Secrets
+secrets.yml
+config/secrets.yml
+*.pem
+*.key
