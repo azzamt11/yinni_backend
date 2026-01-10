@@ -523,6 +523,7 @@ func (uc *ProductUsecase) GenerateAllEmbeddings(ctx context.Context, batchSize i
 		for _, product := range products {
 			// Skip if already has embedding
 			if len(product.Embedding) > 0 {
+				uc.log.Infof("Skipping product %d as it already has an embedding %v", product.ID, product.Embedding)
 				continue
 			}
 
