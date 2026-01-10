@@ -515,6 +515,7 @@ func (uc *ProductUsecase) GenerateAllEmbeddings(ctx context.Context, batchSize i
 		}
 
 		if len(products) == 0 {
+			uc.log.Infof("No more products to process, ending.")
 			break
 		}
 
