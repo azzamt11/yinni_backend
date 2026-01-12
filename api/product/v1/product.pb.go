@@ -1216,10 +1216,10 @@ const file_api_product_v1_product_proto_rawDesc = "" +
 	"\n" +
 	"PriceRange\x12\x10\n" +
 	"\x03min\x18\x01 \x01(\x05R\x03min\x12\x10\n" +
-	"\x03max\x18\x02 \x01(\x05R\x03max2\xff\b\n" +
-	"\aProduct\x12g\n" +
+	"\x03max\x18\x02 \x01(\x05R\x03max2\x82\t\n" +
+	"\aProduct\x12j\n" +
 	"\n" +
-	"GetProduct\x12!.api.product.v1.GetProductRequest\x1a\x1b.api.product.v1.ProductInfo\"\x19\x82\xd3\xe4\x93\x02\x13\x12\x11/v1/products/{id}\x12v\n" +
+	"GetProduct\x12!.api.product.v1.GetProductRequest\x1a\x1b.api.product.v1.ProductInfo\"\x1c\x82\xd3\xe4\x93\x02\x16\x12\x14/v1/products/id/{id}\x12v\n" +
 	"\x0fGetProductByPID\x12&.api.product.v1.GetProductByPIDRequest\x1a\x1b.api.product.v1.ProductInfo\"\x1e\x82\xd3\xe4\x93\x02\x18\x12\x16/v1/products/pid/{pid}\x12l\n" +
 	"\fListProducts\x12#.api.product.v1.ListProductsRequest\x1a!.api.product.v1.ListProductsReply\"\x14\x82\xd3\xe4\x93\x02\x0e\x12\f/v1/products\x12w\n" +
 	"\x0eSearchProducts\x12%.api.product.v1.SearchProductsRequest\x1a!.api.product.v1.ListProductsReply\"\x1b\x82\xd3\xe4\x93\x02\x15\x12\x13/v1/products/search\x12\x83\x01\n" +

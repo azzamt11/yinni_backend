@@ -53,7 +53,7 @@ type ProductHTTPServer interface {
 
 func RegisterProductHTTPServer(s *http.Server, srv ProductHTTPServer) {
 	r := s.Route("/")
-	r.GET("/v1/products/{id}", _Product_GetProduct0_HTTP_Handler(srv))
+	r.GET("/v1/products/id/{id}", _Product_GetProduct0_HTTP_Handler(srv))
 	r.GET("/v1/products/pid/{pid}", _Product_GetProductByPID0_HTTP_Handler(srv))
 	r.GET("/v1/products", _Product_ListProducts0_HTTP_Handler(srv))
 	r.GET("/v1/products/search", _Product_SearchProducts0_HTTP_Handler(srv))
@@ -338,7 +338,7 @@ func (c *ProductHTTPClientImpl) GetFeaturedProducts(ctx context.Context, in *Get
 // GetProduct Get product by ID
 func (c *ProductHTTPClientImpl) GetProduct(ctx context.Context, in *GetProductRequest, opts ...http.CallOption) (*ProductInfo, error) {
 	var out ProductInfo
-	pattern := "/v1/products/{id}"
+	pattern := "/v1/products/id/{id}"
 	path := binding.EncodeURL(pattern, in, true)
 	opts = append(opts, http.Operation(OperationProductGetProduct))
 	opts = append(opts, http.PathTemplate(pattern))

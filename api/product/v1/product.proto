@@ -16,7 +16,7 @@ service Product {
   // Get product by ID
   rpc GetProduct(GetProductRequest) returns (ProductInfo) {
     option (google.api.http) = {
-      get: "/v1/products/{id}"
+      get: "/v1/products/id/{id}"
     };
   }
 
