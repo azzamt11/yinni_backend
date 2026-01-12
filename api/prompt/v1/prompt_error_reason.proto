@@ -1,0 +1,12 @@
+// api/product/v1/product_error_reason.proto
+syntax = "proto3";
+
+package api.product.v1;
+
+option go_package = "yinni_backend/api/product/v1;v1";
+option java_multiple_files = true;
+option java_package = "api.product.v1";
+
+enum ErrorReason {
+  INVALID_PROMPT = 0;
+}

@@ -147,7 +147,6 @@ func (s *ProductService) SearchProducts(ctx context.Context, req *pb.SearchProdu
 		// Fallback to traditional search
 		params := &biz.ListProductsParams{
 			PageSize:    int32(limit),
-			Category:    req.Category,
 			SearchQuery: req.Query,
 		}
 

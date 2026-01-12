@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+package api.prompt.v1;
+
+import "google/api/annotations.proto";
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
+
+option go_package = "yinni_backend/api/prompt/v1;v1";
+option java_multiple_files = true;
+option java_package = "api.prompt.v1";
+
+service Prompt {
+	rpc SendPrompt (SendPromptRequest) returns (SendPromptReply) {
+		option (google.api.http) = {
+			post: "/v1/prompt"
+			body: "*"
+		};
+	}
+}
+
+message SendPromptRequest {
+	int32 limit = 1;
+}
+
+message SendPromptReply {
+	string result = 1;
+}
