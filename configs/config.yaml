@@ -1,10 +1,10 @@
 server:
   http:
     addr: 0.0.0.0:${USER_HTTP_PORT}
-    timeout: 1s
+    timeout: 30s
   grpc:
     addr: 0.0.0.0:${USER_GRPC_PORT}
-    timeout: 1s
+    timeout: 30s
 
 auth:
   jwt_secret: ${JWT_SECRET}

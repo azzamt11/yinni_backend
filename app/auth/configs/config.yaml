@@ -1,10 +1,10 @@
 server:
   http:
     addr: ${KRATOS_SERVER_HTTP_ADDR:0.0.0.0:8080}
-    timeout: 1s
+    timeout: 30s
   grpc:
     addr: ${KRATOS_SERVER_GRPC_ADDR:0.0.0.0:9090}
-    timeout: 1s
+    timeout: 30s
 
 auth:
   jwt_secret: ${KRATOS_AUTH_JWT_SECRET:no-secret}
