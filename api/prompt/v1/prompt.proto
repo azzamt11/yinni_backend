@@ -3,26 +3,32 @@ syntax = "proto3";
 package api.prompt.v1;
 
 import "google/api/annotations.proto";
-import "google/protobuf/timestamp.proto";
-import "google/protobuf/empty.proto";
+import "google/protobuf/struct.proto";
 
 option go_package = "yinni_backend/api/prompt/v1;v1";
-option java_multiple_files = true;
-option java_package = "api.prompt.v1";
 
-service Prompt {
-	rpc SendPrompt (SendPromptRequest) returns (SendPromptReply) {
-		option (google.api.http) = {
-			post: "/v1/prompt"
-			body: "*"
-		};
-	}
+enum PromptType {
+  UNKNOWN = 0;
+  FIND_ITEM = 1;
+  SELECT_OPTION = 2;
+  MAKE_PAYMENT = 3;
 }
 
 message SendPromptRequest {
-	int32 limit = 1;
+  string prompt = 1;
 }
 
 message SendPromptReply {
-	string result = 1;
+  PromptType type = 1;
+  google.protobuf.Struct data = 2;
+  string service_response = 3;
+}
+
+service Prompt {
+  rpc SendPrompt (SendPromptRequest) returns (SendPromptReply) {
+    option (google.api.http) = {
+      post: "/v1/prompt"
+      body: "*"
+    };
+  }
 }

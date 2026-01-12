@@ -1,9 +1,9 @@
 package server
 
 import (
-	v1 "yinni_backend/api/prompt/v1"
-	"yinni_backend/app/prompt/internal/service"
-	"yinni_backend/internal/conf"
+	v1 "yinni_backend/app/payment/api/helloworld/v1"
+	"yinni_backend/app/payment/internal/conf"
+	"yinni_backend/app/payment/internal/service"
 
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/go-kratos/kratos/v2/middleware/recovery"
@@ -11,7 +11,7 @@ import (
 )
 
 // NewHTTPServer new an HTTP server.
-func NewHTTPServer(c *conf.Server, prompt *service.PromptService, logger log.Logger) *http.Server {
+func NewHTTPServer(c *conf.Server, greeter *service.GreeterService, logger log.Logger) *http.Server {
 	var opts = []http.ServerOption{
 		http.Middleware(
 			recovery.Recovery(),
@@ -27,6 +27,6 @@ func NewHTTPServer(c *conf.Server, prompt *service.PromptService, logger log.Log
 		opts = append(opts, http.Timeout(c.Http.Timeout.AsDuration()))
 	}
 	srv := http.NewServer(opts...)
-	v1.RegisterPromptHTTPServer(srv, prompt)
+	v1.RegisterGreeterHTTPServer(srv, greeter)
 	return srv
 }

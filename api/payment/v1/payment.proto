@@ -1,0 +1,44 @@
+syntax = "proto3";
+
+package api.payment.v1;
+
+import "google/api/annotations.proto";
+import "google/protobuf/struct.proto";
+
+option go_package = "yinni_backend/api/payment/v1;v1";
+option java_multiple_files = true;
+option java_package = "api.payment.v1";
+
+enum PaymentMethod {
+  OVO = 0;
+  DANA = 1;
+  GOPAY = 2;
+  SHOPEEPAY = 3;
+  BCA_VIRTUAL_ACCOUNT = 4;
+  BRI_VIRTUAL_ACCOUNT = 5;
+  MANDIRI_VIRTUAL_ACCOUNT = 6;
+  BNI_VIRTUAL_ACCOUNT = 7;
+  MASTERCARD = 8;
+  VISA = 9;
+  KREDIVO = 10;
+  GOPAY_LATER = 11;
+  UNSPECIFIED = 12;
+}
+
+service Payment {
+	rpc Pay(PayRequest) returns (PayReply) {
+		option (google.api.http) = {
+			post: "/v1/pay"
+			body: "*"
+		};
+	}
+}
+
+message PayRequest {
+	PaymentMethod method = 1;
+}
+
+message PayReply {
+	string message = 1;
+	string status = 2;
+}

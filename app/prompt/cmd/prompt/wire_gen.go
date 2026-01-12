@@ -10,25 +10,36 @@ import (
 	"github.com/go-kratos/kratos/v2"
 	"github.com/go-kratos/kratos/v2/log"
 	"yinni_backend/app/prompt/internal/biz"
-	"yinni_backend/app/prompt/internal/conf"
 	"yinni_backend/app/prompt/internal/data"
 	"yinni_backend/app/prompt/internal/server"
 	"yinni_backend/app/prompt/internal/service"
+	"yinni_backend/internal/conf"
 )
 
 import (
+	_ "github.com/go-sql-driver/mysql"
 	_ "go.uber.org/automaxprocs"
 )
 
 // Injectors from wire.go:
 
 // wireApp init kratos application.
-func wireApp(confServer *conf.Server, confData *conf.Data, logger log.Logger) (*kratos.App, func(), error) {
-	dataData, cleanup, err := data.NewData(confData)
+func wireApp(confServer *conf.Server, auth *conf.Auth, services *conf.Services, confData *conf.Data, logger log.Logger) (*kratos.App, func(), error) {
+	dataData, cleanup, err := data.NewData(confData, logger)
 	if err != nil {
 		return nil, nil, err
 	}
-	promptRepo := data.NewPromptRepo(dataData, logger)
+	productClient, err := data.NewProductClient(services)
+	if err != nil {
+		cleanup()
+		return nil, nil, err
+	}
+	paymentClient, err := data.NewPaymentClient(services)
+	if err != nil {
+		cleanup()
+		return nil, nil, err
+	}
+	promptRepo := data.NewPromptRepo(dataData, logger, productClient, paymentClient)
 	promptUsecase := biz.NewPromptUsecase(promptRepo)
 	promptService := service.NewPromptService(promptUsecase, logger)
 	grpcServer := server.NewGRPCServer(confServer, promptService, logger)

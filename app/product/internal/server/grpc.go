@@ -4,7 +4,6 @@ import (
 	v1 "yinni_backend/api/product/v1"
 	"yinni_backend/app/product/internal/service"
 	"yinni_backend/internal/conf"
-	"yinni_backend/pkg/middleware"
 
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/go-kratos/kratos/v2/middleware/recovery"
@@ -16,7 +15,6 @@ func NewGRPCServer(c *conf.Server, authConf *conf.Auth, product *service.Product
 	var opts = []grpc.ServerOption{
 		grpc.Middleware(
 			recovery.Recovery(),
-			middleware.JWT(authConf.JwtSecret),
 		),
 	}
 	if c.Grpc.Network != "" {

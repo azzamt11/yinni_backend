@@ -10,8 +10,7 @@ import (
 	_ "google.golang.org/genproto/googleapis/api/annotations"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
-	_ "google.golang.org/protobuf/types/known/emptypb"
-	_ "google.golang.org/protobuf/types/known/timestamppb"
+	structpb "google.golang.org/protobuf/types/known/structpb"
 	reflect "reflect"
 	sync "sync"
 	unsafe "unsafe"
@@ -24,9 +23,61 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+type PromptType int32
+
+const (
+	PromptType_UNKNOWN       PromptType = 0
+	PromptType_FIND_ITEM     PromptType = 1
+	PromptType_SELECT_OPTION PromptType = 2
+	PromptType_MAKE_PAYMENT  PromptType = 3
+)
+
+// Enum value maps for PromptType.
+var (
+	PromptType_name = map[int32]string{
+		0: "UNKNOWN",
+		1: "FIND_ITEM",
+		2: "SELECT_OPTION",
+		3: "MAKE_PAYMENT",
+	}
+	PromptType_value = map[string]int32{
+		"UNKNOWN":       0,
+		"FIND_ITEM":     1,
+		"SELECT_OPTION": 2,
+		"MAKE_PAYMENT":  3,
+	}
+)
+
+func (x PromptType) Enum() *PromptType {
+	p := new(PromptType)
+	*p = x
+	return p
+}
+
+func (x PromptType) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (PromptType) Descriptor() protoreflect.EnumDescriptor {
+	return file_api_prompt_v1_prompt_proto_enumTypes[0].Descriptor()
+}
+
+func (PromptType) Type() protoreflect.EnumType {
+	return &file_api_prompt_v1_prompt_proto_enumTypes[0]
+}
+
+func (x PromptType) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use PromptType.Descriptor instead.
+func (PromptType) EnumDescriptor() ([]byte, []int) {
+	return file_api_prompt_v1_prompt_proto_rawDescGZIP(), []int{0}
+}
+
 type SendPromptRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Limit         int32                  `protobuf:"varint,1,opt,name=limit,proto3" json:"limit,omitempty"`
+	Prompt        string                 `protobuf:"bytes,1,opt,name=prompt,proto3" json:"prompt,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -61,18 +112,20 @@ func (*SendPromptRequest) Descriptor() ([]byte, []int) {
 	return file_api_prompt_v1_prompt_proto_rawDescGZIP(), []int{0}
 }
 
-func (x *SendPromptRequest) GetLimit() int32 {
+func (x *SendPromptRequest) GetPrompt() string {
 	if x != nil {
-		return x.Limit
+		return x.Prompt
 	}
-	return 0
+	return ""
 }
 
 type SendPromptReply struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Result        string                 `protobuf:"bytes,1,opt,name=result,proto3" json:"result,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state           protoimpl.MessageState `protogen:"open.v1"`
+	Type            PromptType             `protobuf:"varint,1,opt,name=type,proto3,enum=api.prompt.v1.PromptType" json:"type,omitempty"`
+	Data            *structpb.Struct       `protobuf:"bytes,2,opt,name=data,proto3" json:"data,omitempty"`
+	ServiceResponse string                 `protobuf:"bytes,3,opt,name=service_response,json=serviceResponse,proto3" json:"service_response,omitempty"`
+	unknownFields   protoimpl.UnknownFields
+	sizeCache       protoimpl.SizeCache
 }
 
 func (x *SendPromptReply) Reset() {
@@ -105,9 +158,23 @@ func (*SendPromptReply) Descriptor() ([]byte, []int) {
 	return file_api_prompt_v1_prompt_proto_rawDescGZIP(), []int{1}
 }
 
-func (x *SendPromptReply) GetResult() string {
+func (x *SendPromptReply) GetType() PromptType {
 	if x != nil {
-		return x.Result
+		return x.Type
+	}
+	return PromptType_UNKNOWN
+}
+
+func (x *SendPromptReply) GetData() *structpb.Struct {
+	if x != nil {
+		return x.Data
+	}
+	return nil
+}
+
+func (x *SendPromptReply) GetServiceResponse() string {
+	if x != nil {
+		return x.ServiceResponse
 	}
 	return ""
 }
@@ -116,16 +183,23 @@ var File_api_prompt_v1_prompt_proto protoreflect.FileDescriptor
 
 const file_api_prompt_v1_prompt_proto_rawDesc = "" +
 	"\n" +
-	"\x1aapi/prompt/v1/prompt.proto\x12\rapi.prompt.v1\x1a\x1cgoogle/api/annotations.proto\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x1bgoogle/protobuf/empty.proto\")\n" +
-	"\x11SendPromptRequest\x12\x14\n" +
-	"\x05limit\x18\x01 \x01(\x05R\x05limit\")\n" +
-	"\x0fSendPromptReply\x12\x16\n" +
-	"\x06result\x18\x01 \x01(\tR\x06result2o\n" +
+	"\x1aapi/prompt/v1/prompt.proto\x12\rapi.prompt.v1\x1a\x1cgoogle/api/annotations.proto\x1a\x1cgoogle/protobuf/struct.proto\"+\n" +
+	"\x11SendPromptRequest\x12\x16\n" +
+	"\x06prompt\x18\x01 \x01(\tR\x06prompt\"\x98\x01\n" +
+	"\x0fSendPromptReply\x12-\n" +
+	"\x04type\x18\x01 \x01(\x0e2\x19.api.prompt.v1.PromptTypeR\x04type\x12+\n" +
+	"\x04data\x18\x02 \x01(\v2\x17.google.protobuf.StructR\x04data\x12)\n" +
+	"\x10service_response\x18\x03 \x01(\tR\x0fserviceResponse*M\n" +
+	"\n" +
+	"PromptType\x12\v\n" +
+	"\aUNKNOWN\x10\x00\x12\r\n" +
+	"\tFIND_ITEM\x10\x01\x12\x11\n" +
+	"\rSELECT_OPTION\x10\x02\x12\x10\n" +
+	"\fMAKE_PAYMENT\x10\x032o\n" +
 	"\x06Prompt\x12e\n" +
 	"\n" +
 	"SendPrompt\x12 .api.prompt.v1.SendPromptRequest\x1a\x1e.api.prompt.v1.SendPromptReply\"\x15\x82\xd3\xe4\x93\x02\x0f:\x01*\"\n" +
-	"/v1/promptB1\n" +
-	"\rapi.prompt.v1P\x01Z\x1eyinni_backend/api/prompt/v1;v1b\x06proto3"
+	"/v1/promptB Z\x1eyinni_backend/api/prompt/v1;v1b\x06proto3"
 
 var (
 	file_api_prompt_v1_prompt_proto_rawDescOnce sync.Once
@@ -139,19 +213,24 @@ func file_api_prompt_v1_prompt_proto_rawDescGZIP() []byte {
 	return file_api_prompt_v1_prompt_proto_rawDescData
 }
 
+var file_api_prompt_v1_prompt_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
 var file_api_prompt_v1_prompt_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
 var file_api_prompt_v1_prompt_proto_goTypes = []any{
-	(*SendPromptRequest)(nil), // 0: api.prompt.v1.SendPromptRequest
-	(*SendPromptReply)(nil),   // 1: api.prompt.v1.SendPromptReply
+	(PromptType)(0),           // 0: api.prompt.v1.PromptType
+	(*SendPromptRequest)(nil), // 1: api.prompt.v1.SendPromptRequest
+	(*SendPromptReply)(nil),   // 2: api.prompt.v1.SendPromptReply
+	(*structpb.Struct)(nil),   // 3: google.protobuf.Struct
 }
 var file_api_prompt_v1_prompt_proto_depIdxs = []int32{
-	0, // 0: api.prompt.v1.Prompt.SendPrompt:input_type -> api.prompt.v1.SendPromptRequest
-	1, // 1: api.prompt.v1.Prompt.SendPrompt:output_type -> api.prompt.v1.SendPromptReply
-	1, // [1:2] is the sub-list for method output_type
-	0, // [0:1] is the sub-list for method input_type
-	0, // [0:0] is the sub-list for extension type_name
-	0, // [0:0] is the sub-list for extension extendee
-	0, // [0:0] is the sub-list for field type_name
+	0, // 0: api.prompt.v1.SendPromptReply.type:type_name -> api.prompt.v1.PromptType
+	3, // 1: api.prompt.v1.SendPromptReply.data:type_name -> google.protobuf.Struct
+	1, // 2: api.prompt.v1.Prompt.SendPrompt:input_type -> api.prompt.v1.SendPromptRequest
+	2, // 3: api.prompt.v1.Prompt.SendPrompt:output_type -> api.prompt.v1.SendPromptReply
+	3, // [3:4] is the sub-list for method output_type
+	2, // [2:3] is the sub-list for method input_type
+	2, // [2:2] is the sub-list for extension type_name
+	2, // [2:2] is the sub-list for extension extendee
+	0, // [0:2] is the sub-list for field type_name
 }
 
 func init() { file_api_prompt_v1_prompt_proto_init() }
@@ -164,13 +243,14 @@ func file_api_prompt_v1_prompt_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_api_prompt_v1_prompt_proto_rawDesc), len(file_api_prompt_v1_prompt_proto_rawDesc)),
-			NumEnums:      0,
+			NumEnums:      1,
 			NumMessages:   2,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
 		GoTypes:           file_api_prompt_v1_prompt_proto_goTypes,
 		DependencyIndexes: file_api_prompt_v1_prompt_proto_depIdxs,
+		EnumInfos:         file_api_prompt_v1_prompt_proto_enumTypes,
 		MessageInfos:      file_api_prompt_v1_prompt_proto_msgTypes,
 	}.Build()
 	File_api_prompt_v1_prompt_proto = out.File

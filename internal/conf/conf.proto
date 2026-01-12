@@ -16,6 +16,7 @@ message Bootstrap {
   Auth auth = 3;
   Embeddings embeddings = 4;  // Changed back to Embeddings
   Admin admin = 5; 
+  Services services = 6;
 }
 
 message Server {
@@ -62,4 +63,10 @@ message Embeddings {
   string base_url = 4;
   int32 timeout_seconds = 5;
   int32 max_retries = 6;
+}
+
+message Services {
+  string product_service_endpoint = 1;
+  string payment_service_endpoint = 2;
+  string timeout = 3;
 }

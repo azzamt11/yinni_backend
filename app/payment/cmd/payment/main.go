@@ -4,27 +4,25 @@ import (
 	"flag"
 	"os"
 
-	"yinni_backend/internal/conf"
+	"yinni_backend/app/payment/internal/conf"
 
 	"github.com/go-kratos/kratos/v2"
 	"github.com/go-kratos/kratos/v2/config"
-	"github.com/go-kratos/kratos/v2/config/env"
 	"github.com/go-kratos/kratos/v2/config/file"
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/go-kratos/kratos/v2/middleware/tracing"
 	"github.com/go-kratos/kratos/v2/transport/grpc"
 	"github.com/go-kratos/kratos/v2/transport/http"
 
-	_ "github.com/go-sql-driver/mysql"
 	_ "go.uber.org/automaxprocs"
 )
 
 // go build -ldflags "-X main.Version=x.y.z"
 var (
 	// Name is the name of the compiled software.
-	Name string = "prompt-service" // Changed to prompt-service
+	Name string
 	// Version is the version of the compiled software.
-	Version string = "v1.0.0"
+	Version string
 	// flagconf is the config flag.
 	flagconf string
 
@@ -60,13 +58,9 @@ func main() {
 		"trace.id", tracing.TraceID(),
 		"span.id", tracing.SpanID(),
 	)
-
-	logHelper := log.NewHelper(logger)
-
 	c := config.New(
 		config.WithSource(
 			file.NewSource(flagconf),
-			env.NewSource(),
 		),
 	)
 	defer c.Close()
@@ -80,23 +74,10 @@ func main() {
 		panic(err)
 	}
 
-	// ---- sanity logs ----
-	logHelper.Infof("HTTP addr: %s", bc.Server.Http.Addr)
-	logHelper.Infof("gRPC addr: %s", bc.Server.Grpc.Addr)
-	logHelper.Infof("DB source: %s", bc.Data.Database.Source)
-	logHelper.Infof("JWT secret: %s", bc.Auth.JwtSecret)
-	logHelper.Infof("JWT expire: %s", bc.Auth.JwtExpire)
-
-	// Log service-specific configs
-	logHelper.Infof("Product Service URL: %s", bc.Services.ProductServiceEndpoint)
-	logHelper.Infof("Payment Service URL: %s", bc.Services.PaymentServiceEndpoint)
-	logHelper.Infof("Service Timeout: %s", bc.Services.Timeout)
-
-	app, cleanup, err := wireApp(bc.Server, bc.Auth, bc.Services, bc.Data, logger)
+	app, cleanup, err := wireApp(bc.Server, bc.Data, logger)
 	if err != nil {
 		panic(err)
 	}
-
 	defer cleanup()
 
 	// start and wait for stop signal

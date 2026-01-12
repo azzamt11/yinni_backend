@@ -1,14 +1,18 @@
 package data
 
 import (
-	"yinni_backend/app/prompt/internal/conf"
+	"yinni_backend/internal/conf" // Use root config
+
+	paymentpb "yinni_backend/api/payment/v1"
+	productpb "yinni_backend/api/product/v1"
 
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/google/wire"
+	"google.golang.org/grpc"
 )
 
 // ProviderSet is data providers.
-var ProviderSet = wire.NewSet(NewData, NewPromptRepo)
+var ProviderSet = wire.NewSet(NewData, NewProductClient, NewPaymentClient, NewPromptRepo)
 
 // Data .
 type Data struct {
@@ -16,9 +20,41 @@ type Data struct {
 }
 
 // NewData .
-func NewData(c *conf.Data) (*Data, func(), error) {
+func NewData(c *conf.Data, logger log.Logger) (*Data, func(), error) {
 	cleanup := func() {
-		log.Info("closing the data resources")
+		log.NewHelper(logger).Info("closing the data resources")
 	}
 	return &Data{}, cleanup, nil
+}
+
+func NewProductClient(
+	c *conf.Services,
+) (productpb.ProductClient, error) {
+
+	conn, err := grpc.Dial(
+		c.ProductServiceEndpoint,
+		grpc.WithInsecure(), // internal network
+		grpc.WithBlock(),
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return productpb.NewProductClient(conn), nil
+}
+
+func NewPaymentClient(
+	c *conf.Services,
+) (paymentpb.PaymentClient, error) {
+
+	conn, err := grpc.Dial(
+		c.PaymentServiceEndpoint,
+		grpc.WithInsecure(),
+		grpc.WithBlock(),
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return paymentpb.NewPaymentClient(conn), nil
 }
