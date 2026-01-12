@@ -3,27 +3,27 @@ package service
 import (
 	"context"
 
-	v1 "yinni_backend/app/payment/api/helloworld/v1"
+	v1 "yinni_backend/api/payment/v1"
 	"yinni_backend/app/payment/internal/biz"
 )
 
-// GreeterService is a greeter service.
-type GreeterService struct {
-	v1.UnimplementedGreeterServer
+// PaymentService is a greeter service.
+type PaymentService struct {
+	v1.UnimplementedPaymentServer
 
-	uc *biz.GreeterUsecase
+	uc *biz.PaymentUsecase
 }
 
-// NewGreeterService new a greeter service.
-func NewGreeterService(uc *biz.GreeterUsecase) *GreeterService {
-	return &GreeterService{uc: uc}
+// NewPaymentService new a greeter service.
+func NewPaymentService(uc *biz.PaymentUsecase) *PaymentService {
+	return &PaymentService{uc: uc}
 }
 
-// SayHello implements helloworld.GreeterServer.
-func (s *GreeterService) SayHello(ctx context.Context, in *v1.HelloRequest) (*v1.HelloReply, error) {
-	g, err := s.uc.CreateGreeter(ctx, &biz.Greeter{Hello: in.Name})
+// SayHello implements helloworld.PaymentServer.
+func (s *PaymentService) SayHello(ctx context.Context, in *v1.PayRequest) (*v1.PayReply, error) {
+	g, err := s.uc.Pay(ctx, &biz.Payment{})
 	if err != nil {
 		return nil, err
 	}
-	return &v1.HelloReply{Message: "Hello " + g.Hello}, nil
+	return &v1.PayReply{Message: "Hello " + g.Hello}, nil
 }

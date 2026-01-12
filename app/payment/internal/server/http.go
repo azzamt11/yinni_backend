@@ -1,7 +1,7 @@
 package server
 
 import (
-	v1 "yinni_backend/app/payment/api/helloworld/v1"
+	v1 "yinni_backend/api/payment/v1"
 	"yinni_backend/app/payment/internal/conf"
 	"yinni_backend/app/payment/internal/service"
 
@@ -11,7 +11,7 @@ import (
 )
 
 // NewHTTPServer new an HTTP server.
-func NewHTTPServer(c *conf.Server, greeter *service.GreeterService, logger log.Logger) *http.Server {
+func NewHTTPServer(c *conf.Server, greeter *service.PaymentService, logger log.Logger) *http.Server {
 	var opts = []http.ServerOption{
 		http.Middleware(
 			recovery.Recovery(),
@@ -27,6 +27,6 @@ func NewHTTPServer(c *conf.Server, greeter *service.GreeterService, logger log.L
 		opts = append(opts, http.Timeout(c.Http.Timeout.AsDuration()))
 	}
 	srv := http.NewServer(opts...)
-	v1.RegisterGreeterHTTPServer(srv, greeter)
+	v1.RegisterPaymentHTTPServer(srv, greeter)
 	return srv
 }

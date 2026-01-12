@@ -12,11 +12,10 @@ import (
 	"yinni_backend/app/payment/internal/data"
 	"yinni_backend/app/payment/internal/server"
 	"yinni_backend/app/payment/internal/service"
+
 	"github.com/go-kratos/kratos/v2"
 	"github.com/go-kratos/kratos/v2/log"
-)
 
-import (
 	_ "go.uber.org/automaxprocs"
 )
 
@@ -28,11 +27,11 @@ func wireApp(confServer *conf.Server, confData *conf.Data, logger log.Logger) (*
 	if err != nil {
 		return nil, nil, err
 	}
-	greeterRepo := data.NewGreeterRepo(dataData, logger)
-	greeterUsecase := biz.NewGreeterUsecase(greeterRepo)
-	greeterService := service.NewGreeterService(greeterUsecase)
-	grpcServer := server.NewGRPCServer(confServer, greeterService, logger)
-	httpServer := server.NewHTTPServer(confServer, greeterService, logger)
+	paymentRepo := data.NewPaymentRepo(dataData, logger)
+	paymentUsecase := biz.NewPaymentUsecase(paymentRepo)
+	paymentService := service.NewPaymentService(paymentUsecase)
+	grpcServer := server.NewGRPCServer(confServer, paymentService, logger)
+	httpServer := server.NewHTTPServer(confServer, paymentService, logger)
 	app := newApp(logger, grpcServer, httpServer)
 	return app, func() {
 		cleanup()

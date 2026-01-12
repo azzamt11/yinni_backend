@@ -17,7 +17,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 WORKDIR /app
 
-COPY --from=builder /src/bin/product /app/server
+COPY --from=builder /src/bin/prompt /app/server
 
 COPY ./configs /data/conf
 
