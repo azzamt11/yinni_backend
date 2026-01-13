@@ -43,7 +43,7 @@ func wireApp(confServer *conf.Server, auth *conf.Auth, services *conf.Services, 
 	promptUsecase := biz.NewPromptUsecase(promptRepo)
 	promptService := service.NewPromptService(promptUsecase, logger)
 	grpcServer := server.NewGRPCServer(confServer, promptService, logger)
-	httpServer := server.NewHTTPServer(confServer, promptService, logger)
+	httpServer := server.NewHTTPServer(confServer, auth, promptService, logger)
 	app := newApp(logger, grpcServer, httpServer)
 	return app, func() {
 		cleanup()

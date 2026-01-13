@@ -1,54 +1,34 @@
 FROM python:3.10-slim
 
-# --------------------
-# Environment
-# --------------------
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
+# This ensures "import internal" works from anywhere
 ENV PYTHONPATH=/app
 
-# --------------------
-# System dependencies (Torch needs these)
-# --------------------
 RUN apt-get update && apt-get install -y \
-    gcc \
-    g++ \
-    libstdc++6 \
-    libgomp1 \
-    ca-certificates \
+    gcc g++ libstdc++6 libgomp1 ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
-# --------------------
-# Workdir
-# --------------------
 WORKDIR /app
 
-# --------------------
-# Install Python deps first (better cache)
-# --------------------
-COPY configs/requirements.txt ./requirements.txt
-RUN pip install --no-cache-dir -r requirements.txt
+# 1. Install deps
+COPY app/classifier/configs/requirements.txt ./configs/requirements.txt
+RUN pip install --no-cache-dir -r ./configs/requirements.txt
 
-# --------------------
-# Copy application code
-# --------------------
+# 2. Copy shared API
 COPY api ./api
-COPY internal ./internal
-COPY cmd ./cmd
 
-# --------------------
-# Copy model artifacts
-# --------------------
-COPY ulc_model_weights.pth .
-COPY ulc_vocab.pkl .
-COPY ulc_model_config.json .
+# 3. Copy application code (Preserving the full path)
+COPY app/classifier/internal ./internal
+COPY app/classifier/cmd ./cmd
 
-# --------------------
-# Expose gRPC port
-# --------------------
+# 4. Copy model artifacts INTO the classifier folder
+# This makes os.path.join(BASE_DIR, "file") much easier to manage
+COPY app/classifier/ulc_model_weights.pth ./
+COPY app/classifier/ulc_vocab.pkl ./
+COPY app/classifier/ulc_model_config.json ./
+
 EXPOSE 9005
 
-# --------------------
-# Run classifier service
-# --------------------
+# 5. Fixed path to main.py
 CMD ["python", "cmd/classifier/main.py"]

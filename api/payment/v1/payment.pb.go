@@ -26,19 +26,19 @@ const (
 type PaymentMethod int32
 
 const (
-	PaymentMethod_OVO                     PaymentMethod = 0
-	PaymentMethod_DANA                    PaymentMethod = 1
-	PaymentMethod_GOPAY                   PaymentMethod = 2
-	PaymentMethod_SHOPEEPAY               PaymentMethod = 3
-	PaymentMethod_BCA_VIRTUAL_ACCOUNT     PaymentMethod = 4
-	PaymentMethod_BRI_VIRTUAL_ACCOUNT     PaymentMethod = 5
-	PaymentMethod_MANDIRI_VIRTUAL_ACCOUNT PaymentMethod = 6
-	PaymentMethod_BNI_VIRTUAL_ACCOUNT     PaymentMethod = 7
-	PaymentMethod_MASTERCARD              PaymentMethod = 8
-	PaymentMethod_VISA                    PaymentMethod = 9
-	PaymentMethod_KREDIVO                 PaymentMethod = 10
-	PaymentMethod_GOPAY_LATER             PaymentMethod = 11
-	PaymentMethod_UNSPECIFIED             PaymentMethod = 12
+	PaymentMethod_OVO         PaymentMethod = 0
+	PaymentMethod_DANA        PaymentMethod = 1
+	PaymentMethod_GOPAY       PaymentMethod = 2
+	PaymentMethod_SHOPEEPAY   PaymentMethod = 3
+	PaymentMethod_BCA         PaymentMethod = 4
+	PaymentMethod_BRI         PaymentMethod = 5
+	PaymentMethod_MANDIRI     PaymentMethod = 6
+	PaymentMethod_BNI         PaymentMethod = 7
+	PaymentMethod_MASTERCARD  PaymentMethod = 8
+	PaymentMethod_VISA        PaymentMethod = 9
+	PaymentMethod_KREDIVO     PaymentMethod = 10
+	PaymentMethod_GOPAY_LATER PaymentMethod = 11
+	PaymentMethod_UNSPECIFIED PaymentMethod = 12
 )
 
 // Enum value maps for PaymentMethod.
@@ -48,10 +48,10 @@ var (
 		1:  "DANA",
 		2:  "GOPAY",
 		3:  "SHOPEEPAY",
-		4:  "BCA_VIRTUAL_ACCOUNT",
-		5:  "BRI_VIRTUAL_ACCOUNT",
-		6:  "MANDIRI_VIRTUAL_ACCOUNT",
-		7:  "BNI_VIRTUAL_ACCOUNT",
+		4:  "BCA",
+		5:  "BRI",
+		6:  "MANDIRI",
+		7:  "BNI",
 		8:  "MASTERCARD",
 		9:  "VISA",
 		10: "KREDIVO",
@@ -59,19 +59,19 @@ var (
 		12: "UNSPECIFIED",
 	}
 	PaymentMethod_value = map[string]int32{
-		"OVO":                     0,
-		"DANA":                    1,
-		"GOPAY":                   2,
-		"SHOPEEPAY":               3,
-		"BCA_VIRTUAL_ACCOUNT":     4,
-		"BRI_VIRTUAL_ACCOUNT":     5,
-		"MANDIRI_VIRTUAL_ACCOUNT": 6,
-		"BNI_VIRTUAL_ACCOUNT":     7,
-		"MASTERCARD":              8,
-		"VISA":                    9,
-		"KREDIVO":                 10,
-		"GOPAY_LATER":             11,
-		"UNSPECIFIED":             12,
+		"OVO":         0,
+		"DANA":        1,
+		"GOPAY":       2,
+		"SHOPEEPAY":   3,
+		"BCA":         4,
+		"BRI":         5,
+		"MANDIRI":     6,
+		"BNI":         7,
+		"MASTERCARD":  8,
+		"VISA":        9,
+		"KREDIVO":     10,
+		"GOPAY_LATER": 11,
+		"UNSPECIFIED": 12,
 	}
 )
 
@@ -208,16 +208,16 @@ const file_api_payment_v1_payment_proto_rawDesc = "" +
 	"\x06method\x18\x01 \x01(\x0e2\x1d.api.payment.v1.PaymentMethodR\x06method\"<\n" +
 	"\bPayReply\x12\x18\n" +
 	"\amessage\x18\x01 \x01(\tR\amessage\x12\x16\n" +
-	"\x06status\x18\x02 \x01(\tR\x06status*\xed\x01\n" +
+	"\x06status\x18\x02 \x01(\tR\x06status*\xad\x01\n" +
 	"\rPaymentMethod\x12\a\n" +
 	"\x03OVO\x10\x00\x12\b\n" +
 	"\x04DANA\x10\x01\x12\t\n" +
 	"\x05GOPAY\x10\x02\x12\r\n" +
-	"\tSHOPEEPAY\x10\x03\x12\x17\n" +
-	"\x13BCA_VIRTUAL_ACCOUNT\x10\x04\x12\x17\n" +
-	"\x13BRI_VIRTUAL_ACCOUNT\x10\x05\x12\x1b\n" +
-	"\x17MANDIRI_VIRTUAL_ACCOUNT\x10\x06\x12\x17\n" +
-	"\x13BNI_VIRTUAL_ACCOUNT\x10\a\x12\x0e\n" +
+	"\tSHOPEEPAY\x10\x03\x12\a\n" +
+	"\x03BCA\x10\x04\x12\a\n" +
+	"\x03BRI\x10\x05\x12\v\n" +
+	"\aMANDIRI\x10\x06\x12\a\n" +
+	"\x03BNI\x10\a\x12\x0e\n" +
 	"\n" +
 	"MASTERCARD\x10\b\x12\b\n" +
 	"\x04VISA\x10\t\x12\v\n" +

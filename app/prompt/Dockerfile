@@ -22,7 +22,6 @@ WORKDIR /app
 COPY --from=builder /src/bin/prompt /app/server
 
 COPY ./configs /data/conf
-COPY ./yinni_classifier /app/yinni_classifier
 
 RUN chmod +x /app/server
 

@@ -4,7 +4,7 @@ import (
 	"flag"
 	"os"
 
-	"yinni_backend/app/payment/internal/conf"
+	"yinni_backend/internal/conf"
 
 	"github.com/go-kratos/kratos/v2"
 	"github.com/go-kratos/kratos/v2/config"

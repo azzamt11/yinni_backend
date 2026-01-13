@@ -6,7 +6,12 @@ import sys
 from internal.model.model import UltraLiteClassifier
 from rapidfuzz import process, fuzz
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+# 1. Get the directory of THIS file (/app/internal/model/)
+CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
+
+# 2. Go up 2 levels to reach /app/
+# (internal -> model -> /app/)
+BASE_DIR = os.path.abspath(os.path.join(CURRENT_DIR, "../.."))
 
 model_path = os.path.join(BASE_DIR, "ulc_model_weights.pth")
 vocab_path = os.path.join(BASE_DIR, "ulc_vocab.pkl")

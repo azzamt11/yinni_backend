@@ -7,10 +7,10 @@ package main
 
 import (
 	"yinni_backend/app/payment/internal/biz"
-	"yinni_backend/app/payment/internal/conf"
 	"yinni_backend/app/payment/internal/data"
 	"yinni_backend/app/payment/internal/server"
 	"yinni_backend/app/payment/internal/service"
+	"yinni_backend/internal/conf"
 
 	"github.com/go-kratos/kratos/v2"
 	"github.com/go-kratos/kratos/v2/log"

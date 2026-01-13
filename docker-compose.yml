@@ -97,8 +97,8 @@ services:
       context: .
       dockerfile: app/payment/Dockerfile
     ports:
-      - "${PROMPT_HTTP_PORT}:8003"
-      - "${PROMPT_GRPC_PORT}:9003"
+      - "${PROMPT_HTTP_PORT}:8004"
+      - "${PROMPT_GRPC_PORT}:9004"
     volumes:
       - ./app/payment/configs:/data/conf
     environment:
@@ -117,7 +117,7 @@ services:
       context: .
       dockerfile: app/classifier/Dockerfile
     ports:
-      - "50051:50051"   # optional: expose only for local debugging
+      - "9005:9005"   # optional: expose only for local debugging
     environment:
       GRPC_PORT: "9005"
     depends_on:

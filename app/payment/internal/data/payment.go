@@ -21,22 +21,8 @@ func NewPaymentRepo(data *Data, logger log.Logger) biz.PaymentRepo {
 	}
 }
 
-func (r *greeterRepo) Save(ctx context.Context, g *biz.Payment) (*biz.Payment, error) {
-	return g, nil
-}
-
-func (r *greeterRepo) Update(ctx context.Context, g *biz.Payment) (*biz.Payment, error) {
-	return g, nil
-}
-
-func (r *greeterRepo) FindByID(context.Context, int64) (*biz.Payment, error) {
-	return nil, nil
-}
-
-func (r *greeterRepo) ListByHello(context.Context, string) ([]*biz.Payment, error) {
-	return nil, nil
-}
-
-func (r *greeterRepo) ListAll(context.Context) ([]*biz.Payment, error) {
-	return nil, nil
+func (r *greeterRepo) Pay(ctx context.Context, g *biz.Payment) (*biz.Payment, error) {
+	return &biz.Payment{
+		Method: g.Method,
+	}, nil
 }

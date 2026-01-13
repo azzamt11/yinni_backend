@@ -16,21 +16,18 @@ var (
 
 // Payment is a Payment model.
 type Payment struct {
-	Hello string
+	Method string
 }
 
 // PaymentRepo is a Greater repo.
 type PaymentRepo interface {
-	Save(context.Context, *Payment) (*Payment, error)
-	Update(context.Context, *Payment) (*Payment, error)
-	FindByID(context.Context, int64) (*Payment, error)
-	ListByHello(context.Context, string) ([]*Payment, error)
-	ListAll(context.Context) ([]*Payment, error)
+	Pay(context.Context, *Payment) (*Payment, error)
 }
 
 // PaymentUsecase is a Payment usecase.
 type PaymentUsecase struct {
 	repo PaymentRepo
+	log  *log.Helper
 }
 
 // NewPaymentUsecase new a Payment usecase.
@@ -38,8 +35,8 @@ func NewPaymentUsecase(repo PaymentRepo) *PaymentUsecase {
 	return &PaymentUsecase{repo: repo}
 }
 
-// CreatePayment creates a Payment, and returns the new Payment.
-func (uc *PaymentUsecase) Pay(ctx context.Context, g *Payment) (*Payment, error) {
-	log.Infof("CreatePayment: %v", g.Hello)
-	return uc.repo.Save(ctx, g)
+// CreateProduct creates a new Product.
+func (uc *PaymentUsecase) Pay(ctx context.Context, p *Payment) (*Payment, error) {
+	uc.log.Infof("CreateProduct: %v", p.Method)
+	return uc.repo.Pay(ctx, p)
 }

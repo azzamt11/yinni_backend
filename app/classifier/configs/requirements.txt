@@ -1,6 +1,5 @@
 torch==2.1.0
 numpy
-grpc
 grpcio
 grpcio-tools
 rapidfuzz

@@ -1,7 +1,7 @@
 package data
 
 import (
-	"yinni_backend/app/payment/internal/conf"
+	"yinni_backend/internal/conf"
 
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/google/wire"
