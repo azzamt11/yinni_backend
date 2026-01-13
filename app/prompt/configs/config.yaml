@@ -12,7 +12,7 @@ services:
   timeout: "30s"
 
 auth:
-  jwt_secret: ${KRATOS_AUTH_JWT_SECRET:super-secret-key}
+  jwt_secret: ${KRATOS_AUTH_JWT_SECRET:no-secret}
   jwt_expire: 3600
 data:
   database:

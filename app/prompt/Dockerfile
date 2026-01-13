@@ -21,7 +21,7 @@ WORKDIR /app
 
 COPY --from=builder /src/bin/prompt /app/server
 
-COPY ./configs /app/configs
+COPY ./configs /data/conf
 
 RUN chmod +x /app/server
 
@@ -30,4 +30,4 @@ EXPOSE 9003
 
 VOLUME /data/conf
 
-CMD ["./server", "-conf", "/app/configs"]
+CMD ["./server", "-conf", "/data/conf"]

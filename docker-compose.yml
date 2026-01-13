@@ -91,7 +91,7 @@ services:
       mysql:
         condition: service_healthy
 
-  # ---------- PROMPT SERVICE ----------
+  # ---------- PAYMENT SERVICE ----------
   payment-service:
     build:
       context: .
