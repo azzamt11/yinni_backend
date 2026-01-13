@@ -13,7 +13,7 @@ services:
 
 auth:
   jwt_secret: ${KRATOS_AUTH_JWT_SECRET:no-secret}
-  jwt_expire: ${KRATOS_AUTH_JWT_EXPIRE:3600}
+  jwt_expire: 3600
 
 data:
   database:
