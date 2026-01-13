@@ -8,7 +8,7 @@ server:
 
 auth:
   jwt_secret: ${JWT_SECRET}
-  jwt_expire: ${JWT_EXPIRE}
+  jwt_expire: 3600
 
 data:
   database:
