@@ -97,8 +97,8 @@ services:
       context: .
       dockerfile: app/payment/Dockerfile
     ports:
-      - "${PROMPT_HTTP_PORT}:8004"
-      - "${PROMPT_GRPC_PORT}:9004"
+      - "${PAYMENT_HTTP_PORT}:8004"
+      - "${PAYMENT_GRPC_PORT}:9004"
     volumes:
       - ./app/payment/configs:/data/conf
     environment:
@@ -133,6 +133,7 @@ services:
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_ROOT_HOST: "%"
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}"]
       interval: 5s
