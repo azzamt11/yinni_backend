@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+package api.classifier.v1;
+
+option go_package = "yinni_backend/api/classifier/v1;v1";
+option java_multiple_files = true;
+option java_package = "api.classifier.v1";
+
+service Classifier {
+	rpc Classify (ClassifyRequest) returns (ClassifyReply);
+}
+
+message ClassifyRequest {
+  string text = 1;
+}
+
+message ClassifyReply {
+  string type = 1;
+  float confidence = 2;
+  string value = 3;
+}

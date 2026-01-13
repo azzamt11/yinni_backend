@@ -1,0 +1,10 @@
+{
+  "vocab_size": 287,
+  "num_classes": 3,
+  "embed_dim": 128,
+  "class_names": [
+    "Find_Item",
+    "Select_Option",
+    "Make_Payment"
+  ]
+}

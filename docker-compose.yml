@@ -91,6 +91,40 @@ services:
       mysql:
         condition: service_healthy
 
+  # ---------- PROMPT SERVICE ----------
+  payment-service:
+    build:
+      context: .
+      dockerfile: app/payment/Dockerfile
+    ports:
+      - "${PROMPT_HTTP_PORT}:8003"
+      - "${PROMPT_GRPC_PORT}:9003"
+    volumes:
+      - ./app/payment/configs:/data/conf
+    environment:
+      KRATOS_SERVER_HTTP_ADDR: 0.0.0.0:8004
+      KRATOS_SERVER_GRPC_ADDR: 0.0.0.0:9004
+      KRATOS_DATA_DATABASE_SOURCE: ${DB_SOURCE}
+      KRATOS_AUTH_JWT_SECRET: ${JWT_SECRET}
+      KRATOS_AUTH_JWT_EXPIRE: ${JWT_EXPIRE}
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  # ---------- CLASSIFIER SERVICE ----------
+  classifier-service:
+    build:
+      context: .
+      dockerfile: app/classifier/Dockerfile
+    ports:
+      - "50051:50051"   # optional: expose only for local debugging
+    environment:
+      GRPC_PORT: "9005"
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+
   # ---------- MYSQL ----------
   mysql:
     image: mysql:8.0

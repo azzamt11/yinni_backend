@@ -52,6 +52,8 @@ bin/
 .env.example
 .env.sample
 
+app/classifier/venv
+
 # Secrets
 secrets.yml
 config/secrets.yml

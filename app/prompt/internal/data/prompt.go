@@ -2,13 +2,12 @@ package data
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
-	"os/exec"
 	"strings"
 
 	"yinni_backend/app/prompt/internal/biz"
 
+	classifypb "yinni_backend/api/classifier/v1"
 	paymentpb "yinni_backend/api/payment/v1"
 	productpb "yinni_backend/api/product/v1"
 
@@ -16,10 +15,11 @@ import (
 )
 
 type promptRepo struct {
-	data          *Data
-	log           *log.Helper
-	productClient productpb.ProductClient
-	paymentClient paymentpb.PaymentClient
+	data           *Data
+	log            *log.Helper
+	productClient  productpb.ProductClient
+	paymentClient  paymentpb.PaymentClient
+	classifyClient classifypb.ClassifierClient
 }
 
 // NewPromptRepo implements biz.PromptRepo
@@ -50,28 +50,22 @@ type mlResult struct {
 
 func (r *promptRepo) Classify(ctx context.Context, prompt string) (biz.PromptType, string, error) {
 
-	// Example: python classify.py "I want to buy iphone"
-	cmd := exec.CommandContext(ctx, "python", "classify.py", prompt)
-
-	output, err := cmd.Output()
+	resp, err := r.classifyClient.Classify(ctx, &classifypb.ClassifyRequest{
+		Text: prompt,
+	})
 	if err != nil {
 		return biz.PromptUnknown, "", fmt.Errorf("ml classify failed: %w", err)
 	}
 
-	var result mlResult
-	if err := json.Unmarshal(output, &result); err != nil {
-		return biz.PromptUnknown, "", err
-	}
-
-	switch strings.ToLower(result.Type) {
+	switch strings.ToLower(resp.Type) {
 	case "find_item":
-		return biz.PromptFindItem, result.Value, nil
+		return biz.PromptFindItem, resp.Value, nil
 	case "select_item":
-		return biz.PromptSelectOption, result.Value, nil
+		return biz.PromptSelectOption, resp.Value, nil
 	case "make_payment":
-		return biz.PromptMakePayment, result.Value, nil
+		return biz.PromptMakePayment, resp.Value, nil
 	default:
-		return biz.PromptUnknown, result.Value, nil
+		return biz.PromptUnknown, resp.Value, nil
 	}
 }
 

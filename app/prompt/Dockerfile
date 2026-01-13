@@ -13,13 +13,16 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
     netbase \
     gettext-base \
-    && rm -rf /var/lib/apt/lists/*
+    python3 \
+    python3-pip \
+ && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
 COPY --from=builder /src/bin/prompt /app/server
 
 COPY ./configs /data/conf
+COPY ./yinni_classifier /app/yinni_classifier
 
 RUN chmod +x /app/server
 
