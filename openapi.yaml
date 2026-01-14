@@ -3,19 +3,19 @@
 
 openapi: 3.0.3
 info:
-    title: Payment API
+    title: Main API
     version: 0.0.1
 paths:
-    /v1/pay:
+    /v1/prompt:
         post:
             tags:
-                - Payment
-            operationId: Payment_Pay
+                - Main
+            operationId: Main_SendPrompt
             requestBody:
                 content:
                     application/json:
                         schema:
-                            $ref: '#/components/schemas/PayRequest'
+                            $ref: '#/components/schemas/SendPromptRequest'
                 required: true
             responses:
                 "200":
@@ -23,7 +23,7 @@ paths:
                     content:
                         application/json:
                             schema:
-                                $ref: '#/components/schemas/PayReply'
+                                $ref: '#/components/schemas/SendPromptReply'
                 default:
                     description: Default error response
                     content:
@@ -40,19 +40,21 @@ components:
                     description: The type of the serialized message.
             additionalProperties: true
             description: Contains an arbitrary serialized message along with a @type that describes the type of the serialized message.
-        PayReply:
+        SendPromptReply:
             type: object
             properties:
-                message:
-                    type: string
-                status:
-                    type: string
-        PayRequest:
-            type: object
-            properties:
-                method:
+                type:
                     type: integer
                     format: enum
+                data:
+                    type: string
+                serviceResponse:
+                    type: string
+        SendPromptRequest:
+            type: object
+            properties:
+                prompt:
+                    type: string
         Status:
             type: object
             properties:
@@ -70,4 +72,4 @@ components:
                     description: A list of messages that carry the error details.  There is a common set of message types for APIs to use.
             description: 'The `Status` type defines a logical error model that is suitable for different programming environments, including REST APIs and RPC APIs. It is used by [gRPC](https://github.com/grpc). Each `Status` message contains three pieces of data: error code, error message, and error details. You can find out more about this error model and how to work with it in the [API Design Guide](https://cloud.google.com/apis/design/errors).'
 tags:
-    - name: Payment
+    - name: Main

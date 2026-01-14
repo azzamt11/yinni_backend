@@ -1,0 +1,24 @@
+server:
+  http:
+    addr: ${KRATOS_SERVER_HTTP_ADDR:0.0.0.0:8003}
+    timeout: 30s
+  grpc:
+    addr: ${KRATOS_SERVER_GRPC_ADDR:0.0.0.0:9003}
+    timeout: 30s
+
+auth:
+  jwt_secret: ${KRATOS_AUTH_JWT_SECRET:no-secret}
+  jwt_expire: ${KRATOS_AUTH_JWT_EXPIRE:3600}
+
+data:
+  database:
+    driver: mysql
+    source: ${KRATOS_DATA_DATABASE_SOURCE}
+
+embeddings:
+  api_key: ${AI_API_KEY}
+  model: ${AI_EMBEDDING_MODEL:openai-embedder}
+  batch_size: 16
+  base_url: ${AI_EMBEDDING_URL:https://api.openai.com}
+  timeout_seconds: 30
+  max_retries: 3
