@@ -23,8 +23,8 @@ func NewHTTPServer(c *conf.Server, authConf *conf.Auth, prompt *service.PromptSe
 
 	var opts = []http.ServerOption{
 		http.Middleware(
-			logging.Server(logger),
 			recovery.Recovery(),
+			logging.Server(logger),
 			//middleware.JWT(authConf.JwtSecret),
 		),
 		http.Filter(corsHandler.Handler),
