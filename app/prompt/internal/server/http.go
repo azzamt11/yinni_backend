@@ -1,6 +1,7 @@
 package server
 
 import (
+	"context"
 	v1 "yinni_backend/api/prompt/v1"
 	"yinni_backend/app/prompt/internal/service"
 	"yinni_backend/internal/conf"
@@ -10,6 +11,8 @@ import (
 	"github.com/go-kratos/kratos/v2/middleware/recovery"
 	"github.com/go-kratos/kratos/v2/transport/http"
 	"github.com/rs/cors"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 // NewHTTPServer new an HTTP server.
@@ -23,7 +26,12 @@ func NewHTTPServer(c *conf.Server, authConf *conf.Auth, prompt *service.PromptSe
 
 	var opts = []http.ServerOption{
 		http.Middleware(
-			recovery.Recovery(),
+			recovery.Recovery(
+				recovery.WithHandler(func(ctx context.Context, req, err interface{}) error {
+					log.Error("PANIC RECOVERED:", err)
+					return status.Errorf(codes.Internal, "internal server error")
+				}),
+			),
 			logging.Server(logger),
 			//middleware.JWT(authConf.JwtSecret),
 		),

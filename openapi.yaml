@@ -3,14 +3,14 @@
 
 openapi: 3.0.3
 info:
-    title: Main API
+    title: Prompt API
     version: 0.0.1
 paths:
     /v1/prompt:
         post:
             tags:
-                - Main
-            operationId: Main_SendPrompt
+                - Prompt
+            operationId: Prompt_SendPrompt
             requestBody:
                 content:
                     application/json:
@@ -47,7 +47,7 @@ components:
                     type: integer
                     format: enum
                 data:
-                    type: string
+                    type: object
                 serviceResponse:
                     type: string
         SendPromptRequest:
@@ -72,4 +72,4 @@ components:
                     description: A list of messages that carry the error details.  There is a common set of message types for APIs to use.
             description: 'The `Status` type defines a logical error model that is suitable for different programming environments, including REST APIs and RPC APIs. It is used by [gRPC](https://github.com/grpc). Each `Status` message contains three pieces of data: error code, error message, and error details. You can find out more about this error model and how to work with it in the [API Design Guide](https://cloud.google.com/apis/design/errors).'
 tags:
-    - name: Main
+    - name: Prompt

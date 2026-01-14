@@ -10,6 +10,7 @@ import (
 	_ "google.golang.org/genproto/googleapis/api/annotations"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
+	_ "google.golang.org/protobuf/types/known/emptypb"
 	structpb "google.golang.org/protobuf/types/known/structpb"
 	reflect "reflect"
 	sync "sync"
@@ -183,7 +184,7 @@ var File_api_prompt_v1_prompt_proto protoreflect.FileDescriptor
 
 const file_api_prompt_v1_prompt_proto_rawDesc = "" +
 	"\n" +
-	"\x1aapi/prompt/v1/prompt.proto\x12\rapi.prompt.v1\x1a\x1cgoogle/api/annotations.proto\x1a\x1cgoogle/protobuf/struct.proto\"+\n" +
+	"\x1aapi/prompt/v1/prompt.proto\x12\rapi.prompt.v1\x1a\x1cgoogle/api/annotations.proto\x1a\x1cgoogle/protobuf/struct.proto\x1a\x1bgoogle/protobuf/empty.proto\x1a'api/prompt/v1/prompt_error_reason.proto\"+\n" +
 	"\x11SendPromptRequest\x12\x16\n" +
 	"\x06prompt\x18\x01 \x01(\tR\x06prompt\"\x98\x01\n" +
 	"\x0fSendPromptReply\x12-\n" +
@@ -199,7 +200,8 @@ const file_api_prompt_v1_prompt_proto_rawDesc = "" +
 	"\x06Prompt\x12e\n" +
 	"\n" +
 	"SendPrompt\x12 .api.prompt.v1.SendPromptRequest\x1a\x1e.api.prompt.v1.SendPromptReply\"\x15\x82\xd3\xe4\x93\x02\x0f:\x01*\"\n" +
-	"/v1/promptB Z\x1eyinni_backend/api/prompt/v1;v1b\x06proto3"
+	"/v1/promptB1\n" +
+	"\rapi.prompt.v1P\x01Z\x1eyinni_backend/api/prompt/v1;v1b\x06proto3"
 
 var (
 	file_api_prompt_v1_prompt_proto_rawDescOnce sync.Once
@@ -238,6 +240,7 @@ func file_api_prompt_v1_prompt_proto_init() {
 	if File_api_prompt_v1_prompt_proto != nil {
 		return
 	}
+	file_api_prompt_v1_prompt_error_reason_proto_init()
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{

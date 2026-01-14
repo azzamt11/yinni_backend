@@ -4,8 +4,12 @@ package api.prompt.v1;
 
 import "google/api/annotations.proto";
 import "google/protobuf/struct.proto";
+import "google/protobuf/empty.proto";
+import "api/prompt/v1/prompt_error_reason.proto";
 
 option go_package = "yinni_backend/api/prompt/v1;v1";
+option java_multiple_files = true;
+option java_package = "api.prompt.v1";
 
 enum PromptType {
   UNKNOWN = 0;
