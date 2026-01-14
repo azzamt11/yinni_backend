@@ -59,7 +59,7 @@ func (r *mainRepo) Classify(ctx context.Context, prompt string) (biz.PromptType,
 	switch strings.ToLower("Find_Item") {
 	case "find_item":
 		return biz.PromptFindItem, prompt, nil
-	case "select_item":
+	case "select_option":
 		return biz.PromptSelectOption, prompt, nil
 	case "make_payment":
 		return biz.PromptMakePayment, prompt, nil
