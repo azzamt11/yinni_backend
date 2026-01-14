@@ -7,6 +7,8 @@ import (
 	"yinni_backend/app/prompt/internal/biz"
 
 	"github.com/go-kratos/kratos/v2/log"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/structpb"
 )
 
@@ -32,7 +34,11 @@ func (s *PromptService) SendPrompt(ctx context.Context, req *pb.SendPromptReques
 		return nil, err
 	}
 
-	data, _ := structpb.NewStruct(result.Data)
+	data, err := structpb.NewStruct(result.Data)
+	if err != nil {
+		s.log.Errorf("invalid struct data: %v", err)
+		return nil, status.Errorf(codes.Internal, "invalid response data")
+	}
 
 	return &pb.SendPromptReply{
 		Type:            toProtoType(result.Type),
