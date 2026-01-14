@@ -7,7 +7,7 @@ import (
 
 	"yinni_backend/app/prompt/internal/biz"
 
-	classifypb "yinni_backend/api/classifier/v1"
+	classifierpb "yinni_backend/api/classifier/v1"
 	paymentpb "yinni_backend/api/payment/v1"
 	productpb "yinni_backend/api/product/v1"
 
@@ -15,11 +15,11 @@ import (
 )
 
 type promptRepo struct {
-	data           *Data
-	log            *log.Helper
-	productClient  productpb.ProductClient
-	paymentClient  paymentpb.PaymentClient
-	classifyClient classifypb.ClassifierClient
+	data             *Data
+	log              *log.Helper
+	productClient    productpb.ProductClient
+	paymentClient    paymentpb.PaymentClient
+	classifierClient classifierpb.ClassifierClient
 }
 
 // NewPromptRepo implements biz.PromptRepo
@@ -51,7 +51,7 @@ type mlResult struct {
 func (r *promptRepo) Classify(ctx context.Context, prompt string) (biz.PromptType, string, error) {
 	println("promptRepo.Classify called, prompt =", prompt)
 
-	resp, err := r.classifyClient.Classify(ctx, &classifypb.ClassifyRequest{
+	resp, err := r.classifierClient.Classify(ctx, &classifierpb.ClassifyRequest{
 		Text: prompt,
 	})
 	if err != nil {
