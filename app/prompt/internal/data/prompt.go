@@ -28,12 +28,14 @@ func NewPromptRepo(
 	logger log.Logger,
 	productClient productpb.ProductClient,
 	paymentClient paymentpb.PaymentClient,
+	classifierClient classifierpb.ClassifierClient,
 ) biz.PromptRepo {
 	return &promptRepo{
-		data:          data,
-		log:           log.NewHelper(logger),
-		productClient: productClient,
-		paymentClient: paymentClient,
+		data:             data,
+		log:              log.NewHelper(logger),
+		productClient:    productClient,
+		paymentClient:    paymentClient,
+		classifierClient: classifierClient,
 	}
 }
 
