@@ -21,7 +21,7 @@ func NewPaymentService(uc *biz.PaymentUsecase) *PaymentService {
 
 // SayHello implements helloworld.PaymentServer.
 func (s *PaymentService) Pay(ctx context.Context, in *v1.PayRequest) (*v1.PayReply, error) {
-	g, err := s.uc.Pay(ctx, &biz.Payment{Method: string(in.Method)})
+	g, err := s.uc.Pay(ctx, &biz.Payment{Method: in.Method.String()})
 	if err != nil {
 		return nil, err
 	}
