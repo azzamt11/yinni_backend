@@ -25,5 +25,5 @@ func (s *PaymentService) Pay(ctx context.Context, in *v1.PayRequest) (*v1.PayRep
 	if err != nil {
 		return nil, err
 	}
-	return &v1.PayReply{Message: "Payment Processed using" + g.Method, Status: "Pending"}, nil
+	return &v1.PayReply{Message: g.Method, Status: "Pending"}, nil
 }

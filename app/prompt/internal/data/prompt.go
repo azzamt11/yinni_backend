@@ -128,7 +128,8 @@ func (r *promptRepo) MakePayment(ctx context.Context, method string) (map[string
 	}
 
 	return map[string]interface{}{
-		"status": resp.Status,
+		"status":  resp.Status,
+		"message": resp.Message,
 	}, nil
 }
 
