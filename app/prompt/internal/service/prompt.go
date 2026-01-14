@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"encoding/json"
 
 	pb "yinni_backend/api/prompt/v1"
 	"yinni_backend/app/prompt/internal/biz"
@@ -36,10 +37,25 @@ func (s *PromptService) SendPrompt(ctx context.Context, req *pb.SendPromptReques
 		return nil, err
 	}
 
-	s.log.Info("SendPrompt completed, type:", result.Type)
-	s.log.Info("SendPrompt completed, data:", result.Data)
+	// --- FIX START ---
+	// 1. Convert the result.Data map to JSON bytes
+	jsonBytes, err := json.Marshal(result.Data)
+	if err != nil {
+		s.log.Errorf("failed to marshal result data: %v", err)
+		return nil, status.Errorf(codes.Internal, "data serialization failed")
+	}
 
-	data, err := structpb.NewStruct(result.Data)
+	// 2. Unmarshal the JSON bytes into a standard map[string]interface{}
+	var intermediateMap map[string]interface{}
+	if err := json.Unmarshal(jsonBytes, &intermediateMap); err != nil {
+		s.log.Errorf("failed to unmarshal intermediate data: %v", err)
+		return nil, status.Errorf(codes.Internal, "data conversion failed")
+	}
+
+	// 3. Now NewStruct will accept it because it's all standard types
+	data, err := structpb.NewStruct(intermediateMap)
+	// --- FIX END ---
+
 	if err != nil {
 		s.log.Errorf("invalid struct data: %v", err)
 		return nil, status.Errorf(codes.Internal, "invalid response data")
