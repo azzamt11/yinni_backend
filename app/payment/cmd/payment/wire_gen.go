@@ -30,7 +30,7 @@ func wireApp(confServer *conf.Server, auth *conf.Auth, confData *conf.Data, logg
 		return nil, nil, err
 	}
 	paymentRepo := data.NewPaymentRepo(dataData, logger)
-	paymentUsecase := biz.NewPaymentUsecase(paymentRepo)
+	paymentUsecase := biz.NewPaymentUsecase(paymentRepo, logger)
 	paymentService := service.NewPaymentService(paymentUsecase)
 	grpcServer := server.NewGRPCServer(confServer, paymentService, logger)
 	httpServer := server.NewHTTPServer(confServer, paymentService, logger)
