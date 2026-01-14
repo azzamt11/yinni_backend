@@ -14,11 +14,3 @@ data:
   database:
     driver: mysql
     source: ${KRATOS_DATA_DATABASE_SOURCE}
-
-embeddings:
-  api_key: ${AI_API_KEY}
-  model: ${AI_EMBEDDING_MODEL:openai-embedder}
-  batch_size: 16
-  base_url: ${AI_EMBEDDING_URL:https://api.openai.com}
-  timeout_seconds: 30
-  max_retries: 3
