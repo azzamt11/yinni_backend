@@ -31,8 +31,11 @@ type PaymentUsecase struct {
 }
 
 // NewPaymentUsecase new a Payment usecase.
-func NewPaymentUsecase(repo PaymentRepo) *PaymentUsecase {
-	return &PaymentUsecase{repo: repo}
+func NewPaymentUsecase(repo PaymentRepo, logger log.Logger) *PaymentUsecase {
+	return &PaymentUsecase{
+		repo: repo,
+		log:  log.NewHelper(logger),
+	}
 }
 
 // CreateProduct creates a new Product.
