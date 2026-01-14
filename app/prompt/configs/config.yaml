@@ -9,6 +9,7 @@ server:
 services:
   product_service_endpoint: "product-service:8002"
   payment_service_endpoint: "payment-service:8004"
+  classifier_service_endpoint: "classifier-service:8005"
   timeout: "30s"
 
 auth:

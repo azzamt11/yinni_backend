@@ -68,5 +68,6 @@ message Embeddings {
 message Services {
   string product_service_endpoint = 1;
   string payment_service_endpoint = 2;
-  string timeout = 3;
+  string classifier_service_endpoint = 3;
+  string timeout = 4;
 }

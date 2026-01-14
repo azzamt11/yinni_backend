@@ -415,12 +415,13 @@ func (x *Embeddings) GetMaxRetries() int32 {
 }
 
 type Services struct {
-	state                  protoimpl.MessageState `protogen:"open.v1"`
-	ProductServiceEndpoint string                 `protobuf:"bytes,1,opt,name=product_service_endpoint,json=productServiceEndpoint,proto3" json:"product_service_endpoint,omitempty"`
-	PaymentServiceEndpoint string                 `protobuf:"bytes,2,opt,name=payment_service_endpoint,json=paymentServiceEndpoint,proto3" json:"payment_service_endpoint,omitempty"`
-	Timeout                string                 `protobuf:"bytes,3,opt,name=timeout,proto3" json:"timeout,omitempty"`
-	unknownFields          protoimpl.UnknownFields
-	sizeCache              protoimpl.SizeCache
+	state                     protoimpl.MessageState `protogen:"open.v1"`
+	ProductServiceEndpoint    string                 `protobuf:"bytes,1,opt,name=product_service_endpoint,json=productServiceEndpoint,proto3" json:"product_service_endpoint,omitempty"`
+	PaymentServiceEndpoint    string                 `protobuf:"bytes,2,opt,name=payment_service_endpoint,json=paymentServiceEndpoint,proto3" json:"payment_service_endpoint,omitempty"`
+	ClassifierServiceEndpoint string                 `protobuf:"bytes,3,opt,name=classifier_service_endpoint,json=classifierServiceEndpoint,proto3" json:"classifier_service_endpoint,omitempty"`
+	Timeout                   string                 `protobuf:"bytes,4,opt,name=timeout,proto3" json:"timeout,omitempty"`
+	unknownFields             protoimpl.UnknownFields
+	sizeCache                 protoimpl.SizeCache
 }
 
 func (x *Services) Reset() {
@@ -463,6 +464,13 @@ func (x *Services) GetProductServiceEndpoint() string {
 func (x *Services) GetPaymentServiceEndpoint() string {
 	if x != nil {
 		return x.PaymentServiceEndpoint
+	}
+	return ""
+}
+
+func (x *Services) GetClassifierServiceEndpoint() string {
+	if x != nil {
+		return x.ClassifierServiceEndpoint
 	}
 	return ""
 }
@@ -770,11 +778,12 @@ const file_internal_conf_conf_proto_rawDesc = "" +
 	"\bbase_url\x18\x04 \x01(\tR\abaseUrl\x12'\n" +
 	"\x0ftimeout_seconds\x18\x05 \x01(\x05R\x0etimeoutSeconds\x12\x1f\n" +
 	"\vmax_retries\x18\x06 \x01(\x05R\n" +
-	"maxRetries\"\x98\x01\n" +
+	"maxRetries\"\xd8\x01\n" +
 	"\bServices\x128\n" +
 	"\x18product_service_endpoint\x18\x01 \x01(\tR\x16productServiceEndpoint\x128\n" +
-	"\x18payment_service_endpoint\x18\x02 \x01(\tR\x16paymentServiceEndpoint\x12\x18\n" +
-	"\atimeout\x18\x03 \x01(\tR\atimeoutB\"Z yinni_backend/internal/conf;confb\x06proto3"
+	"\x18payment_service_endpoint\x18\x02 \x01(\tR\x16paymentServiceEndpoint\x12>\n" +
+	"\x1bclassifier_service_endpoint\x18\x03 \x01(\tR\x19classifierServiceEndpoint\x12\x18\n" +
+	"\atimeout\x18\x04 \x01(\tR\atimeoutB\"Z yinni_backend/internal/conf;confb\x06proto3"
 
 var (
 	file_internal_conf_conf_proto_rawDescOnce sync.Once

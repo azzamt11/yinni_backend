@@ -90,6 +90,7 @@ func main() {
 	// Log service-specific configs
 	logHelper.Infof("Product Service URL: %s", bc.Services.ProductServiceEndpoint)
 	logHelper.Infof("Payment Service URL: %s", bc.Services.PaymentServiceEndpoint)
+	logHelper.Infof("Classifier Service URL: %s", bc.Services.ClassifierServiceEndpoint)
 	logHelper.Infof("Service Timeout: %s", bc.Services.Timeout)
 
 	app, cleanup, err := wireApp(bc.Server, bc.Auth, bc.Services, bc.Data, logger)

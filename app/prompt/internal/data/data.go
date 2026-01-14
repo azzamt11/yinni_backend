@@ -1,8 +1,9 @@
 package data
 
 import (
-	"yinni_backend/internal/conf" // Use root config
+	"yinni_backend/internal/conf"
 
+	classifierpb "yinni_backend/api/classifier/v1"
 	paymentpb "yinni_backend/api/payment/v1"
 	productpb "yinni_backend/api/product/v1"
 
@@ -12,7 +13,7 @@ import (
 )
 
 // ProviderSet is data providers.
-var ProviderSet = wire.NewSet(NewData, NewProductClient, NewPaymentClient, NewPromptRepo)
+var ProviderSet = wire.NewSet(NewData, NewProductClient, NewPaymentClient, NewClassifierClient, NewPromptRepo)
 
 // Data .
 type Data struct {
@@ -33,7 +34,7 @@ func NewProductClient(
 
 	conn, err := grpc.Dial(
 		c.ProductServiceEndpoint,
-		grpc.WithInsecure(), // internal network
+		grpc.WithInsecure(),
 		grpc.WithBlock(),
 	)
 	if err != nil {
@@ -57,4 +58,20 @@ func NewPaymentClient(
 	}
 
 	return paymentpb.NewPaymentClient(conn), nil
+}
+
+func NewClassifierClient(
+	c *conf.Services,
+) (classifierpb.ClassifierClient, error) {
+
+	conn, err := grpc.Dial(
+		c.ClassifierServiceEndpoint,
+		grpc.WithInsecure(),
+		grpc.WithBlock(),
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return classifierpb.NewClassifierClient(conn), nil
 }
