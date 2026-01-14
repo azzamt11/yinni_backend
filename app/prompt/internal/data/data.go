@@ -28,30 +28,23 @@ func NewData(c *conf.Data, logger log.Logger) (*Data, func(), error) {
 	return &Data{}, cleanup, nil
 }
 
-func NewProductClient(
-	c *conf.Services,
-) (productpb.ProductClient, error) {
-
+func NewProductClient(c *conf.Services) (productpb.ProductClient, error) {
+	// Remove grpc.WithBlock()
 	conn, err := grpc.Dial(
 		c.ProductServiceEndpoint,
 		grpc.WithInsecure(),
-		grpc.WithBlock(),
 	)
 	if err != nil {
 		return nil, err
 	}
-
 	return productpb.NewProductClient(conn), nil
 }
 
-func NewPaymentClient(
-	c *conf.Services,
-) (paymentpb.PaymentClient, error) {
+func NewPaymentClient(c *conf.Services) (paymentpb.PaymentClient, error) {
 
 	conn, err := grpc.Dial(
 		c.PaymentServiceEndpoint,
 		grpc.WithInsecure(),
-		grpc.WithBlock(),
 	)
 	if err != nil {
 		return nil, err
@@ -60,14 +53,11 @@ func NewPaymentClient(
 	return paymentpb.NewPaymentClient(conn), nil
 }
 
-func NewClassifierClient(
-	c *conf.Services,
-) (classifierpb.ClassifierClient, error) {
+func NewClassifierClient(c *conf.Services) (classifierpb.ClassifierClient, error) {
 
 	conn, err := grpc.Dial(
 		c.ClassifierServiceEndpoint,
 		grpc.WithInsecure(),
-		grpc.WithBlock(),
 	)
 	if err != nil {
 		return nil, err
