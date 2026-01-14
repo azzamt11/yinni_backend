@@ -37,6 +37,7 @@ func (s *PromptService) SendPrompt(ctx context.Context, req *pb.SendPromptReques
 	}
 
 	s.log.Info("SendPrompt completed, type:", result.Type)
+	s.log.Info("SendPrompt completed, data:", result.Data)
 
 	data, err := structpb.NewStruct(result.Data)
 	if err != nil {
