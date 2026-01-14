@@ -28,11 +28,15 @@ func NewPromptService(uc *biz.PromptUsecase, logger log.Logger) *PromptService {
 }
 
 func (s *PromptService) SendPrompt(ctx context.Context, req *pb.SendPromptRequest) (*pb.SendPromptReply, error) {
+	s.log.Info("SendPrompt called with prompt:", req.Prompt)
 
 	result, err := s.uc.HandlePrompt(ctx, req.Prompt)
 	if err != nil {
+		s.log.Error("HandlePrompt error:", err)
 		return nil, err
 	}
+
+	s.log.Info("SendPrompt completed, type:", result.Type)
 
 	data, err := structpb.NewStruct(result.Data)
 	if err != nil {

@@ -22,12 +22,16 @@ func JWT(secret string) middleware.Middleware {
 	return func(handler middleware.Handler) middleware.Handler {
 		return func(ctx context.Context, req interface{}) (interface{}, error) {
 			tr, ok := transport.FromServerContext(ctx)
-			if !ok {
+			if ok {
+				println("JWT middleware: request path =", tr.Operation())
+			} else {
+				println("JWT middleware: no transport context")
 				return nil, errors.New("missing transport context")
 			}
 
 			auth := tr.RequestHeader().Get("Authorization")
 			if auth == "" {
+				println("JWT middleware: invalid token")
 				return nil, errors.New("missing authorization header")
 			}
 
@@ -42,6 +46,7 @@ func JWT(secret string) middleware.Middleware {
 				},
 			)
 			if err != nil || !token.Valid {
+				println("JWT middleware: invalid token")
 				return nil, errors.New("invalid token")
 			}
 
@@ -83,6 +88,7 @@ func JWT(secret string) middleware.Middleware {
 			// Store full claims in context
 			ctx = context.WithValue(ctx, "jwt_claims", userClaims)
 
+			println("JWT middleware: token validated, calling handler")
 			return handler(ctx, req)
 		}
 	}

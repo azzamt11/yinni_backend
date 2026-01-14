@@ -49,13 +49,17 @@ type mlResult struct {
 }
 
 func (r *promptRepo) Classify(ctx context.Context, prompt string) (biz.PromptType, string, error) {
+	println("promptRepo.Classify called, prompt =", prompt)
 
 	resp, err := r.classifyClient.Classify(ctx, &classifypb.ClassifyRequest{
 		Text: prompt,
 	})
 	if err != nil {
+		println("gRPC Classify failed:", err.Error())
 		return biz.PromptUnknown, "", fmt.Errorf("ml classify failed: %w", err)
 	}
+
+	println("gRPC Classify success, type =", resp.Type)
 
 	switch strings.ToLower(resp.Type) {
 	case "find_item":

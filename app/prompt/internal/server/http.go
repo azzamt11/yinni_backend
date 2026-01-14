@@ -41,6 +41,8 @@ func NewHTTPServer(c *conf.Server, authConf *conf.Auth, prompt *service.PromptSe
 	}
 
 	srv := http.NewServer(opts...)
+
+	log.NewHelper(logger).Info("HTTP server initialized, registering Prompt handlers")
 	v1.RegisterPromptHTTPServer(srv, prompt)
 	return srv
 }
