@@ -1,9 +1,9 @@
 server:
   http:
-    addr: ${KRATOS_SERVER_HTTP_ADDR:0.0.0.0:8084}
+    addr: ${KRATOS_SERVER_HTTP_ADDR:0.0.0.0:8004}
     timeout: 30s
   grpc:
-    addr: ${KRATOS_SERVER_GRPC_ADDR:0.0.0.0:9094}
+    addr: ${KRATOS_SERVER_GRPC_ADDR:0.0.0.0:9004}
     timeout: 30s
 
 auth:
