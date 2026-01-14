@@ -7,9 +7,9 @@ server:
     timeout: 30s
 
 services:
-  product_service_endpoint: "product-service:8002"
-  payment_service_endpoint: "payment-service:8004"
-  classifier_service_endpoint: "classifier-service:8005"
+  product_service_endpoint: "product-service:9002"
+  payment_service_endpoint: "payment-service:9004"
+  classifier_service_endpoint: "classifier-service:9005"
   timeout: "30s"
 
 auth:
