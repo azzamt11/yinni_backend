@@ -39,7 +39,12 @@ func wireApp(confServer *conf.Server, auth *conf.Auth, services *conf.Services, 
 		cleanup()
 		return nil, nil, err
 	}
-	promptRepo := data.NewPromptRepo(dataData, logger, productClient, paymentClient)
+	classifierClient, err := data.NewClassifierClient(services)
+	if err != nil {
+		cleanup()
+		return nil, nil, err
+	}
+	promptRepo := data.NewPromptRepo(dataData, logger, productClient, paymentClient, classifierClient)
 	promptUsecase := biz.NewPromptUsecase(promptRepo)
 	promptService := service.NewPromptService(promptUsecase, logger)
 	grpcServer := server.NewGRPCServer(confServer, promptService, logger)
