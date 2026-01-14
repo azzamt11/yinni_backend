@@ -5,6 +5,7 @@ import (
 	v1 "yinni_backend/api/prompt/v1"
 	"yinni_backend/app/prompt/internal/service"
 	"yinni_backend/internal/conf"
+	"yinni_backend/pkg/middleware"
 
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/go-kratos/kratos/v2/middleware/logging"
@@ -33,7 +34,7 @@ func NewHTTPServer(c *conf.Server, authConf *conf.Auth, prompt *service.PromptSe
 				}),
 			),
 			logging.Server(logger),
-			//middleware.JWT(authConf.JwtSecret),
+			middleware.JWT(authConf.JwtSecret),
 		),
 		http.Filter(corsHandler.Handler),
 	}
