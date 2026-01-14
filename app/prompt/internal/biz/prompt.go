@@ -53,7 +53,8 @@ func (uc *PromptUsecase) HandlePrompt(ctx context.Context, prompt string) (*Prom
 		if err != nil {
 			return nil, err
 		}
-		data, err = uc.repo.SelectItem(ctx, id)
+		// FIX: Specify the map type explicitly
+		data, err = map[string]interface{}{"option": id}, nil
 	case PromptMakePayment:
 		data, err = uc.repo.MakePayment(ctx, value)
 	default:
