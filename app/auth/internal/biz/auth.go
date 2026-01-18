@@ -138,7 +138,7 @@ func (uc *AuthUsecase) SignIn(ctx context.Context, email, password string) (*Use
 	// Find user by email
 	user, err := uc.repo.FindByEmail(ctx, email)
 	if err != nil {
-		return nil, "", NewAuthError("failed to find user: "+err.Error(), ErrInternal)
+		return nil, "", NewAuthError("failed to find user", ErrInternal)
 	}
 
 	if user == nil {
@@ -153,8 +153,11 @@ func (uc *AuthUsecase) SignIn(ctx context.Context, email, password string) (*Use
 	// Generate JWT token
 	token, err := uc.generateJWTToken(user.ID)
 	if err != nil {
-		return nil, "", NewAuthError("failed to generate token: "+err.Error(), ErrInternal)
+		return nil, "", NewAuthError("failed to generate token", ErrInternal)
 	}
+
+	// IMPORTANT: never expose password outside usecase
+	user.Password = ""
 
 	return user, token, nil
 }

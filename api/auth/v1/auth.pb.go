@@ -10,6 +10,8 @@ import (
 	_ "google.golang.org/genproto/googleapis/api/annotations"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
+	_ "google.golang.org/protobuf/types/known/emptypb"
+	structpb "google.golang.org/protobuf/types/known/structpb"
 	reflect "reflect"
 	sync "sync"
 	unsafe "unsafe"
@@ -183,6 +185,7 @@ type SignInReply struct {
 	AccessToken   string                 `protobuf:"bytes,1,opt,name=access_token,json=accessToken,proto3" json:"access_token,omitempty"`
 	TokenType     string                 `protobuf:"bytes,2,opt,name=token_type,json=tokenType,proto3" json:"token_type,omitempty"`  // "Bearer"
 	ExpiresIn     int64                  `protobuf:"varint,3,opt,name=expires_in,json=expiresIn,proto3" json:"expires_in,omitempty"` // seconds
+	User          *structpb.Struct       `protobuf:"bytes,4,opt,name=user,proto3" json:"user,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -238,11 +241,18 @@ func (x *SignInReply) GetExpiresIn() int64 {
 	return 0
 }
 
+func (x *SignInReply) GetUser() *structpb.Struct {
+	if x != nil {
+		return x.User
+	}
+	return nil
+}
+
 var File_api_auth_v1_auth_proto protoreflect.FileDescriptor
 
 const file_api_auth_v1_auth_proto_rawDesc = "" +
 	"\n" +
-	"\x16api/auth/v1/auth.proto\x12\vapi.auth.v1\x1a\x1cgoogle/api/annotations.proto\"U\n" +
+	"\x16api/auth/v1/auth.proto\x12\vapi.auth.v1\x1a\x1cgoogle/api/annotations.proto\x1a\x1cgoogle/protobuf/struct.proto\x1a\x1bgoogle/protobuf/empty.proto\"U\n" +
 	"\rSignUpRequest\x12\x14\n" +
 	"\x05email\x18\x01 \x01(\tR\x05email\x12\x1a\n" +
 	"\bpassword\x18\x02 \x01(\tR\bpassword\x12\x12\n" +
@@ -251,13 +261,14 @@ const file_api_auth_v1_auth_proto_rawDesc = "" +
 	"\auser_id\x18\x01 \x01(\x03R\x06userId\"A\n" +
 	"\rSignInRequest\x12\x14\n" +
 	"\x05email\x18\x01 \x01(\tR\x05email\x12\x1a\n" +
-	"\bpassword\x18\x02 \x01(\tR\bpassword\"n\n" +
+	"\bpassword\x18\x02 \x01(\tR\bpassword\"\x9b\x01\n" +
 	"\vSignInReply\x12!\n" +
 	"\faccess_token\x18\x01 \x01(\tR\vaccessToken\x12\x1d\n" +
 	"\n" +
 	"token_type\x18\x02 \x01(\tR\ttokenType\x12\x1d\n" +
 	"\n" +
-	"expires_in\x18\x03 \x01(\x03R\texpiresIn2\xc0\x01\n" +
+	"expires_in\x18\x03 \x01(\x03R\texpiresIn\x12+\n" +
+	"\x04user\x18\x04 \x01(\v2\x17.google.protobuf.StructR\x04user2\xc0\x01\n" +
 	"\x04Auth\x12[\n" +
 	"\x06SignUp\x12\x1a.api.auth.v1.SignUpRequest\x1a\x18.api.auth.v1.SignUpReply\"\x1b\x82\xd3\xe4\x93\x02\x15:\x01*\"\x10/v1/auth/sign-up\x12[\n" +
 	"\x06SignIn\x12\x1a.api.auth.v1.SignInRequest\x1a\x18.api.auth.v1.SignInReply\"\x1b\x82\xd3\xe4\x93\x02\x15:\x01*\"\x10/v1/auth/sign-inB\x10Z\x0eapi/auth/v1;v1b\x06proto3"
@@ -276,21 +287,23 @@ func file_api_auth_v1_auth_proto_rawDescGZIP() []byte {
 
 var file_api_auth_v1_auth_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
 var file_api_auth_v1_auth_proto_goTypes = []any{
-	(*SignUpRequest)(nil), // 0: api.auth.v1.SignUpRequest
-	(*SignUpReply)(nil),   // 1: api.auth.v1.SignUpReply
-	(*SignInRequest)(nil), // 2: api.auth.v1.SignInRequest
-	(*SignInReply)(nil),   // 3: api.auth.v1.SignInReply
+	(*SignUpRequest)(nil),   // 0: api.auth.v1.SignUpRequest
+	(*SignUpReply)(nil),     // 1: api.auth.v1.SignUpReply
+	(*SignInRequest)(nil),   // 2: api.auth.v1.SignInRequest
+	(*SignInReply)(nil),     // 3: api.auth.v1.SignInReply
+	(*structpb.Struct)(nil), // 4: google.protobuf.Struct
 }
 var file_api_auth_v1_auth_proto_depIdxs = []int32{
-	0, // 0: api.auth.v1.Auth.SignUp:input_type -> api.auth.v1.SignUpRequest
-	2, // 1: api.auth.v1.Auth.SignIn:input_type -> api.auth.v1.SignInRequest
-	1, // 2: api.auth.v1.Auth.SignUp:output_type -> api.auth.v1.SignUpReply
-	3, // 3: api.auth.v1.Auth.SignIn:output_type -> api.auth.v1.SignInReply
-	2, // [2:4] is the sub-list for method output_type
-	0, // [0:2] is the sub-list for method input_type
-	0, // [0:0] is the sub-list for extension type_name
-	0, // [0:0] is the sub-list for extension extendee
-	0, // [0:0] is the sub-list for field type_name
+	4, // 0: api.auth.v1.SignInReply.user:type_name -> google.protobuf.Struct
+	0, // 1: api.auth.v1.Auth.SignUp:input_type -> api.auth.v1.SignUpRequest
+	2, // 2: api.auth.v1.Auth.SignIn:input_type -> api.auth.v1.SignInRequest
+	1, // 3: api.auth.v1.Auth.SignUp:output_type -> api.auth.v1.SignUpReply
+	3, // 4: api.auth.v1.Auth.SignIn:output_type -> api.auth.v1.SignInReply
+	3, // [3:5] is the sub-list for method output_type
+	1, // [1:3] is the sub-list for method input_type
+	1, // [1:1] is the sub-list for extension type_name
+	1, // [1:1] is the sub-list for extension extendee
+	0, // [0:1] is the sub-list for field type_name
 }
 
 func init() { file_api_auth_v1_auth_proto_init() }

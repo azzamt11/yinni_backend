@@ -71,26 +71,6 @@ services:
       mysql:
         condition: service_healthy
 
-  # ---------- MAIN SERVICE ----------
-  # main-service:
-  #   build:
-  #     context: .
-  #     dockerfile: app/main/Dockerfile
-  #   ports:
-  #     - "${MAIN_HTTP_PORT}:8003"
-  #     - "${MAIN_GRPC_PORT}:9003"
-  #   volumes:
-  #     - ./app/main/configs:/data/conf
-  #   environment:
-  #     KRATOS_SERVER_HTTP_ADDR: 0.0.0.0:8003
-  #     KRATOS_SERVER_GRPC_ADDR: 0.0.0.0:9003
-  #     KRATOS_DATA_DATABASE_SOURCE: ${DB_SOURCE}
-  #     KRATOS_AUTH_JWT_SECRET: ${JWT_SECRET}
-  #     KRATOS_AUTH_JWT_EXPIRE: ${JWT_EXPIRE}
-  #   depends_on:
-  #     mysql:
-  #       condition: service_healthy
-
   # ---------- PROMPT SERVICE ----------
   prompt-service:
     build:

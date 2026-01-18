@@ -5,6 +5,8 @@ package api.auth.v1;
 option go_package = "api/auth/v1;v1";
 
 import "google/api/annotations.proto";
+import "google/protobuf/struct.proto";
+import "google/protobuf/empty.proto";
 
 service Auth {
   // Register new user
@@ -43,4 +45,5 @@ message SignInReply {
   string access_token = 1;
   string token_type = 2; // "Bearer"
   int64  expires_in = 3; // seconds
+  google.protobuf.Struct user = 4;
 }
