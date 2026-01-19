@@ -17,6 +17,7 @@ var (
 // Payment is a Payment model.
 type Payment struct {
 	Method string
+	Image  string
 }
 
 // PaymentRepo is a Greater repo.

@@ -107,6 +107,7 @@ services:
       KRATOS_DATA_DATABASE_SOURCE: ${DB_SOURCE}
       KRATOS_AUTH_JWT_SECRET: ${JWT_SECRET}
       KRATOS_AUTH_JWT_EXPIRE: ${JWT_EXPIRE}
+      PAYMENT_PUBLIC_BASE_URL: ${PAYMENT_PUBLIC_BASE_URL}
     depends_on:
       mysql:
         condition: service_healthy

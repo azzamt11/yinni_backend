@@ -150,6 +150,7 @@ type PayReply struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Message       string                 `protobuf:"bytes,1,opt,name=message,proto3" json:"message,omitempty"`
 	Status        string                 `protobuf:"bytes,2,opt,name=status,proto3" json:"status,omitempty"`
+	Image         string                 `protobuf:"bytes,3,opt,name=image,proto3" json:"image,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -198,6 +199,13 @@ func (x *PayReply) GetStatus() string {
 	return ""
 }
 
+func (x *PayReply) GetImage() string {
+	if x != nil {
+		return x.Image
+	}
+	return ""
+}
+
 var File_api_payment_v1_payment_proto protoreflect.FileDescriptor
 
 const file_api_payment_v1_payment_proto_rawDesc = "" +
@@ -205,10 +213,11 @@ const file_api_payment_v1_payment_proto_rawDesc = "" +
 	"\x1capi/payment/v1/payment.proto\x12\x0eapi.payment.v1\x1a\x1cgoogle/api/annotations.proto\x1a\x1cgoogle/protobuf/struct.proto\"C\n" +
 	"\n" +
 	"PayRequest\x125\n" +
-	"\x06method\x18\x01 \x01(\x0e2\x1d.api.payment.v1.PaymentMethodR\x06method\"<\n" +
+	"\x06method\x18\x01 \x01(\x0e2\x1d.api.payment.v1.PaymentMethodR\x06method\"R\n" +
 	"\bPayReply\x12\x18\n" +
 	"\amessage\x18\x01 \x01(\tR\amessage\x12\x16\n" +
-	"\x06status\x18\x02 \x01(\tR\x06status*\xad\x01\n" +
+	"\x06status\x18\x02 \x01(\tR\x06status\x12\x14\n" +
+	"\x05image\x18\x03 \x01(\tR\x05image*\xad\x01\n" +
 	"\rPaymentMethod\x12\a\n" +
 	"\x03OVO\x10\x00\x12\b\n" +
 	"\x04DANA\x10\x01\x12\t\n" +

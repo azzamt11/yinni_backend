@@ -41,4 +41,5 @@ message PayRequest {
 message PayReply {
 	string message = 1;
 	string status = 2;
+  string image = 3;
 }

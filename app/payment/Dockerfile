@@ -20,6 +20,7 @@ WORKDIR /app
 COPY --from=builder /src/bin/payment /app/server
 
 COPY ./configs /data/conf
+COPY ./assets /app/assets
 
 RUN chmod +x /app/server
 
