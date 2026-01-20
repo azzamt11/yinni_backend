@@ -48,15 +48,19 @@ func (uc *PromptUsecase) HandlePrompt(ctx context.Context, prompt string) (*Prom
 	switch t {
 	case PromptFindItem:
 		data, err = uc.repo.FindItem(ctx, value)
+
 	case PromptSelectOption:
-		id, err := strconv.ParseInt(value, 10, 64)
-		if err != nil {
-			return nil, err
+		id, parseErr := strconv.ParseInt(value, 10, 64)
+		if parseErr != nil {
+			// Fallback: If parseInt fails, treat it as a FindItem request
+			data, err = uc.repo.FindItem(ctx, value)
+		} else {
+			data, err = map[string]interface{}{"option": id}, nil
 		}
-		// FIX: Specify the map type explicitly
-		data, err = map[string]interface{}{"option": id}, nil
+
 	case PromptMakePayment:
 		data, err = uc.repo.MakePayment(ctx, value)
+
 	default:
 		return &PromptResult{
 			Type:            PromptUnknown,
