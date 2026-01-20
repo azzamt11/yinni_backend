@@ -53,6 +53,7 @@ func (uc *PromptUsecase) HandlePrompt(ctx context.Context, prompt string) (*Prom
 		id, parseErr := strconv.ParseInt(value, 10, 64)
 		if parseErr != nil {
 			// Fallback: If parseInt fails, treat it as a FindItem request
+			t = PromptFindItem
 			data, err = uc.repo.FindItem(ctx, value)
 		} else {
 			data, err = map[string]interface{}{"option": id}, nil
