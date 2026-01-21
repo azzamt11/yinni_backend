@@ -22,59 +22,51 @@ class TextPredictor:
                  vocab_path=vocab_path, 
                  config_path=config_path):
         """
-        Load trained model for inference
+        Load trained model for inference by matching weights shape exactly.
         """
-        # Check if files exist
+        # 1. Check if files exist
         missing_files = []
         for path in [model_path, vocab_path, config_path]:
             if not os.path.exists(path):
                 missing_files.append(path)
         
         if missing_files:
-            for f in missing_files:
-                print(f"   - {f}")
             raise FileNotFoundError(f"Missing files: {missing_files}")
         
-        # Load configuration
+        # 2. Load the weight checkpoint FIRST to determine the correct architecture
+        checkpoint = torch.load(model_path, map_location="cpu")
+        
+        # Unwrap state_dict if it was saved as a dictionary
+        if isinstance(checkpoint, dict) and "state_dict" in checkpoint:
+            checkpoint = checkpoint["state_dict"]
+            
+        # Extract the EXACT dimensions from the weights
+        # shape[0] is vocab_size, shape[1] is embed_dim
+        weights_vocab_size = checkpoint['embedding.weight'].shape[0]
+        weights_embed_dim = checkpoint['embedding.weight'].shape[1]
+        weights_num_classes = checkpoint['fc.weight'].shape[0]
+
+        # 3. Load configuration and vocabulary for names and tokenization
         with open(config_path, 'r') as f:
             self.config = json.load(f)
         
-        # Load vocabulary
         with open(vocab_path, 'rb') as f:
             self.vocab = pickle.load(f)
         
-        # Get ACTUAL vocabulary size from the loaded vocab
-        actual_vocab_size = len(self.vocab)
-        config_vocab_size = self.config.get('vocab_size', actual_vocab_size)
-        
-        # Use the larger of the two to be safe
-        vocab_size_to_use = max(actual_vocab_size, config_vocab_size)
-        
-        # Initialize model with CORRECT vocabulary size
+        # 4. Initialize model with dimensions that MATCH the weights
+        # This prevents the "size mismatch" RuntimeError
         self.model = UltraLiteClassifier(
-            vocab_size=vocab_size_to_use,
-            num_class=self.config['num_classes'],
-            embed_dim=self.config.get('embed_dim', 128)
+            vocab_size=weights_vocab_size,
+            num_class=weights_num_classes,
+            embed_dim=weights_embed_dim
         )
         
-        # Load trained weights
-        checkpoint = torch.load(model_path, map_location="cpu")
-
-        if isinstance(checkpoint, dict) and "state_dict" in checkpoint:
-            checkpoint = checkpoint["state_dict"]
-
-        self.model.load_state_dict(checkpoint, strict=False)
-        
-        try:
-            self.model.load_state_dict(checkpoint, strict=True)
-        except RuntimeError as e:
-            # Try partial load
-            self.model.load_state_dict(checkpoint, strict=False)
-        
+        # 5. Load weights with strict=True to ensure a perfect match
+        self.model.load_state_dict(checkpoint, strict=True)
         self.model.eval()  # Set to evaluation mode
         
-        # Get class names
-        self.class_names = self.config.get('class_names', ['Type_0', 'Type_1', 'Type_2'])
+        # 6. Get class names from config or default to generic names
+        self.class_names = self.config.get('class_names', [f'Type_{i}' for i in range(weights_num_classes)])
     
     def tokenize_text(self, text):
         """
