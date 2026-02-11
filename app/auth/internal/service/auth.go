@@ -2,11 +2,11 @@ package service
 
 import (
 	"context"
-	"errors"
 
 	pb "yinni_backend/api/auth/v1"
 	"yinni_backend/app/auth/internal/biz"
 
+	"github.com/go-kratos/kratos/v2/errors"
 	"github.com/go-kratos/kratos/v2/log"
 	"google.golang.org/protobuf/types/known/structpb"
 )
@@ -26,19 +26,26 @@ func NewAuthService(uc *biz.AuthUsecase, logger log.Logger) *AuthService {
 
 func (s *AuthService) SignUp(ctx context.Context, req *pb.SignUpRequest) (*pb.SignUpReply, error) {
 	s.logger.Infow(
-		"signup_request",
+		"event", "signup_request",
 		"email", req.Email,
 		"name", req.Name,
 		"has_password", req.Password != "",
 	)
 
 	if req.Email == "" || req.Password == "" || req.Name == "" {
-		return nil, errors.New("email, password, and name are required")
+		return nil, errors.BadRequest("INVALID_ARGUMENT", "email, password, and name are required")
 	}
 
 	user, _, err := s.uc.SignUp(ctx, req.Email, req.Password, req.Name)
 	if err != nil {
-		return nil, errors.New("internal server error")
+		if authErr, ok := err.(*biz.AuthError); ok {
+			switch authErr.Type {
+			case biz.ErrUserAlreadyExists:
+				return nil, errors.Conflict("USER_ALREADY_EXISTS", "user already exists")
+			}
+		}
+		s.logger.Errorw("signup_failed", "error", err, "email", req.Email)
+		return nil, errors.InternalServer("INTERNAL_ERROR", "internal server error")
 	}
 
 	return &pb.SignUpReply{
@@ -48,13 +55,13 @@ func (s *AuthService) SignUp(ctx context.Context, req *pb.SignUpRequest) (*pb.Si
 
 func (s *AuthService) SignIn(ctx context.Context, req *pb.SignInRequest) (*pb.SignInReply, error) {
 	s.logger.Infow(
-		"signin_request",
+		"event", "signin_request",
 		"email", req.Email,
 		"has_password", req.Password != "",
 	)
 
 	if req.Email == "" || req.Password == "" {
-		return nil, errors.New("email and password are required")
+		return nil, errors.BadRequest("INVALID_ARGUMENT", "email and password are required")
 	}
 
 	user, token, err := s.uc.SignIn(ctx, req.Email, req.Password)
@@ -62,10 +69,11 @@ func (s *AuthService) SignIn(ctx context.Context, req *pb.SignInRequest) (*pb.Si
 		if authErr, ok := err.(*biz.AuthError); ok {
 			switch authErr.Type {
 			case biz.ErrInvalidCredentials:
-				return nil, errors.New("invalid email or password")
+				return nil, errors.Unauthorized("INVALID_CREDENTIALS", "invalid email or password")
 			}
 		}
-		return nil, errors.New("internal server error")
+		s.logger.Errorw("signin_failed", "error", err, "email", req.Email)
+		return nil, errors.InternalServer("INTERNAL_ERROR", "internal server error")
 	}
 
 	// Convert user to protobuf Struct
@@ -76,7 +84,7 @@ func (s *AuthService) SignIn(ctx context.Context, req *pb.SignInRequest) (*pb.Si
 	})
 	if err != nil {
 		s.logger.Errorw("failed_to_build_user_struct", "error", err)
-		return nil, errors.New("internal server error")
+		return nil, errors.InternalServer("INTERNAL_ERROR", "internal server error")
 	}
 
 	return &pb.SignInReply{
