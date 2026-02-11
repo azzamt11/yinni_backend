@@ -18,4 +18,4 @@ auth:
 data:
   database:
     driver: mysql
-    source: ${KRATOS_DATA_DATABASE_SOURCE:root:root@tcp(mysql:3306)/yinni_db?parseTime=true&charset=utf8mb4&loc=Local}
+    source: ${KRATOS_DATA_DATABASE_SOURCE:root:root@tcp(mysql:3307)/yinni_db?parseTime=true&charset=utf8mb4&loc=Local}
