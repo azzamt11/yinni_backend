@@ -140,4 +140,4 @@ services:
       interval: 5s
       timeout: 10s
       retries: 5
-      start_period: 30syy
+      start_period: 30
