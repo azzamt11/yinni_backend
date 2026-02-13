@@ -44,7 +44,7 @@ func (s *AuthService) SignUp(ctx context.Context, req *pb.SignUpRequest) (*pb.Si
 				return nil, errors.Conflict("USER_ALREADY_EXISTS", "user already exists")
 			}
 		}
-		s.logger.Errorw("signup_failed", "error", err, "email", req.Email)
+		s.logger.Errorw("event", "signup_failed", "error", err, "email", req.Email)
 		return nil, errors.InternalServer("INTERNAL_ERROR", "internal server error")
 	}
 
@@ -72,7 +72,7 @@ func (s *AuthService) SignIn(ctx context.Context, req *pb.SignInRequest) (*pb.Si
 				return nil, errors.Unauthorized("INVALID_CREDENTIALS", "invalid email or password")
 			}
 		}
-		s.logger.Errorw("signin_failed", "error", err, "email", req.Email)
+		s.logger.Errorw("event", "signin_failed", "error", err, "email", req.Email)
 		return nil, errors.InternalServer("INTERNAL_ERROR", "internal server error")
 	}
 

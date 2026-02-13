@@ -24,6 +24,8 @@ services:
     depends_on:
       mysql:
         condition: service_healthy
+    networks:
+      - yinni-net
 
     # ---------- USER SERVICE ----------
   # user-service:
@@ -70,6 +72,8 @@ services:
     depends_on:
       mysql:
         condition: service_healthy
+    networks:
+      - yinni-net
 
   # ---------- PROMPT SERVICE ----------
   # prompt-service:
@@ -141,3 +145,11 @@ services:
       timeout: 10s
       retries: 5
       start_period: 30s  # Add this to give MySQL time to initialize
+    networks:
+      yinni-net:
+        aliases:
+          - mysql
+
+networks:
+  yinni-net:
+    driver: bridge
