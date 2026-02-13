@@ -73,7 +73,6 @@ func NewData(c *conf.Data, logger log.Logger) (*Data, func(), error) {
 			continue
 		}
 
-		// For other errors, break
 		break
 	}
 
