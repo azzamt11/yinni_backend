@@ -2,8 +2,6 @@ package data
 
 import (
 	"context"
-	"database/sql"
-	"fmt"
 	"strings"
 	"time"
 
@@ -12,7 +10,6 @@ import (
 	"yinni_backend/internal/conf"
 
 	"github.com/go-kratos/kratos/v2/log"
-	mysqlDriver "github.com/go-sql-driver/mysql"
 	"github.com/google/wire"
 )
 
@@ -33,12 +30,6 @@ func NewData(c *conf.Data, logger log.Logger) (*Data, func(), error) {
 	// Simple delay to ensure MySQL is ready
 	logHelper.Info("Waiting for MySQL to initialize...")
 	time.Sleep(5 * time.Second)
-
-	// Ensure target database exists before opening Ent with DB-qualified DSN.
-	if err := ensureMySQLDatabase(c.Database.Source); err != nil {
-		logHelper.Errorf("Failed to ensure database exists: %v", err)
-		return nil, nil, err
-	}
 
 	// Create Ent client
 	client, err := ent.Open("mysql", c.Database.Source)
@@ -73,6 +64,7 @@ func NewData(c *conf.Data, logger log.Logger) (*Data, func(), error) {
 			continue
 		}
 
+		// For other errors, break
 		break
 	}
 
@@ -89,39 +81,4 @@ func NewData(c *conf.Data, logger log.Logger) (*Data, func(), error) {
 
 	logHelper.Info("Database connection established successfully")
 	return &Data{ent: client}, cleanup, nil
-}
-
-func ensureMySQLDatabase(source string) error {
-	cfg, err := mysqlDriver.ParseDSN(source)
-	if err != nil {
-		return err
-	}
-
-	if cfg.DBName == "" {
-		return nil
-	}
-
-	dbName := cfg.DBName
-	cfg.DBName = ""
-
-	adminDB, err := sql.Open("mysql", cfg.FormatDSN())
-	if err != nil {
-		return err
-	}
-	defer adminDB.Close()
-
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
-	if err := adminDB.PingContext(ctx); err != nil {
-		return err
-	}
-
-	escapedName := strings.ReplaceAll(dbName, "`", "``")
-	query := fmt.Sprintf(
-		"CREATE DATABASE IF NOT EXISTS `%s` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci",
-		escapedName,
-	)
-	_, err = adminDB.ExecContext(ctx, query)
-	return err
 }
