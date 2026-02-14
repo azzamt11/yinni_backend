@@ -781,7 +781,13 @@ func (r *productRepo) GenerateEmbeddingsForProducts(ctx context.Context, product
 }
 
 func (r *productRepo) ClearProducts(ctx context.Context) error {
+	r.log.Info("ClearProducts: deleting existing products...")
 	_, err := r.data.ent.Product.Delete().Exec(ctx)
+	if err != nil {
+		r.log.Errorf("ClearProducts failed: %v", err)
+		return err
+	}
+	r.log.Info("ClearProducts: delete completed")
 	return err
 }
 
@@ -789,6 +795,7 @@ func (r *productRepo) BulkCreateProducts(ctx context.Context, products []*biz.Pr
 	if batchSize <= 0 {
 		batchSize = 100
 	}
+	r.log.Infof("BulkCreateProducts started: total=%d batch_size=%d", len(products), batchSize)
 
 	created := 0
 	for i := 0; i < len(products); i += batchSize {
@@ -802,6 +809,7 @@ func (r *productRepo) BulkCreateProducts(ctx context.Context, products []*biz.Pr
 		if end > len(products) {
 			end = len(products)
 		}
+		r.log.Infof("BulkCreateProducts: building batch %d-%d", i, end)
 
 		builders := make([]*ent.ProductCreate, 0, end-i)
 		for _, p := range products[i:end] {
@@ -809,19 +817,23 @@ func (r *productRepo) BulkCreateProducts(ctx context.Context, products []*biz.Pr
 		}
 
 		if len(builders) == 0 {
+			r.log.Warnf("BulkCreateProducts: empty batch %d-%d, skipping", i, end)
 			continue
 		}
 
 		if _, err := r.data.ent.Product.CreateBulk(builders...).Save(ctx); err != nil {
+			r.log.Errorf("BulkCreateProducts failed at batch %d-%d: %v", i, end, err)
 			return created, err
 		}
 
 		created += len(builders)
+		r.log.Infof("BulkCreateProducts: inserted batch %d-%d, total_created=%d", i, end, created)
 		if progressCallback != nil {
 			progressCallback(created)
 		}
 	}
 
+	r.log.Infof("BulkCreateProducts completed: created=%d", created)
 	return created, nil
 }
 

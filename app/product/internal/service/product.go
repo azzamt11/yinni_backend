@@ -361,6 +361,7 @@ func (s *ProductService) GetProductSeedJobStatus(ctx context.Context, req *pb.Ge
 
 	job := s.seedJobMgr.GetJob(req.JobId)
 	if job == nil {
+		s.log.WithContext(ctx).Warnf("GetProductSeedJobStatus: job not found for job_id=%s", req.JobId)
 		return nil, errors.NotFound("PRODUCT_SEED_JOB_NOT_FOUND", "product seed job not found")
 	}
 
@@ -603,14 +604,19 @@ func (m *ProductSeedJobManager) StartJob(req *pb.StartProductSeedJobRequest, use
 		return nil, errors.Conflict("PRODUCT_SEED_JOB_ALREADY_RUNNING", "product seeding already in progress")
 	}
 
-	dataset, err := loadProductDataset()
+	m.log.Infof("Loading dataset for seed job request: clear_existing=%v max_products=%d batch_size=%d user=%d",
+		req.GetClearExisting(), req.GetMaxProducts(), req.GetBatchSize(), userID)
+	dataset, err := loadProductDataset(m.log)
 	if err != nil {
+		m.log.Errorf("Failed to load dataset for seed job: %v", err)
 		return nil, errors.InternalServer("DATASET_LOAD_FAILED", fmt.Sprintf("failed to load dataset: %v", err))
 	}
 
+	originalLen := len(dataset)
 	if req.MaxProducts > 0 && int(req.MaxProducts) < len(dataset) {
 		dataset = dataset[:req.MaxProducts]
 	}
+	m.log.Infof("Dataset loaded for seed job: original=%d effective=%d", originalLen, len(dataset))
 
 	job := &ProductSeedJob{
 		ID:          generateSeedJobID(),
@@ -630,6 +636,8 @@ func (m *ProductSeedJobManager) StartJob(req *pb.StartProductSeedJobRequest, use
 }
 
 func (m *ProductSeedJobManager) processJob(job *ProductSeedJob, dataset []map[string]interface{}) {
+	m.log.Infof("Product seed job %s started: total_dataset_rows=%d", job.ID, len(dataset))
+
 	m.mu.Lock()
 	job.Status = "running"
 	job.LastUpdated = time.Now()
@@ -637,27 +645,46 @@ func (m *ProductSeedJobManager) processJob(job *ProductSeedJob, dataset []map[st
 
 	bgCtx, cancel := context.WithTimeout(context.Background(), 2*time.Hour)
 	defer cancel()
+	m.log.Infof("Product seed job %s context timeout set to 2h", job.ID)
 
 	if job.Request.GetClearExisting() {
+		m.log.Infof("Product seed job %s clearing existing products...", job.ID)
 		if err := m.uc.ClearProducts(bgCtx); err != nil {
 			m.mu.Lock()
 			job.Status = "failed"
 			job.Error = fmt.Sprintf("failed to clear products: %v", err)
 			job.LastUpdated = time.Now()
 			m.mu.Unlock()
+			m.log.Errorf("Product seed job %s failed while clearing products: %v", job.ID, err)
 			return
 		}
+		m.log.Infof("Product seed job %s existing products cleared", job.ID)
 	}
 
 	records := make([]*biz.Product, 0, len(dataset))
 	skipped := 0
+	skippedByReason := map[string]int{}
 	for i, data := range dataset {
-		product, ok := mapDatasetProduct(data, i)
+		product, ok, reason := mapDatasetProduct(data, i)
 		if !ok {
 			skipped++
+			skippedByReason[reason]++
 			continue
 		}
 		records = append(records, product)
+	}
+	m.log.Infof("Product seed job %s mapping complete: valid=%d skipped=%d reasons=%v", job.ID, len(records), skipped, skippedByReason)
+
+	if len(records) == 0 {
+		m.mu.Lock()
+		job.Status = "failed"
+		job.Error = "no valid records after dataset mapping"
+		job.Skipped = skipped
+		job.Processed = skipped
+		job.LastUpdated = time.Now()
+		m.mu.Unlock()
+		m.log.Errorf("Product seed job %s failed: no valid records after mapping", job.ID)
+		return
 	}
 
 	m.mu.Lock()
@@ -667,6 +694,10 @@ func (m *ProductSeedJobManager) processJob(job *ProductSeedJob, dataset []map[st
 	m.mu.Unlock()
 
 	batchSize := int(job.Request.GetBatchSize())
+	if batchSize <= 0 {
+		batchSize = 100
+	}
+	m.log.Infof("Product seed job %s bulk insert starting: records=%d batch_size=%d", job.ID, len(records), batchSize)
 	seeded, err := m.uc.BulkCreateProducts(bgCtx, records, batchSize, func(processed int) {
 		m.mu.Lock()
 		job.Seeded = processed
@@ -676,6 +707,10 @@ func (m *ProductSeedJobManager) processJob(job *ProductSeedJob, dataset []map[st
 		}
 		job.LastUpdated = time.Now()
 		m.mu.Unlock()
+		if processed%1000 == 0 || processed == len(records) {
+			m.log.Infof("Product seed job %s progress: seeded=%d/%d skipped=%d processed=%d/%d",
+				job.ID, processed, len(records), job.Skipped, job.Processed, job.Total)
+		}
 	})
 
 	m.mu.Lock()
@@ -731,7 +766,7 @@ func contains(slice []string, item string) bool {
 	return false
 }
 
-func loadProductDataset() ([]map[string]interface{}, error) {
+func loadProductDataset(logger *log.Helper) ([]map[string]interface{}, error) {
 	paths := []string{
 		"./product_dataset.json",
 		"../product_dataset.json",
@@ -742,30 +777,37 @@ func loadProductDataset() ([]map[string]interface{}, error) {
 	var file *os.File
 	var err error
 	for _, path := range paths {
+		logger.Infof("Trying dataset path: %s", path)
 		file, err = os.Open(path)
 		if err == nil {
 			defer file.Close()
+			logger.Infof("Dataset opened from path: %s", path)
 			break
 		}
 	}
 	if err != nil {
+		logger.Errorf("Could not open dataset from any known path: %v", err)
 		return nil, err
 	}
 
 	content, err := io.ReadAll(file)
 	if err != nil {
+		logger.Errorf("Failed reading dataset content: %v", err)
 		return nil, err
 	}
+	logger.Infof("Dataset size bytes: %d", len(content))
 
 	var dataset []map[string]interface{}
 	if err := json.Unmarshal(content, &dataset); err != nil {
+		logger.Errorf("Failed unmarshalling dataset JSON: %v", err)
 		return nil, err
 	}
+	logger.Infof("Dataset entries loaded: %d", len(dataset))
 
 	return dataset, nil
 }
 
-func mapDatasetProduct(data map[string]interface{}, index int) (*biz.Product, bool) {
+func mapDatasetProduct(data map[string]interface{}, index int) (*biz.Product, bool, string) {
 	pid, _ := data["pid"].(string)
 	title, _ := data["title"].(string)
 	brand, _ := data["brand"].(string)
@@ -773,8 +815,23 @@ func mapDatasetProduct(data map[string]interface{}, index int) (*biz.Product, bo
 	subCategory, _ := data["sub_category"].(string)
 	originalID, _ := data["_id"].(string)
 
-	if pid == "" || title == "" || brand == "" || category == "" || subCategory == "" || originalID == "" {
-		return nil, false
+	if pid == "" {
+		return nil, false, "missing_pid"
+	}
+	if title == "" {
+		return nil, false, "missing_title"
+	}
+	if brand == "" {
+		return nil, false, "missing_brand"
+	}
+	if category == "" {
+		return nil, false, "missing_category"
+	}
+	if subCategory == "" {
+		return nil, false, "missing_sub_category"
+	}
+	if originalID == "" {
+		return nil, false, "missing_original_id"
 	}
 
 	p := &biz.Product{
@@ -854,7 +911,7 @@ func mapDatasetProduct(data map[string]interface{}, index int) (*biz.Product, bo
 		p.Featured = true
 	}
 
-	return p, true
+	return p, true, ""
 }
 
 func parseDatasetPrice(priceStr string) int {
