@@ -107,6 +107,10 @@ type ProductRepo interface {
 	CountProducts(ctx context.Context) (int, error)
 	CountProductsWithoutEmbeddings(ctx context.Context) (int, error)
 	GenerateEmbeddingsForProducts(ctx context.Context, productIDs []int64) error
+
+	// Runtime seed operations
+	ClearProducts(ctx context.Context) error
+	BulkCreateProducts(ctx context.Context, products []*Product, batchSize int, progressCallback func(processed int)) (int, error)
 }
 
 // ListProductsParams defines parameters for listing products
@@ -483,6 +487,14 @@ func (uc *ProductUsecase) CountProductsWithoutEmbeddings(ctx context.Context) (i
 
 func (uc *ProductUsecase) GenerateEmbeddingsForProducts(ctx context.Context, productIDs []int64) error {
 	return uc.repo.GenerateEmbeddingsForProducts(ctx, productIDs)
+}
+
+func (uc *ProductUsecase) ClearProducts(ctx context.Context) error {
+	return uc.repo.ClearProducts(ctx)
+}
+
+func (uc *ProductUsecase) BulkCreateProducts(ctx context.Context, products []*Product, batchSize int, progressCallback func(processed int)) (int, error) {
+	return uc.repo.BulkCreateProducts(ctx, products, batchSize, progressCallback)
 }
 
 func (uc *ProductUsecase) GenerateAllEmbeddings(ctx context.Context, batchSize int, progressCallback func(processed int)) error {

@@ -77,6 +77,21 @@ service Product {
       body: "*"
     };
   }
+
+  // Admin-only: Start runtime product seeding job
+  rpc StartProductSeedJob(StartProductSeedJobRequest) returns (StartProductSeedJobResponse) {
+    option (google.api.http) = {
+      post: "/v1/admin/products/seed"
+      body: "*"
+    };
+  }
+
+  // Admin-only: Get runtime product seeding job status
+  rpc GetProductSeedJobStatus(GetProductSeedJobStatusRequest) returns (GetProductSeedJobStatusResponse) {
+    option (google.api.http) = {
+      get: "/v1/admin/products/seed/status"
+    };
+  }
 }
 
 // ========== REQUEST MESSAGES ==========
@@ -133,6 +148,16 @@ message GetEmbeddingStatusRequest {
   string job_id = 1;
 }
 
+message StartProductSeedJobRequest {
+  bool clear_existing = 1;
+  int32 max_products = 2;  // 0 means seed all products from dataset
+  int32 batch_size = 3;    // 0 means default batch size
+}
+
+message GetProductSeedJobStatusRequest {
+  string job_id = 1;
+}
+
 // ========== RESPONSE MESSAGES ==========
 
 message ListProductsReply {
@@ -159,6 +184,27 @@ message GetEmbeddingStatusResponse {
   google.protobuf.Timestamp started_at = 7;
   google.protobuf.Timestamp last_updated = 8;
   google.protobuf.Timestamp estimated_completion = 9;
+}
+
+message StartProductSeedJobResponse {
+  string job_id = 1;
+  string status = 2;
+  int32 total_products = 3;
+  int32 estimated_time_seconds = 4;
+}
+
+message GetProductSeedJobStatusResponse {
+  string job_id = 1;
+  string status = 2;  // "pending", "running", "completed", "failed", "cancelled"
+  int32 processed = 3;
+  int32 total = 4;
+  float progress = 5;  // 0.0 to 1.0
+  int32 seeded = 6;
+  int32 skipped = 7;
+  string error_message = 8;
+  google.protobuf.Timestamp started_at = 9;
+  google.protobuf.Timestamp last_updated = 10;
+  google.protobuf.Timestamp estimated_completion = 11;
 }
 
 // ========== DATA MESSAGES ==========

@@ -31,6 +31,8 @@ const (
 	Product_GenerateEmbeddings_FullMethodName        = "/api.product.v1.Product/GenerateEmbeddings"
 	Product_GetEmbeddingStatus_FullMethodName        = "/api.product.v1.Product/GetEmbeddingStatus"
 	Product_CancelEmbeddingGeneration_FullMethodName = "/api.product.v1.Product/CancelEmbeddingGeneration"
+	Product_StartProductSeedJob_FullMethodName       = "/api.product.v1.Product/StartProductSeedJob"
+	Product_GetProductSeedJobStatus_FullMethodName   = "/api.product.v1.Product/GetProductSeedJobStatus"
 )
 
 // ProductClient is the client API for Product service.
@@ -55,6 +57,10 @@ type ProductClient interface {
 	GetEmbeddingStatus(ctx context.Context, in *GetEmbeddingStatusRequest, opts ...grpc.CallOption) (*GetEmbeddingStatusResponse, error)
 	// Admin-only: Cancel embedding generation
 	CancelEmbeddingGeneration(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	// Admin-only: Start runtime product seeding job
+	StartProductSeedJob(ctx context.Context, in *StartProductSeedJobRequest, opts ...grpc.CallOption) (*StartProductSeedJobResponse, error)
+	// Admin-only: Get runtime product seeding job status
+	GetProductSeedJobStatus(ctx context.Context, in *GetProductSeedJobStatusRequest, opts ...grpc.CallOption) (*GetProductSeedJobStatusResponse, error)
 }
 
 type productClient struct {
@@ -155,6 +161,26 @@ func (c *productClient) CancelEmbeddingGeneration(ctx context.Context, in *empty
 	return out, nil
 }
 
+func (c *productClient) StartProductSeedJob(ctx context.Context, in *StartProductSeedJobRequest, opts ...grpc.CallOption) (*StartProductSeedJobResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(StartProductSeedJobResponse)
+	err := c.cc.Invoke(ctx, Product_StartProductSeedJob_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *productClient) GetProductSeedJobStatus(ctx context.Context, in *GetProductSeedJobStatusRequest, opts ...grpc.CallOption) (*GetProductSeedJobStatusResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetProductSeedJobStatusResponse)
+	err := c.cc.Invoke(ctx, Product_GetProductSeedJobStatus_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ProductServer is the server API for Product service.
 // All implementations must embed UnimplementedProductServer
 // for forward compatibility.
@@ -177,6 +203,10 @@ type ProductServer interface {
 	GetEmbeddingStatus(context.Context, *GetEmbeddingStatusRequest) (*GetEmbeddingStatusResponse, error)
 	// Admin-only: Cancel embedding generation
 	CancelEmbeddingGeneration(context.Context, *emptypb.Empty) (*emptypb.Empty, error)
+	// Admin-only: Start runtime product seeding job
+	StartProductSeedJob(context.Context, *StartProductSeedJobRequest) (*StartProductSeedJobResponse, error)
+	// Admin-only: Get runtime product seeding job status
+	GetProductSeedJobStatus(context.Context, *GetProductSeedJobStatusRequest) (*GetProductSeedJobStatusResponse, error)
 	mustEmbedUnimplementedProductServer()
 }
 
@@ -213,6 +243,12 @@ func (UnimplementedProductServer) GetEmbeddingStatus(context.Context, *GetEmbedd
 }
 func (UnimplementedProductServer) CancelEmbeddingGeneration(context.Context, *emptypb.Empty) (*emptypb.Empty, error) {
 	return nil, status.Error(codes.Unimplemented, "method CancelEmbeddingGeneration not implemented")
+}
+func (UnimplementedProductServer) StartProductSeedJob(context.Context, *StartProductSeedJobRequest) (*StartProductSeedJobResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method StartProductSeedJob not implemented")
+}
+func (UnimplementedProductServer) GetProductSeedJobStatus(context.Context, *GetProductSeedJobStatusRequest) (*GetProductSeedJobStatusResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetProductSeedJobStatus not implemented")
 }
 func (UnimplementedProductServer) mustEmbedUnimplementedProductServer() {}
 func (UnimplementedProductServer) testEmbeddedByValue()                 {}
@@ -397,6 +433,42 @@ func _Product_CancelEmbeddingGeneration_Handler(srv interface{}, ctx context.Con
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Product_StartProductSeedJob_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(StartProductSeedJobRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ProductServer).StartProductSeedJob(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Product_StartProductSeedJob_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ProductServer).StartProductSeedJob(ctx, req.(*StartProductSeedJobRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Product_GetProductSeedJobStatus_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetProductSeedJobStatusRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ProductServer).GetProductSeedJobStatus(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Product_GetProductSeedJobStatus_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ProductServer).GetProductSeedJobStatus(ctx, req.(*GetProductSeedJobStatusRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Product_ServiceDesc is the grpc.ServiceDesc for Product service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -439,6 +511,14 @@ var Product_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CancelEmbeddingGeneration",
 			Handler:    _Product_CancelEmbeddingGeneration_Handler,
+		},
+		{
+			MethodName: "StartProductSeedJob",
+			Handler:    _Product_StartProductSeedJob_Handler,
+		},
+		{
+			MethodName: "GetProductSeedJobStatus",
+			Handler:    _Product_GetProductSeedJobStatus_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

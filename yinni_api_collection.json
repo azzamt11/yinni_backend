@@ -375,6 +375,61 @@
           "response": []
         },
         {
+          "name": "Start Product Seed Job",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_access_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"clear_existing\": true,\n  \"max_products\": 30000,\n  \"batch_size\": 200\n}"
+            },
+            "url": {
+              "raw": "{{base_url_product}}/v1/admin/products/seed",
+              "host": ["{{base_url_product}}"],
+              "path": ["v1", "admin", "products", "seed"]
+            },
+            "description": "Start product dataset seeding as an async runtime job (Admin only)"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Product Seed Job Status",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_access_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url_product}}/v1/admin/products/seed/status?job_id=seed_xxxxxxxx",
+              "host": ["{{base_url_product}}"],
+              "path": ["v1", "admin", "products", "seed", "status"],
+              "query": [
+                {
+                  "key": "job_id",
+                  "value": "seed_xxxxxxxx",
+                  "description": "Job ID from Start Product Seed Job response"
+                }
+              ]
+            },
+            "description": "Get status of product seed runtime job (Admin only)"
+          },
+          "response": []
+        },
+        {
           "name": "Test Admin Access (Denied)",
           "request": {
             "method": "POST",

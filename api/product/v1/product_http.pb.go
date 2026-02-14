@@ -26,9 +26,11 @@ const OperationProductGetEmbeddingStatus = "/api.product.v1.Product/GetEmbedding
 const OperationProductGetFeaturedProducts = "/api.product.v1.Product/GetFeaturedProducts"
 const OperationProductGetProduct = "/api.product.v1.Product/GetProduct"
 const OperationProductGetProductByPID = "/api.product.v1.Product/GetProductByPID"
+const OperationProductGetProductSeedJobStatus = "/api.product.v1.Product/GetProductSeedJobStatus"
 const OperationProductGetSimilarProducts = "/api.product.v1.Product/GetSimilarProducts"
 const OperationProductListProducts = "/api.product.v1.Product/ListProducts"
 const OperationProductSearchProducts = "/api.product.v1.Product/SearchProducts"
+const OperationProductStartProductSeedJob = "/api.product.v1.Product/StartProductSeedJob"
 
 type ProductHTTPServer interface {
 	// CancelEmbeddingGenerationAdmin-only: Cancel embedding generation
@@ -43,12 +45,16 @@ type ProductHTTPServer interface {
 	GetProduct(context.Context, *GetProductRequest) (*ProductInfo, error)
 	// GetProductByPID Get product by Flipkart PID
 	GetProductByPID(context.Context, *GetProductByPIDRequest) (*ProductInfo, error)
+	// GetProductSeedJobStatus Admin-only: Get runtime product seeding job status
+	GetProductSeedJobStatus(context.Context, *GetProductSeedJobStatusRequest) (*GetProductSeedJobStatusResponse, error)
 	// GetSimilarProducts Get similar products
 	GetSimilarProducts(context.Context, *GetSimilarProductsRequest) (*ListProductsReply, error)
 	// ListProducts List products
 	ListProducts(context.Context, *ListProductsRequest) (*ListProductsReply, error)
 	// SearchProducts Search products
 	SearchProducts(context.Context, *SearchProductsRequest) (*ListProductsReply, error)
+	// StartProductSeedJob Admin-only: Start runtime product seeding job
+	StartProductSeedJob(context.Context, *StartProductSeedJobRequest) (*StartProductSeedJobResponse, error)
 }
 
 func RegisterProductHTTPServer(s *http.Server, srv ProductHTTPServer) {
@@ -62,6 +68,8 @@ func RegisterProductHTTPServer(s *http.Server, srv ProductHTTPServer) {
 	r.POST("/v1/admin/embeddings/generate", _Product_GenerateEmbeddings0_HTTP_Handler(srv))
 	r.GET("/v1/admin/embeddings/status", _Product_GetEmbeddingStatus0_HTTP_Handler(srv))
 	r.POST("/v1/admin/embeddings/cancel", _Product_CancelEmbeddingGeneration0_HTTP_Handler(srv))
+	r.POST("/v1/admin/products/seed", _Product_StartProductSeedJob0_HTTP_Handler(srv))
+	r.GET("/v1/admin/products/seed/status", _Product_GetProductSeedJobStatus0_HTTP_Handler(srv))
 }
 
 func _Product_GetProduct0_HTTP_Handler(srv ProductHTTPServer) func(ctx http.Context) error {
@@ -250,6 +258,47 @@ func _Product_CancelEmbeddingGeneration0_HTTP_Handler(srv ProductHTTPServer) fun
 	}
 }
 
+func _Product_StartProductSeedJob0_HTTP_Handler(srv ProductHTTPServer) func(ctx http.Context) error {
+	return func(ctx http.Context) error {
+		var in StartProductSeedJobRequest
+		if err := ctx.Bind(&in); err != nil {
+			return err
+		}
+		if err := ctx.BindQuery(&in); err != nil {
+			return err
+		}
+		http.SetOperation(ctx, OperationProductStartProductSeedJob)
+		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
+			return srv.StartProductSeedJob(ctx, req.(*StartProductSeedJobRequest))
+		})
+		out, err := h(ctx, &in)
+		if err != nil {
+			return err
+		}
+		reply := out.(*StartProductSeedJobResponse)
+		return ctx.Result(200, reply)
+	}
+}
+
+func _Product_GetProductSeedJobStatus0_HTTP_Handler(srv ProductHTTPServer) func(ctx http.Context) error {
+	return func(ctx http.Context) error {
+		var in GetProductSeedJobStatusRequest
+		if err := ctx.BindQuery(&in); err != nil {
+			return err
+		}
+		http.SetOperation(ctx, OperationProductGetProductSeedJobStatus)
+		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
+			return srv.GetProductSeedJobStatus(ctx, req.(*GetProductSeedJobStatusRequest))
+		})
+		out, err := h(ctx, &in)
+		if err != nil {
+			return err
+		}
+		reply := out.(*GetProductSeedJobStatusResponse)
+		return ctx.Result(200, reply)
+	}
+}
+
 type ProductHTTPClient interface {
 	// CancelEmbeddingGenerationAdmin-only: Cancel embedding generation
 	CancelEmbeddingGeneration(ctx context.Context, req *emptypb.Empty, opts ...http.CallOption) (rsp *emptypb.Empty, err error)
@@ -263,12 +312,16 @@ type ProductHTTPClient interface {
 	GetProduct(ctx context.Context, req *GetProductRequest, opts ...http.CallOption) (rsp *ProductInfo, err error)
 	// GetProductByPID Get product by Flipkart PID
 	GetProductByPID(ctx context.Context, req *GetProductByPIDRequest, opts ...http.CallOption) (rsp *ProductInfo, err error)
+	// GetProductSeedJobStatus Admin-only: Get runtime product seeding job status
+	GetProductSeedJobStatus(ctx context.Context, req *GetProductSeedJobStatusRequest, opts ...http.CallOption) (rsp *GetProductSeedJobStatusResponse, err error)
 	// GetSimilarProducts Get similar products
 	GetSimilarProducts(ctx context.Context, req *GetSimilarProductsRequest, opts ...http.CallOption) (rsp *ListProductsReply, err error)
 	// ListProducts List products
 	ListProducts(ctx context.Context, req *ListProductsRequest, opts ...http.CallOption) (rsp *ListProductsReply, err error)
 	// SearchProducts Search products
 	SearchProducts(ctx context.Context, req *SearchProductsRequest, opts ...http.CallOption) (rsp *ListProductsReply, err error)
+	// StartProductSeedJob Admin-only: Start runtime product seeding job
+	StartProductSeedJob(ctx context.Context, req *StartProductSeedJobRequest, opts ...http.CallOption) (rsp *StartProductSeedJobResponse, err error)
 }
 
 type ProductHTTPClientImpl struct {
@@ -363,6 +416,20 @@ func (c *ProductHTTPClientImpl) GetProductByPID(ctx context.Context, in *GetProd
 	return &out, nil
 }
 
+// GetProductSeedJobStatus Admin-only: Get runtime product seeding job status
+func (c *ProductHTTPClientImpl) GetProductSeedJobStatus(ctx context.Context, in *GetProductSeedJobStatusRequest, opts ...http.CallOption) (*GetProductSeedJobStatusResponse, error) {
+	var out GetProductSeedJobStatusResponse
+	pattern := "/v1/admin/products/seed/status"
+	path := binding.EncodeURL(pattern, in, true)
+	opts = append(opts, http.Operation(OperationProductGetProductSeedJobStatus))
+	opts = append(opts, http.PathTemplate(pattern))
+	err := c.cc.Invoke(ctx, "GET", path, nil, &out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
 // GetSimilarProducts Get similar products
 func (c *ProductHTTPClientImpl) GetSimilarProducts(ctx context.Context, in *GetSimilarProductsRequest, opts ...http.CallOption) (*ListProductsReply, error) {
 	var out ListProductsReply
@@ -399,6 +466,20 @@ func (c *ProductHTTPClientImpl) SearchProducts(ctx context.Context, in *SearchPr
 	opts = append(opts, http.Operation(OperationProductSearchProducts))
 	opts = append(opts, http.PathTemplate(pattern))
 	err := c.cc.Invoke(ctx, "GET", path, nil, &out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+// StartProductSeedJob Admin-only: Start runtime product seeding job
+func (c *ProductHTTPClientImpl) StartProductSeedJob(ctx context.Context, in *StartProductSeedJobRequest, opts ...http.CallOption) (*StartProductSeedJobResponse, error) {
+	var out StartProductSeedJobResponse
+	pattern := "/v1/admin/products/seed"
+	path := binding.EncodeURL(pattern, in, false)
+	opts = append(opts, http.Operation(OperationProductStartProductSeedJob))
+	opts = append(opts, http.PathTemplate(pattern))
+	err := c.cc.Invoke(ctx, "POST", path, in, &out, opts...)
 	if err != nil {
 		return nil, err
 	}

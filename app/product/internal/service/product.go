@@ -2,7 +2,10 @@ package service
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"io"
+	"os"
 	"strconv"
 	"strings"
 	"sync"
@@ -20,9 +23,10 @@ import (
 
 type ProductService struct {
 	pb.UnimplementedProductServer
-	uc     *biz.ProductUsecase
-	log    *log.Helper
-	jobMgr *EmbeddingJobManager
+	uc         *biz.ProductUsecase
+	log        *log.Helper
+	jobMgr     *EmbeddingJobManager
+	seedJobMgr *ProductSeedJobManager
 }
 
 // EmbeddingJobManager manages embedding generation jobs
@@ -46,12 +50,37 @@ type EmbeddingJob struct {
 	CreatedBy   int64 // User ID who started the job
 }
 
+type ProductSeedJobManager struct {
+	mu        sync.RWMutex
+	activeJob *ProductSeedJob
+	log       *log.Helper
+	uc        *biz.ProductUsecase
+}
+
+type ProductSeedJob struct {
+	ID          string
+	Status      string // "pending", "running", "completed", "failed", "cancelled"
+	Processed   int
+	Total       int
+	Seeded      int
+	Skipped     int
+	Error       string
+	StartedAt   time.Time
+	LastUpdated time.Time
+	Request     *pb.StartProductSeedJobRequest
+	CreatedBy   int64
+}
+
 func NewProductService(uc *biz.ProductUsecase, logger log.Logger) *ProductService {
 	return &ProductService{
 		uc:  uc,
 		log: log.NewHelper(logger),
 		jobMgr: &EmbeddingJobManager{
 			log: log.NewHelper(log.With(logger, "module", "embedding-job")),
+			uc:  uc,
+		},
+		seedJobMgr: &ProductSeedJobManager{
+			log: log.NewHelper(log.With(logger, "module", "product-seed-job")),
 			uc:  uc,
 		},
 	}
@@ -298,6 +327,74 @@ func (s *ProductService) CancelEmbeddingGeneration(ctx context.Context, _ *empty
 	return &emptypb.Empty{}, nil
 }
 
+func (s *ProductService) StartProductSeedJob(ctx context.Context, req *pb.StartProductSeedJobRequest) (*pb.StartProductSeedJobResponse, error) {
+	claims, err := middleware.ExtractClaimsFromContext(ctx)
+	if err != nil {
+		s.log.WithContext(ctx).Errorf("Failed to extract user claims: %v", err)
+		return nil, errors.Unauthorized("UNAUTHORIZED", "authentication required")
+	}
+
+	s.log.WithContext(ctx).Infof("Admin %d requested product seed job: clear_existing=%v, max_products=%d, batch_size=%d",
+		claims.UserID, req.ClearExisting, req.MaxProducts, req.BatchSize)
+
+	job, err := s.seedJobMgr.StartJob(req, claims.UserID)
+	if err != nil {
+		s.log.WithContext(ctx).Errorf("Failed to start product seed job: %v", err)
+		return nil, err
+	}
+
+	estimated := int32(job.Total / 75)
+	if estimated < 60 {
+		estimated = 60
+	}
+
+	return &pb.StartProductSeedJobResponse{
+		JobId:                job.ID,
+		Status:               job.Status,
+		TotalProducts:        int32(job.Total),
+		EstimatedTimeSeconds: estimated,
+	}, nil
+}
+
+func (s *ProductService) GetProductSeedJobStatus(ctx context.Context, req *pb.GetProductSeedJobStatusRequest) (*pb.GetProductSeedJobStatusResponse, error) {
+	s.log.WithContext(ctx).Infof("GetProductSeedJobStatus called: job_id=%s", req.JobId)
+
+	job := s.seedJobMgr.GetJob(req.JobId)
+	if job == nil {
+		return nil, errors.NotFound("PRODUCT_SEED_JOB_NOT_FOUND", "product seed job not found")
+	}
+
+	progress := float32(0)
+	if job.Total > 0 {
+		progress = float32(job.Processed) / float32(job.Total)
+	}
+
+	var estimatedCompletion *timestamppb.Timestamp
+	if job.Status == "running" && job.Processed > 0 {
+		elapsed := time.Since(job.StartedAt).Seconds()
+		rate := float64(job.Processed) / elapsed
+		if rate > 0 {
+			remaining := float64(job.Total-job.Processed) / rate
+			estTime := time.Now().Add(time.Duration(remaining) * time.Second)
+			estimatedCompletion = timestamppb.New(estTime)
+		}
+	}
+
+	return &pb.GetProductSeedJobStatusResponse{
+		JobId:               job.ID,
+		Status:              job.Status,
+		Processed:           int32(job.Processed),
+		Total:               int32(job.Total),
+		Progress:            progress,
+		Seeded:              int32(job.Seeded),
+		Skipped:             int32(job.Skipped),
+		ErrorMessage:        job.Error,
+		StartedAt:           timestamppb.New(job.StartedAt),
+		LastUpdated:         timestamppb.New(job.LastUpdated),
+		EstimatedCompletion: estimatedCompletion,
+	}, nil
+}
+
 // ===================== EMBEDDING JOB MANAGER METHODS =====================
 
 // StartJob starts a new embedding generation job
@@ -498,11 +595,130 @@ func (m *EmbeddingJobManager) CancelJob() error {
 	return nil
 }
 
+func (m *ProductSeedJobManager) StartJob(req *pb.StartProductSeedJobRequest, userID int64) (*ProductSeedJob, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	if m.activeJob != nil && (m.activeJob.Status == "running" || m.activeJob.Status == "pending") {
+		return nil, errors.Conflict("PRODUCT_SEED_JOB_ALREADY_RUNNING", "product seeding already in progress")
+	}
+
+	dataset, err := loadProductDataset()
+	if err != nil {
+		return nil, errors.InternalServer("DATASET_LOAD_FAILED", fmt.Sprintf("failed to load dataset: %v", err))
+	}
+
+	if req.MaxProducts > 0 && int(req.MaxProducts) < len(dataset) {
+		dataset = dataset[:req.MaxProducts]
+	}
+
+	job := &ProductSeedJob{
+		ID:          generateSeedJobID(),
+		Status:      "pending",
+		Total:       len(dataset),
+		StartedAt:   time.Now(),
+		LastUpdated: time.Now(),
+		Request:     req,
+		CreatedBy:   userID,
+	}
+
+	m.activeJob = job
+	m.log.Infof("Product seed job %s created for %d products (user: %d)", job.ID, job.Total, userID)
+
+	go m.processJob(job, dataset)
+	return job, nil
+}
+
+func (m *ProductSeedJobManager) processJob(job *ProductSeedJob, dataset []map[string]interface{}) {
+	m.mu.Lock()
+	job.Status = "running"
+	job.LastUpdated = time.Now()
+	m.mu.Unlock()
+
+	bgCtx, cancel := context.WithTimeout(context.Background(), 2*time.Hour)
+	defer cancel()
+
+	if job.Request.GetClearExisting() {
+		if err := m.uc.ClearProducts(bgCtx); err != nil {
+			m.mu.Lock()
+			job.Status = "failed"
+			job.Error = fmt.Sprintf("failed to clear products: %v", err)
+			job.LastUpdated = time.Now()
+			m.mu.Unlock()
+			return
+		}
+	}
+
+	records := make([]*biz.Product, 0, len(dataset))
+	skipped := 0
+	for i, data := range dataset {
+		product, ok := mapDatasetProduct(data, i)
+		if !ok {
+			skipped++
+			continue
+		}
+		records = append(records, product)
+	}
+
+	m.mu.Lock()
+	job.Skipped = skipped
+	job.Processed = skipped
+	job.LastUpdated = time.Now()
+	m.mu.Unlock()
+
+	batchSize := int(job.Request.GetBatchSize())
+	seeded, err := m.uc.BulkCreateProducts(bgCtx, records, batchSize, func(processed int) {
+		m.mu.Lock()
+		job.Seeded = processed
+		job.Processed = job.Skipped + processed
+		if job.Processed > job.Total {
+			job.Processed = job.Total
+		}
+		job.LastUpdated = time.Now()
+		m.mu.Unlock()
+	})
+
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	if err != nil {
+		job.Status = "failed"
+		job.Error = err.Error()
+		job.Seeded = seeded
+		job.Processed = job.Skipped + seeded
+		if job.Processed > job.Total {
+			job.Processed = job.Total
+		}
+		job.LastUpdated = time.Now()
+		m.log.Errorf("Product seed job %s failed: %v", job.ID, err)
+		return
+	}
+
+	job.Status = "completed"
+	job.Seeded = seeded
+	job.Processed = job.Total
+	job.LastUpdated = time.Now()
+	m.log.Infof("Product seed job %s completed successfully: seeded=%d skipped=%d", job.ID, job.Seeded, job.Skipped)
+}
+
+func (m *ProductSeedJobManager) GetJob(jobID string) *ProductSeedJob {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+
+	if m.activeJob != nil && m.activeJob.ID == jobID {
+		return m.activeJob
+	}
+	return nil
+}
+
 // ===================== HELPER METHODS =====================
 
 // Helper function to generate job ID
 func generateJobID() string {
 	return "embed_" + strconv.FormatInt(time.Now().UnixNano(), 36)
+}
+
+func generateSeedJobID() string {
+	return "seed_" + strconv.FormatInt(time.Now().UnixNano(), 36)
 }
 
 // Helper function to check if slice contains string
@@ -513,6 +729,168 @@ func contains(slice []string, item string) bool {
 		}
 	}
 	return false
+}
+
+func loadProductDataset() ([]map[string]interface{}, error) {
+	paths := []string{
+		"./product_dataset.json",
+		"../product_dataset.json",
+		"/data/product_dataset.json",
+		"/app/product_dataset.json",
+	}
+
+	var file *os.File
+	var err error
+	for _, path := range paths {
+		file, err = os.Open(path)
+		if err == nil {
+			defer file.Close()
+			break
+		}
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	content, err := io.ReadAll(file)
+	if err != nil {
+		return nil, err
+	}
+
+	var dataset []map[string]interface{}
+	if err := json.Unmarshal(content, &dataset); err != nil {
+		return nil, err
+	}
+
+	return dataset, nil
+}
+
+func mapDatasetProduct(data map[string]interface{}, index int) (*biz.Product, bool) {
+	pid, _ := data["pid"].(string)
+	title, _ := data["title"].(string)
+	brand, _ := data["brand"].(string)
+	category, _ := data["category"].(string)
+	subCategory, _ := data["sub_category"].(string)
+	originalID, _ := data["_id"].(string)
+
+	if pid == "" || title == "" || brand == "" || category == "" || subCategory == "" || originalID == "" {
+		return nil, false
+	}
+
+	p := &biz.Product{
+		PID:         pid,
+		Title:       title,
+		Brand:       brand,
+		Category:    category,
+		SubCategory: subCategory,
+		OriginalID:  originalID,
+	}
+
+	if desc, ok := data["description"].(string); ok {
+		p.Description = desc
+	}
+	if price, ok := data["selling_price"].(string); ok {
+		p.SellingPrice = price
+		p.PriceNumeric = parseDatasetPrice(price)
+	}
+	if actualPrice, ok := data["actual_price"].(string); ok {
+		p.ActualPrice = actualPrice
+	}
+	if discount, ok := data["discount"].(string); ok {
+		p.Discount = discount
+	}
+	if seller, ok := data["seller"].(string); ok {
+		p.Seller = seller
+	}
+	if rating, ok := data["average_rating"].(string); ok {
+		p.AverageRating = rating
+		if ratingNum, err := strconv.ParseFloat(rating, 32); err == nil {
+			p.RatingNumeric = float32(ratingNum)
+		}
+	}
+	if outOfStock, ok := data["out_of_stock"].(bool); ok {
+		p.OutOfStock = outOfStock
+	}
+	if url, ok := data["url"].(string); ok {
+		p.URL = url
+	}
+	if styleCode, ok := data["style_code"].(string); ok {
+		p.StyleCode = styleCode
+	}
+
+	if images, ok := data["images"].([]interface{}); ok {
+		imageStrings := make([]string, 0, len(images))
+		for _, img := range images {
+			if str, ok := img.(string); ok {
+				imageStrings = append(imageStrings, str)
+			}
+		}
+		p.Images = imageStrings
+	}
+
+	if details, ok := data["product_details"].([]interface{}); ok {
+		productDetails := make([]map[string]string, 0, len(details))
+		for _, detail := range details {
+			if detailMap, ok := detail.(map[string]interface{}); ok {
+				strMap := make(map[string]string)
+				for k, v := range detailMap {
+					if str, ok := v.(string); ok {
+						strMap[k] = str
+					}
+				}
+				if len(strMap) > 0 {
+					productDetails = append(productDetails, strMap)
+				}
+			}
+		}
+		p.ProductDetails = productDetails
+	}
+
+	if crawledAt, ok := data["crawled_at"].(string); ok {
+		p.CrawledAt = parseDatasetTime(crawledAt)
+	}
+
+	if (index+1)%20 == 0 {
+		p.Featured = true
+	}
+
+	return p, true
+}
+
+func parseDatasetPrice(priceStr string) int {
+	if priceStr == "" {
+		return 0
+	}
+
+	cleaned := strings.ReplaceAll(priceStr, "â‚¹", "")
+	cleaned = strings.ReplaceAll(cleaned, ",", "")
+	cleaned = strings.ReplaceAll(cleaned, " ", "")
+	cleaned = strings.ReplaceAll(cleaned, "$", "")
+	if price, err := strconv.Atoi(cleaned); err == nil {
+		return price
+	}
+	return 0
+}
+
+func parseDatasetTime(timeStr string) time.Time {
+	if timeStr == "" {
+		return time.Time{}
+	}
+
+	layouts := []string{
+		"02/01/2006, 15:04:05",
+		"2006-01-02 15:04:05",
+		time.RFC3339,
+	}
+
+	for _, layout := range layouts {
+		t, err := time.Parse(layout, timeStr)
+		if err == nil {
+			return t
+		}
+	}
+
+	return time.Time{}
 }
 
 // ===================== EXISTING HELPER METHODS =====================

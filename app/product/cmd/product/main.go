@@ -108,14 +108,16 @@ func main() {
 	logHelper.Infof("JWT secret: %s", bc.Auth.JwtSecret)
 	logHelper.Infof("JWT expire: %s", bc.Auth.JwtExpire)
 
-	// Run database initialization FIRST
-	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
-	defer cancel()
+	if initDB {
+		logHelper.Info("Running initialization mode (-init=true)")
+		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Hour)
+		defer cancel()
 
-	if err := initializeDatabase(ctx, bc.Data, logger); err != nil {
-		// Don't panic, just log the error and continue
-		log.NewHelper(logger).Errorf("Database initialization failed: %v", err)
-		// Continue anyway - maybe tables already exist
+		if err := initializeDatabase(ctx, bc.Data, logger); err != nil {
+			panic(fmt.Errorf("database initialization failed: %w", err))
+		}
+		logHelper.Info("Initialization completed successfully")
+		return
 	}
 
 	app, cleanup, err := wireApp(bc.Server, bc.Auth, bc.Data, bc.Embeddings, logger)

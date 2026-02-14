@@ -779,3 +779,110 @@ func (r *productRepo) GenerateEmbeddingsForProducts(ctx context.Context, product
 
 	return nil
 }
+
+func (r *productRepo) ClearProducts(ctx context.Context) error {
+	_, err := r.data.ent.Product.Delete().Exec(ctx)
+	return err
+}
+
+func (r *productRepo) BulkCreateProducts(ctx context.Context, products []*biz.Product, batchSize int, progressCallback func(processed int)) (int, error) {
+	if batchSize <= 0 {
+		batchSize = 100
+	}
+
+	created := 0
+	for i := 0; i < len(products); i += batchSize {
+		select {
+		case <-ctx.Done():
+			return created, ctx.Err()
+		default:
+		}
+
+		end := i + batchSize
+		if end > len(products) {
+			end = len(products)
+		}
+
+		builders := make([]*ent.ProductCreate, 0, end-i)
+		for _, p := range products[i:end] {
+			builders = append(builders, r.buildProductCreate(p))
+		}
+
+		if len(builders) == 0 {
+			continue
+		}
+
+		if _, err := r.data.ent.Product.CreateBulk(builders...).Save(ctx); err != nil {
+			return created, err
+		}
+
+		created += len(builders)
+		if progressCallback != nil {
+			progressCallback(created)
+		}
+	}
+
+	return created, nil
+}
+
+func (r *productRepo) buildProductCreate(p *biz.Product) *ent.ProductCreate {
+	create := r.data.ent.Product.Create().
+		SetTitle(p.Title).
+		SetBrand(p.Brand).
+		SetCategory(p.Category).
+		SetSubCategory(p.SubCategory).
+		SetPid(p.PID).
+		SetOriginalID(p.OriginalID).
+		SetOutOfStock(p.OutOfStock)
+
+	if p.Description != "" {
+		create.SetDescription(p.Description)
+	}
+	if p.ActualPrice != "" {
+		create.SetActualPrice(p.ActualPrice)
+	}
+	if p.SellingPrice != "" {
+		create.SetSellingPrice(p.SellingPrice)
+	}
+	if p.Discount != "" {
+		create.SetDiscount(p.Discount)
+	}
+	if p.PriceNumeric > 0 {
+		create.SetPriceNumeric(p.PriceNumeric)
+	}
+	if p.Seller != "" {
+		create.SetSeller(p.Seller)
+	}
+	if p.AverageRating != "" {
+		create.SetAverageRating(p.AverageRating)
+	}
+	if p.RatingNumeric > 0 {
+		create.SetRatingNumeric(float64(p.RatingNumeric))
+	}
+	if len(p.Images) > 0 {
+		create.SetImages(p.Images)
+	}
+	if len(p.ProductDetails) > 0 {
+		create.SetProductDetails(p.ProductDetails)
+	}
+	if p.URL != "" {
+		create.SetURL(p.URL)
+	}
+	if p.StyleCode != "" {
+		create.SetStyleCode(p.StyleCode)
+	}
+	if !p.CrawledAt.IsZero() {
+		create.SetCrawledAt(p.CrawledAt)
+	}
+	if p.Featured {
+		create.SetFeatured(true)
+	}
+	if len(p.Embedding) > 0 {
+		create.SetEmbedding(p.Embedding)
+	}
+	if len(p.SearchKeywords) > 0 {
+		create.SetSearchKeywords(p.SearchKeywords)
+	}
+
+	return create
+}
