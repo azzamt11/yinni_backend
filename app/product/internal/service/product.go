@@ -676,6 +676,8 @@ func (m *ProductSeedJobManager) processJob(job *ProductSeedJob, dataset []map[st
 	records := make([]*biz.Product, 0, len(dataset))
 	skipped := 0
 	skippedByReason := map[string]int{}
+	seenPID := make(map[string]struct{}, len(dataset))
+	seenOriginalID := make(map[string]struct{}, len(dataset))
 	for i, data := range dataset {
 		product, ok, reason := mapDatasetProduct(data, i)
 		if !ok {
@@ -683,6 +685,18 @@ func (m *ProductSeedJobManager) processJob(job *ProductSeedJob, dataset []map[st
 			skippedByReason[reason]++
 			continue
 		}
+		if _, exists := seenPID[product.PID]; exists {
+			skipped++
+			skippedByReason["duplicate_pid_in_dataset"]++
+			continue
+		}
+		if _, exists := seenOriginalID[product.OriginalID]; exists {
+			skipped++
+			skippedByReason["duplicate_original_id_in_dataset"]++
+			continue
+		}
+		seenPID[product.PID] = struct{}{}
+		seenOriginalID[product.OriginalID] = struct{}{}
 		records = append(records, product)
 
 		if (i+1)%5000 == 0 || i+1 == len(dataset) {
