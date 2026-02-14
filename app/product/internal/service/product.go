@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"runtime/debug"
 	"strconv"
 	"strings"
 	"sync"
@@ -636,6 +637,17 @@ func (m *ProductSeedJobManager) StartJob(req *pb.StartProductSeedJobRequest, use
 }
 
 func (m *ProductSeedJobManager) processJob(job *ProductSeedJob, dataset []map[string]interface{}) {
+	defer func() {
+		if r := recover(); r != nil {
+			m.mu.Lock()
+			job.Status = "failed"
+			job.Error = fmt.Sprintf("panic in seed job: %v", r)
+			job.LastUpdated = time.Now()
+			m.mu.Unlock()
+			m.log.Errorf("Product seed job %s panicked: %v\n%s", job.ID, r, string(debug.Stack()))
+		}
+	}()
+
 	m.log.Infof("Product seed job %s started: total_dataset_rows=%d", job.ID, len(dataset))
 
 	m.mu.Lock()
@@ -672,6 +684,11 @@ func (m *ProductSeedJobManager) processJob(job *ProductSeedJob, dataset []map[st
 			continue
 		}
 		records = append(records, product)
+
+		if (i+1)%5000 == 0 || i+1 == len(dataset) {
+			m.log.Infof("Product seed job %s mapping progress: scanned=%d/%d valid=%d skipped=%d",
+				job.ID, i+1, len(dataset), len(records), skipped)
+		}
 	}
 	m.log.Infof("Product seed job %s mapping complete: valid=%d skipped=%d reasons=%v", job.ID, len(records), skipped, skippedByReason)
 
