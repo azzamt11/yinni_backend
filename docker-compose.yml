@@ -7,19 +7,19 @@ services:
       context: .
       dockerfile: app/auth/Dockerfile
     ports:
-      - "${AUTH_HTTP_PORT}:8000"
-      - "${AUTH_GRPC_PORT}:9000"
+      - "${YINNI_AUTH_HTTP_PORT}:8000"
+      - "${YINNI_AUTH_GRPC_PORT}:9000"
     volumes:
       - ./app/auth/configs:/data/conf
     environment:
       KRATOS_SERVER_HTTP_ADDR: 0.0.0.0:8000
       KRATOS_SERVER_GRPC_ADDR: 0.0.0.0:9000
-      KRATOS_AUTH_JWT_SECRET: ${JWT_SECRET}
-      KRATOS_AUTH_JWT_EXPIRE: ${JWT_EXPIRE}
-      KRATOS_DATA_DATABASE_SOURCE: ${DB_SOURCE}
-      KRATOS_ADMIN_EMAIL: ${ADMIN_EMAIL}
-      KRATOS_ADMIN_PASSWORD: ${ADMIN_PASSWORD}
-      KRATOS_ADMIN_NAME: ${ADMIN_NAME}
+      KRATOS_AUTH_JWT_SECRET: ${YINNI_JWT_SECRET}
+      KRATOS_AUTH_JWT_EXPIRE: ${YINNI_JWT_EXPIRE}
+      KRATOS_DATA_DATABASE_SOURCE: ${YINNI_DB_SOURCE}
+      KRATOS_ADMIN_EMAIL: ${YINNI_ADMIN_EMAIL}
+      KRATOS_ADMIN_PASSWORD: ${YINNI_ADMIN_PASSWORD}
+      KRATOS_ADMIN_NAME: ${YINNI_ADMIN_NAME}
       KRATOS_ADMIN_ENABLED: "true"
     depends_on:
       mysql:
@@ -31,16 +31,16 @@ services:
   #     context: .
   #     dockerfile: app/user/Dockerfile
   #   ports:
-  #     - "${USER_HTTP_PORT}:8001"
-  #     - "${USER_GRPC_PORT}:9001"
+  #     - "${YINNI_USER_HTTP_PORT}:8001"
+  #     - "${YINNI_USER_GRPC_PORT}:9001"
   #   volumes:
   #     - ./app/user/configs:/data/conf
   #   environment:
   #     KRATOS_SERVER_HTTP_ADDR: 0.0.0.0:8001
   #     KRATOS_SERVER_GRPC_ADDR: 0.0.0.0:9001
-  #     KRATOS_DATA_DATABASE_SOURCE: ${DB_SOURCE}
-  #     KRATOS_AUTH_JWT_SECRET: ${JWT_SECRET}
-  #     KRATOS_AUTH_JWT_EXPIRE: ${JWT_EXPIRE}
+  #     KRATOS_DATA_DATABASE_SOURCE: ${YINNI_DB_SOURCE}
+  #     KRATOS_AUTH_JWT_SECRET: ${YINNI_JWT_SECRET}
+  #     KRATOS_AUTH_JWT_EXPIRE: ${YINNI_JWT_EXPIRE}
   #   depends_on:
   #     mysql:
   #       condition: service_healthy
@@ -51,22 +51,22 @@ services:
       context: .
       dockerfile: app/product/Dockerfile
     ports:
-      - "${PRODUCT_HTTP_PORT}:8002"
-      - "${PRODUCT_GRPC_PORT}:9002"
+      - "${YINNI_PRODUCT_HTTP_PORT}:8002"
+      - "${YINNI_PRODUCT_GRPC_PORT}:9002"
     volumes:
       - ./app/product/product_dataset.json:/app/product_dataset.json
       - ./app/product/configs:/data/conf
     environment:
       KRATOS_SERVER_HTTP_ADDR: 0.0.0.0:8002
       KRATOS_SERVER_GRPC_ADDR: 0.0.0.0:9002
-      KRATOS_DATA_DATABASE_SOURCE: ${DB_SOURCE}
-      KRATOS_AUTH_JWT_SECRET: ${JWT_SECRET}
-      KRATOS_AUTH_JWT_EXPIRE: ${JWT_EXPIRE}
-      AI_API_KEY: ${AI_API_KEY}
-      AI_CHAT_URL: ${AI_CHAT_URL}
-      AI_EMBEDDING_URL: ${AI_EMBEDDING_URL}
-      AI_CHAT_MODEL: ${AI_CHAT_MODEL}
-      AI_EMBEDDING_MODEL: ${AI_EMBEDDING_MODEL}
+      KRATOS_DATA_DATABASE_SOURCE: ${YINNI_DB_SOURCE}
+      KRATOS_AUTH_JWT_SECRET: ${YINNI_JWT_SECRET}
+      KRATOS_AUTH_JWT_EXPIRE: ${YINNI_JWT_EXPIRE}
+      AI_API_KEY: ${YINNI_AI_API_KEY}
+      AI_CHAT_URL: ${YINNI_AI_CHAT_URL}
+      AI_EMBEDDING_URL: ${YINNI_AI_EMBEDDING_URL}
+      AI_CHAT_MODEL: ${YINNI_AI_CHAT_MODEL}
+      AI_EMBEDDING_MODEL: ${YINNI_AI_EMBEDDING_MODEL}
     depends_on:
       mysql:
         condition: service_healthy
@@ -77,16 +77,16 @@ services:
   #     context: .
   #     dockerfile: app/prompt/Dockerfile
   #   ports:
-  #     - "${PROMPT_HTTP_PORT}:8003"
-  #     - "${PROMPT_GRPC_PORT}:9003"
+  #     - "${YINNI_PROMPT_HTTP_PORT}:8003"
+  #     - "${YINNI_PROMPT_GRPC_PORT}:9003"
   #   volumes:
   #     - ./app/prompt/configs:/data/conf
   #   environment:
   #     KRATOS_SERVER_HTTP_ADDR: 0.0.0.0:8003
   #     KRATOS_SERVER_GRPC_ADDR: 0.0.0.0:9003
-  #     KRATOS_DATA_DATABASE_SOURCE: ${DB_SOURCE}
-  #     KRATOS_AUTH_JWT_SECRET: ${JWT_SECRET}
-  #     KRATOS_AUTH_JWT_EXPIRE: ${JWT_EXPIRE}
+  #     KRATOS_DATA_DATABASE_SOURCE: ${YINNI_DB_SOURCE}
+  #     KRATOS_AUTH_JWT_SECRET: ${YINNI_JWT_SECRET}
+  #     KRATOS_AUTH_JWT_EXPIRE: ${YINNI_JWT_EXPIRE}
   #   depends_on:
   #     mysql:
   #       condition: service_healthy
@@ -97,17 +97,17 @@ services:
   #     context: .
   #     dockerfile: app/payment/Dockerfile
   #   ports:
-  #     - "${PAYMENT_HTTP_PORT}:8004"
-  #     - "${PAYMENT_GRPC_PORT}:9004"
+  #     - "${YINNI_PAYMENT_HTTP_PORT}:8004"
+  #     - "${YINNI_PAYMENT_GRPC_PORT}:9004"
   #   volumes:
   #     - ./app/payment/configs:/data/conf
   #   environment:
   #     KRATOS_SERVER_HTTP_ADDR: 0.0.0.0:8004
   #     KRATOS_SERVER_GRPC_ADDR: 0.0.0.0:9004
-  #     KRATOS_DATA_DATABASE_SOURCE: ${DB_SOURCE}
-  #     KRATOS_AUTH_JWT_SECRET: ${JWT_SECRET}
-  #     KRATOS_AUTH_JWT_EXPIRE: ${JWT_EXPIRE}
-  #     PAYMENT_PUBLIC_BASE_URL: ${PAYMENT_PUBLIC_BASE_URL}
+  #     KRATOS_DATA_DATABASE_SOURCE: ${YINNI_DB_SOURCE}
+  #     KRATOS_AUTH_JWT_SECRET: ${YINNI_JWT_SECRET}
+  #     KRATOS_AUTH_JWT_EXPIRE: ${YINNI_JWT_EXPIRE}
+  #     PAYMENT_PUBLIC_BASE_URL: ${YINNI_PAYMENT_PUBLIC_BASE_URL}
   #   depends_on:
   #     mysql:
   #       condition: service_healthy
@@ -130,13 +130,13 @@ services:
   mysql:
     image: mysql:8.0
     ports:
-      - "${MYSQL_PORT}:3306"
+      - "${YINNI_MYSQL_PORT}:3306"
     environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_ROOT_PASSWORD: ${YINNI_MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${YINNI_MYSQL_DATABASE}
       MYSQL_ROOT_HOST: "%"
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${YINNI_MYSQL_ROOT_PASSWORD}"]
       interval: 5s
       timeout: 10s
       retries: 5
