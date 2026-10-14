@@ -51,6 +51,9 @@ bin/
 .envrc
 .env.example
 .env.sample
+docker-compose.env.yml
+docker-compose.*.yml
+!docker-compose.yml
 
 app/classifier/venv
 

@@ -129,6 +129,11 @@ services:
   # ---------- MYSQL ----------
   mysql:
     image: mysql:8.0
+    command:
+      - --performance-schema=OFF
+      - --innodb-buffer-pool-size=64M
+      - --innodb-log-buffer-size=8M
+      - --max-connections=30
     ports:
       - "${YINNI_MYSQL_PORT}:3306"
     environment:
