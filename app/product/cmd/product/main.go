@@ -334,67 +334,112 @@ func seedFromDataset(ctx context.Context, client *ent.Client, dataset []map[stri
 	logHelper := log.NewHelper(logger)
 	logHelper.Infof("Seeding %d products from dataset", len(dataset))
 
-	// Limit to 1000 products for initial seeding
-	// maxProducts := 1000
-	// if len(dataset) > maxProducts {
-	// 	dataset = dataset[:maxProducts]
-	// }
-	logHelper.Infof("Will seed %d products (limited from %d)", len(dataset), len(dataset))
+	seenPids := make(map[string]bool)
+	seenOriginalIDs := make(map[string]bool)
+
+	// Pre-load existing PIDs and OriginalIDs from database to avoid duplicates
+	existingPids, err := client.Product.Query().Select(product.FieldPid).Strings(ctx)
+	if err == nil {
+		for _, p := range existingPids {
+			seenPids[p] = true
+		}
+		logHelper.Infof("Pre-loaded %d existing PIDs from database", len(existingPids))
+	}
+
+	existingOriginalIDs, err := client.Product.Query().Select(product.FieldOriginalID).Strings(ctx)
+	if err == nil {
+		for _, o := range existingOriginalIDs {
+			seenOriginalIDs[o] = true
+		}
+		logHelper.Infof("Pre-loaded %d existing OriginalIDs from database", len(existingOriginalIDs))
+	}
 
 	bulk := make([]*ent.ProductCreate, 0, len(dataset))
+	skippedBadValues := 0
+	skippedDuplicates := 0
 
 	for i, data := range dataset {
-		existing, err := client.Product.
-			Query().
-			Where(product.Pid(data["pid"].(string))).
-			First(ctx)
-
-		if err == nil && existing != nil {
-			// Product already exists, skip or update
-			continue // Skip this item
-		} else if !ent.IsNotFound(err) {
-			// Some other error
-			return err
+		// 1. Validate and deduplicate PID
+		pid, _ := data["pid"].(string)
+		pid = strings.TrimSpace(pid)
+		if pid == "" {
+			skippedBadValues++
+			continue
+		}
+		if seenPids[pid] {
+			skippedDuplicates++
+			continue
 		}
 
-		create := client.Product.Create()
+		// 2. Validate and deduplicate OriginalID (_id)
+		originalID, _ := data["_id"].(string)
+		originalID = strings.TrimSpace(originalID)
+		if originalID == "" {
+			skippedBadValues++
+			continue
+		}
+		if seenOriginalIDs[originalID] {
+			skippedDuplicates++
+			continue
+		}
 
-		// Set fields from dataset
-		if title, ok := data["title"].(string); ok {
-			create.SetTitle(title)
+		// 3. Validate required non-empty string fields (brand, title, category, sub_category)
+		brand, _ := data["brand"].(string)
+		brand = strings.TrimSpace(brand)
+		if brand == "" {
+			skippedBadValues++
+			continue
 		}
-		if brand, ok := data["brand"].(string); ok {
-			create.SetBrand(brand)
+
+		title, _ := data["title"].(string)
+		title = strings.TrimSpace(title)
+		if title == "" {
+			skippedBadValues++
+			continue
 		}
-		if category, ok := data["category"].(string); ok {
-			create.SetCategory(category)
+
+		category, _ := data["category"].(string)
+		category = strings.TrimSpace(category)
+		if category == "" {
+			skippedBadValues++
+			continue
 		}
-		if subCategory, ok := data["sub_category"].(string); ok {
-			create.SetSubCategory(subCategory)
+
+		subCategory, _ := data["sub_category"].(string)
+		subCategory = strings.TrimSpace(subCategory)
+		if subCategory == "" {
+			subCategory = category
 		}
-		if desc, ok := data["description"].(string); ok {
+
+		// Mark as seen
+		seenPids[pid] = true
+		seenOriginalIDs[originalID] = true
+
+		create := client.Product.Create().
+			SetPid(pid).
+			SetOriginalID(originalID).
+			SetBrand(brand).
+			SetTitle(title).
+			SetCategory(category).
+			SetSubCategory(subCategory)
+
+		if desc, ok := data["description"].(string); ok && strings.TrimSpace(desc) != "" {
 			create.SetDescription(desc)
 		}
-		if price, ok := data["selling_price"].(string); ok {
+		if price, ok := data["selling_price"].(string); ok && strings.TrimSpace(price) != "" {
 			create.SetSellingPrice(price)
 			create.SetPriceNumeric(parsePrice(price))
 		}
-		if actualPrice, ok := data["actual_price"].(string); ok {
+		if actualPrice, ok := data["actual_price"].(string); ok && strings.TrimSpace(actualPrice) != "" {
 			create.SetActualPrice(actualPrice)
 		}
-		if discount, ok := data["discount"].(string); ok {
+		if discount, ok := data["discount"].(string); ok && strings.TrimSpace(discount) != "" {
 			create.SetDiscount(discount)
 		}
-		if pid, ok := data["pid"].(string); ok {
-			create.SetPid(pid)
-		}
-		if originalID, ok := data["_id"].(string); ok {
-			create.SetOriginalID(originalID)
-		}
-		if seller, ok := data["seller"].(string); ok {
+		if seller, ok := data["seller"].(string); ok && strings.TrimSpace(seller) != "" {
 			create.SetSeller(seller)
 		}
-		if rating, ok := data["average_rating"].(string); ok {
+		if rating, ok := data["average_rating"].(string); ok && strings.TrimSpace(rating) != "" {
 			create.SetAverageRating(rating)
 			if ratingNum, err := strconv.ParseFloat(rating, 64); err == nil {
 				create.SetRatingNumeric(ratingNum)
@@ -408,7 +453,7 @@ func seedFromDataset(ctx context.Context, client *ent.Client, dataset []map[stri
 		if images, ok := data["images"].([]interface{}); ok {
 			imageStrings := make([]string, 0, len(images))
 			for _, img := range images {
-				if str, ok := img.(string); ok {
+				if str, ok := img.(string); ok && strings.TrimSpace(str) != "" {
 					imageStrings = append(imageStrings, str)
 				}
 			}
@@ -428,7 +473,9 @@ func seedFromDataset(ctx context.Context, client *ent.Client, dataset []map[stri
 							strMap[k] = str
 						}
 					}
-					productDetails = append(productDetails, strMap)
+					if len(strMap) > 0 {
+						productDetails = append(productDetails, strMap)
+					}
 				}
 			}
 			if len(productDetails) > 0 {
@@ -451,7 +498,10 @@ func seedFromDataset(ctx context.Context, client *ent.Client, dataset []map[stri
 		bulk = append(bulk, create)
 	}
 
-	// Save in batches
+	logHelper.Infof("Prepared %d valid products for insertion (Skipped: %d duplicates, %d bad values)",
+		len(bulk), skippedDuplicates, skippedBadValues)
+
+	// Save in batches with resilient individual fallback
 	batchSize := 100
 	seeded := 0
 	for i := 0; i < len(bulk); i += batchSize {
@@ -463,7 +513,15 @@ func seedFromDataset(ctx context.Context, client *ent.Client, dataset []map[stri
 		batch := bulk[i:end]
 		_, err := client.Product.CreateBulk(batch...).Save(ctx)
 		if err != nil {
-			logHelper.Errorf("Failed to save batch %d-%d: %v", i, end, err)
+			logHelper.Warnf("Batch %d-%d bulk save failed (%v). Falling back to saving individually...", i, end, err)
+			batchSuccess := 0
+			for _, item := range batch {
+				if _, itemErr := item.Save(ctx); itemErr == nil {
+					batchSuccess++
+					seeded++
+				}
+			}
+			logHelper.Infof("Recovered %d/%d valid items from batch %d-%d", batchSuccess, len(batch), i, end)
 			continue
 		}
 
